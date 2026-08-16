@@ -1,36 +1,103 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lime Kraft Home Stays
 
-## Getting Started
+A hospitality platform for a small boutique property collection in Indore: a
+guest-facing booking site, a property management system, a property-level
+finance module, and a read-only stakeholder portal — all on one data model.
 
-First, run the development server:
+## Running it
+
+The app needs Node 20+. If you don't have Node installed locally, everything
+below works through Docker (`docker compose run --rm app <command>`).
 
 ```bash
+cp .env.example .env          # fill in DATABASE_URL and AUTH_SECRET
+npm install
+npx prisma migrate deploy     # or `migrate dev` when changing the schema
+npx tsx prisma/seed.ts        # demo portfolio: 5 properties, ~250 bookings
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Optional local services for caching, background jobs and uploads:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+docker compose up -d redis minio
+```
 
-## Learn More
+### Database
 
-To learn more about Next.js, take a look at the following resources:
+`DATABASE_URL` points at Postgres. With Supabase, use the **Supavisor pooler**
+host rather than `db.<ref>.supabase.co` — the direct host is IPv6-only and
+unreachable from most Docker networks. Do not append `sslmode` to the URL: the
+`pg` driver lets it override the TLS options set in `src/lib/db-config.ts`. To
+verify certificates properly, set `PGSSLROOTCERT` to Supabase's CA bundle.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## How it fits together
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+Guest books  →  POST /api/bookings
+                  ├─ availability check + inventory lock  (single transaction)
+                  ├─ Reservation + ReservationGuest
+                  ├─ Transaction rows: REVENUE, OTA_FEE, PAYMENT_FEE
+                  ├─ Guest created or matched
+                  └─ confirmation message + admin notification
+                          ↓
+        Admin calendar · Reservations · Property P&L · Stakeholder portal
+```
 
-## Deploy on Vercel
+Two rules hold the system together:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Inventory is the source of truth.** `InventoryNight` has one row per occupied
+unit-night with a unique constraint on `(unitId, date)`. Double-booking is
+prevented by the database, not by application checks — two concurrent bookings
+for the same night cannot both commit.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Money is derived, never stored as a total.** Every figure in the finance
+module — P&L, ROI, capital recovery, channel profitability, break-even, budget
+variance — is computed from `Transaction` rows at read time
+(`src/lib/finance/calculations.ts`). Refundable security deposits are tracked as
+`DEPOSIT_OUT`, so they count towards capital deployed but never as an expense.
+
+## Layout
+
+```
+prisma/schema.prisma        data model
+prisma/seed.ts              demo portfolio
+src/lib/finance/            P&L, ROI, capital recovery, break-even
+src/lib/pricing/engine.ts   base rate + stacked pricing rules
+src/lib/booking/            transaction-safe reservation creation
+src/lib/payments/           provider-agnostic payment interface
+src/lib/notifications/      email / WhatsApp / SMS interface + templates
+src/app/(site)/             guest website
+src/app/admin/              property management system
+src/app/stakeholder/        owner & investor portal
+```
+
+## Authentication
+
+OTP-first — email or mobile, no passwords. A booking does not require an
+account; one is created automatically afterwards and linked to the guest
+profile. Roles (`SUPER_ADMIN` … `CLEANER`, `OWNER`, `INVESTOR`) drive both
+navigation and data scoping; stakeholders only ever see properties joined to
+them through `StakeholderProperty`.
+
+Admin and stakeholder areas fall back to a seeded demo user when no session
+exists, so the dashboards are explorable without logging in. Remove the fallback
+in `src/lib/auth/current-user.ts` before deploying anywhere real.
+
+## What is not connected
+
+These have real interfaces, data models and error states, but no live
+credentials — nothing pretends to be connected:
+
+| Area | Status |
+|---|---|
+| Payments (Razorpay/Stripe) | Interface + mock provider that settles synchronously |
+| OTA channels | Connection states, sync logs and error handling; no live API calls |
+| Email / WhatsApp / SMS | Messages are logged, never delivered; OTP codes surface in the UI |
+| Ask Lime | Deterministic queries over real aggregates — not a language model |
+| PDF export | Stubbed; CSV export is real |
+
+Swap any of them by implementing its interface — `PaymentProvider`,
+`NotificationProvider` — and returning it from the corresponding factory.

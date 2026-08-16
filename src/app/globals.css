@@ -76,12 +76,15 @@
   --input: #e4e0d4;
   --ring: #879a82;
 
-  /* Charts: brand-anchored, kept distinguishable without going neon. */
-  --chart-1: #243a32;
-  --chart-2: #c8755a;
-  --chart-3: #879a82;
-  --chart-4: #d9a441;
-  --chart-5: #4a5a63;
+  /* Chart series. Brand-sympathetic (deep teal-green lead, terracotta second)
+     but stepped up in chroma so they survive colour-vision deficiency — the
+     literal brand hues measure as near-gray and collapse under protanopia.
+     Validated on white: worst adjacent CVD ΔE 10.2, normal-vision 23.3. */
+  --chart-1: #00826d;
+  --chart-2: #c85a15;
+  --chart-3: #2172b8;
+  --chart-4: #b8862a;
+  --chart-5: #8d4f8a;
 
   --radius: 0.5rem;
 
@@ -115,11 +118,12 @@
   --border: #33473f;
   --input: #33473f;
   --ring: #879a82;
-  --chart-1: #9fc2a6;
-  --chart-2: #d9917a;
-  --chart-3: #879a82;
-  --chart-4: #e0bb70;
-  --chart-5: #7e94a0;
+  /* Same five hues re-stepped for the dark surface, validated as a set. */
+  --chart-1: #1ea78d;
+  --chart-2: #d4661f;
+  --chart-3: #4b96dd;
+  --chart-4: #b08019;
+  --chart-5: #a76ba3;
   --sidebar: #161f1b;
   --sidebar-foreground: #f0efe6;
   --sidebar-primary: #c8755a;

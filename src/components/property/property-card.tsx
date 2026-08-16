@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { BedDouble, Heart, MapPin, Star, Users } from "lucide-react";
+import { toast } from "sonner";
 import { formatINR } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -37,12 +38,27 @@ export function PropertyCard({
   function toggleSave(e: React.MouseEvent) {
     e.preventDefault();
     const next = !saved;
-    setSaved(next); // optimistic
+    setSaved(next); // optimistic; reverted below if the write fails
     startTransition(async () => {
       try {
-        await onToggleSave?.(property.slug, next);
-      } catch {
+        if (onToggleSave) {
+          await onToggleSave(property.slug, next);
+          return;
+        }
+        const res = await fetch("/api/wishlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ propertySlug: property.slug, saved: next }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error ?? "Could not save.");
+        }
+      } catch (err) {
         setSaved(!next);
+        toast.error(
+          err instanceof Error ? err.message : "Could not save that stay.",
+        );
       }
     });
   }
