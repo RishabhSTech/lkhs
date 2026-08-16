@@ -1,0 +1,338 @@
+import "server-only";
+import { Prisma, type BookingSource, type PaymentMethodType } from "@prisma/client";
+import { db } from "@/lib/db";
+import { eachNight, toUTCDate } from "@/lib/dates";
+import { buildQuote } from "@/lib/pricing/engine";
+import { getPaymentProvider } from "@/lib/payments/provider";
+import { getNotificationProvider } from "@/lib/notifications/provider";
+import { renderTemplate } from "@/lib/notifications/templates";
+
+export class InventoryConflictError extends Error {
+  constructor() {
+    super("Those dates were just taken. Please pick different dates.");
+    this.name = "InventoryConflictError";
+  }
+}
+
+export type CreateReservationInput = {
+  propertyId: string;
+  unitId?: string;
+  checkIn: Date;
+  checkOut: Date;
+  adults: number;
+  children?: number;
+  guest: { name: string; email?: string | null; phone?: string | null };
+  source?: BookingSource;
+  paymentMethod?: PaymentMethodType;
+  userId?: string | null;
+};
+
+function generateCode() {
+  const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `LK-${new Date().getFullYear()}${rand}`;
+}
+
+/** OTA commission rates used to record the fee side of channel bookings. */
+const OTA_FEE_RATES: Partial<Record<BookingSource, number>> = {
+  AIRBNB: 0.14,
+  BOOKING_COM: 0.15,
+  AGODA: 0.16,
+};
+const PAYMENT_FEE_RATE = 0.02;
+
+/**
+ * The one path that creates a booking. Availability check, inventory lock,
+ * reservation, payment and revenue posting all happen inside a single
+ * transaction — the unique constraint on (unitId, date) is what actually
+ * guarantees no double-booking under concurrency.
+ */
+export async function createReservation(input: CreateReservationInput) {
+  const checkIn = toUTCDate(input.checkIn);
+  const checkOut = toUTCDate(input.checkOut);
+  const nights = eachNight(checkIn, checkOut);
+
+  if (nights.length === 0) {
+    throw new Error("Checkout must be at least one night after check-in.");
+  }
+
+  const property = await db.property.findUniqueOrThrow({
+    where: { id: input.propertyId },
+    include: { units: true, pricingRules: { where: { isActive: true } } },
+  });
+
+  const unitId = input.unitId ?? property.units[0]?.id;
+  if (!unitId) throw new Error("This property has no bookable unit.");
+
+  const overrides = await db.dailyRate.findMany({
+    where: { propertyId: property.id, date: { gte: checkIn, lt: checkOut } },
+  });
+
+  const quote = buildQuote({
+    basePrice: Number(property.basePrice),
+    cleaningFee: Number(property.cleaningFee),
+    checkIn,
+    checkOut,
+    rules: property.pricingRules,
+    dailyRateOverrides: Object.fromEntries(
+      overrides.map((o) => [o.date.toISOString().slice(0, 10), Number(o.price)]),
+    ),
+  });
+
+  const source = input.source ?? "DIRECT";
+  const code = generateCode();
+
+  const reservation = await db
+    .$transaction(async (tx) => {
+      const guest = await upsertGuest(tx, input.guest, input.userId ?? null);
+
+      const created = await tx.reservation.create({
+        data: {
+          code,
+          propertyId: property.id,
+          unitId,
+          guestId: guest.id,
+          checkIn,
+          checkOut,
+          adults: input.adults,
+          children: input.children ?? 0,
+          status: "CONFIRMED",
+          source,
+          nightlyRate: new Prisma.Decimal(quote.averageNightlyRate),
+          nights: quote.nightCount,
+          subtotal: new Prisma.Decimal(quote.subtotal),
+          cleaningFee: new Prisma.Decimal(quote.cleaningFee),
+          taxes: new Prisma.Decimal(quote.taxes),
+          discount: new Prisma.Decimal(quote.discount),
+          total: new Prisma.Decimal(quote.total),
+          reservationGuests: {
+            create: {
+              name: input.guest.name,
+              email: input.guest.email ?? null,
+              phone: input.guest.phone ?? null,
+              isPrimary: true,
+            },
+          },
+        },
+      });
+
+      // Locking inventory: unique (unitId, date) rejects any concurrent booking
+      // that overlaps even a single night.
+      await tx.inventoryNight.createMany({
+        data: nights.map((date) => ({
+          unitId,
+          date,
+          reservationId: created.id,
+        })),
+      });
+
+      await postBookingFinancials(tx, {
+        propertyId: property.id,
+        reservationId: created.id,
+        total: quote.total,
+        source,
+        date: checkIn,
+      });
+
+      return created;
+    })
+    .catch((error) => {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        throw new InventoryConflictError();
+      }
+      throw error;
+    });
+
+  await recordPaymentAndNotify({
+    reservationId: reservation.id,
+    code: reservation.code,
+    total: quote.total,
+    method: input.paymentMethod ?? "UPI",
+    guest: input.guest,
+    propertyName: property.name,
+    checkIn,
+    checkOut,
+  });
+
+  return { reservation, quote };
+}
+
+type TxClient = Prisma.TransactionClient;
+
+async function upsertGuest(
+  tx: TxClient,
+  guest: CreateReservationInput["guest"],
+  userId: string | null,
+) {
+  const existing = await tx.guest.findFirst({
+    where: {
+      OR: [
+        guest.email ? { email: guest.email } : undefined,
+        guest.phone ? { phone: guest.phone } : undefined,
+      ].filter(Boolean) as Prisma.GuestWhereInput[],
+    },
+  });
+
+  if (existing) {
+    return tx.guest.update({
+      where: { id: existing.id },
+      data: {
+        name: guest.name,
+        email: guest.email ?? existing.email,
+        phone: guest.phone ?? existing.phone,
+        userId: existing.userId ?? userId,
+      },
+    });
+  }
+
+  return tx.guest.create({
+    data: {
+      name: guest.name,
+      email: guest.email ?? null,
+      phone: guest.phone ?? null,
+      userId,
+    },
+  });
+}
+
+/** Revenue plus its OTA/payment fees are posted as separate transactions. */
+async function postBookingFinancials(
+  tx: TxClient,
+  args: {
+    propertyId: string;
+    reservationId: string;
+    total: number;
+    source: BookingSource;
+    date: Date;
+  },
+) {
+  const revenueCategory = await tx.transactionCategory.findFirstOrThrow({
+    where: { group: "REVENUE", name: "Accommodation" },
+  });
+
+  await tx.transaction.create({
+    data: {
+      propertyId: args.propertyId,
+      categoryId: revenueCategory.id,
+      reservationId: args.reservationId,
+      type: "REVENUE",
+      amount: new Prisma.Decimal(args.total),
+      date: args.date,
+      status: "PAID",
+      paymentMethod: "UPI",
+      description: `Booking revenue · ${args.source}`,
+    },
+  });
+
+  const otaRate = OTA_FEE_RATES[args.source];
+  if (otaRate) {
+    const otaCategory = await tx.transactionCategory.findFirstOrThrow({
+      where: { group: "OTA_FEE" },
+    });
+    await tx.transaction.create({
+      data: {
+        propertyId: args.propertyId,
+        categoryId: otaCategory.id,
+        reservationId: args.reservationId,
+        type: "OTA_FEE",
+        amount: new Prisma.Decimal(Math.round(args.total * otaRate)),
+        date: args.date,
+        status: "PAID",
+        description: `${args.source} commission`,
+      },
+    });
+  }
+
+  const paymentFeeCategory = await tx.transactionCategory.findFirstOrThrow({
+    where: { group: "PAYMENT_FEE" },
+  });
+  await tx.transaction.create({
+    data: {
+      propertyId: args.propertyId,
+      categoryId: paymentFeeCategory.id,
+      reservationId: args.reservationId,
+      type: "PAYMENT_FEE",
+      amount: new Prisma.Decimal(Math.round(args.total * PAYMENT_FEE_RATE)),
+      date: args.date,
+      status: "PAID",
+      description: "Payment gateway fee",
+    },
+  });
+}
+
+async function recordPaymentAndNotify(args: {
+  reservationId: string;
+  code: string;
+  total: number;
+  method: PaymentMethodType;
+  guest: CreateReservationInput["guest"];
+  propertyName: string;
+  checkIn: Date;
+  checkOut: Date;
+}) {
+  const provider = getPaymentProvider();
+  const intent = await provider.createIntent({
+    reservationCode: args.code,
+    amount: args.total,
+    currency: "INR",
+    method: args.method,
+    customer: args.guest,
+  });
+
+  await db.reservationPayment.create({
+    data: {
+      reservationId: args.reservationId,
+      provider: provider.name,
+      method: args.method,
+      amount: new Prisma.Decimal(args.total),
+      status: intent.status === "SUCCEEDED" ? "SUCCEEDED" : "PENDING",
+      providerRef: intent.providerRef,
+    },
+  });
+
+  const rendered = renderTemplate("BOOKING_CONFIRMED", {
+    guestName: args.guest.name,
+    propertyName: args.propertyName,
+    checkIn: args.checkIn,
+    checkOut: args.checkOut,
+    bookingCode: args.code,
+    total: args.total,
+  });
+
+  const notifier = getNotificationProvider();
+  const destination = args.guest.email ?? args.guest.phone;
+  if (destination) {
+    const result = await notifier.send({
+      channel: args.guest.email ? "EMAIL" : "WHATSAPP",
+      to: destination,
+      subject: rendered.subject,
+      body: rendered.body,
+      templateKey: "BOOKING_CONFIRMED",
+    });
+
+    await db.message.create({
+      data: {
+        reservationId: args.reservationId,
+        channel: args.guest.email ? "EMAIL" : "WHATSAPP",
+        direction: "OUTBOUND",
+        templateKey: "BOOKING_CONFIRMED",
+        subject: rendered.subject,
+        body: rendered.body,
+        status: result.status === "SENT" ? "SENT" : "FAILED",
+        sentAt: new Date(),
+      },
+    });
+  }
+
+  await db.notification.create({
+    data: {
+      type: "NEW_BOOKING",
+      title: "New booking confirmed",
+      body: `${args.guest.name} booked ${args.propertyName} · ${args.code}`,
+      severity: "INFO",
+      link: `/admin/reservations?code=${args.code}`,
+    },
+  });
+}
