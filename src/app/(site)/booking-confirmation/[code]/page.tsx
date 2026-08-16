@@ -40,7 +40,7 @@ export default async function BookingConfirmationPage({
         <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 lg:py-16">
           <ConfirmationHero guestName={reservation.guest.name} />
 
-          <div className="mt-8 overflow-hidden rounded-xl border border-border bg-white">
+          <div className="mt-8 overflow-hidden rounded-xl border border-border bg-card">
             {reservation.property.images[0] && (
               <div className="relative aspect-[16/7]">
                 <Image
@@ -57,7 +57,7 @@ export default async function BookingConfirmationPage({
             <div className="p-6 sm:p-8">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <h2 className="font-heading text-2xl text-brand-green">
+                  <h2 className="font-heading text-2xl text-foreground">
                     {reservation.property.name}
                   </h2>
                   <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -66,11 +66,11 @@ export default async function BookingConfirmationPage({
                     {reservation.property.city}
                   </p>
                 </div>
-                <div className="rounded-lg bg-brand-ivory px-3.5 py-2 text-right">
+                <div className="rounded-lg bg-muted/40 px-3.5 py-2 text-right">
                   <p className="text-[0.625rem] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
                     Booking ID
                   </p>
-                  <p className="font-mono text-sm font-medium text-brand-green">
+                  <p className="font-mono text-sm font-medium text-foreground">
                     {reservation.code}
                   </p>
                 </div>
@@ -108,7 +108,7 @@ export default async function BookingConfirmationPage({
                 </Detail>
               </dl>
 
-              <div className="mt-6 rounded-lg bg-brand-ivory p-4 text-sm leading-relaxed text-muted-foreground">
+              <div className="mt-6 rounded-lg bg-muted/40 p-4 text-sm leading-relaxed text-muted-foreground">
                 We've sent your confirmation
                 {reservation.guest.email ? ` to ${reservation.guest.email}` : ""}.
                 Access instructions and the exact address arrive three days before
@@ -151,7 +151,7 @@ function Detail({
         <dt className="text-[0.625rem] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
           {label}
         </dt>
-        <dd className="mt-1 text-sm font-medium text-brand-ink">{children}</dd>
+        <dd className="mt-1 text-sm font-medium text-foreground">{children}</dd>
       </div>
     </div>
   );

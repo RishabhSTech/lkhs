@@ -137,15 +137,16 @@ export function ReservationsTable({
       ) : (
         <>
           {/* Desktop table */}
-          <div className="mt-4 hidden overflow-x-auto rounded-xl border border-border bg-card lg:block">
+          <div className="mt-4 hidden overflow-hidden rounded-xl border border-border bg-card lg:block">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border text-left">
+                <tr className="border-b border-border bg-muted/40 text-left">
                   {["Booking", "Property", "Guest", "Dates", "Channel", "Status", "Amount"].map(
                     (h) => (
                       <th
                         key={h}
-                        className="px-4 py-3 text-[0.6875rem] font-semibold tracking-wide text-muted-foreground uppercase"
+                        scope="col"
+                        className="px-4 py-2.5 text-[0.6875rem] font-semibold tracking-[0.08em] text-muted-foreground uppercase last:text-right"
                       >
                         {h}
                       </th>
@@ -158,14 +159,14 @@ export function ReservationsTable({
                   <tr
                     key={r.id}
                     onClick={() => setParam("id", r.id)}
-                    className="cursor-pointer transition-colors hover:bg-muted/50"
+                    className="cursor-pointer transition-colors hover:bg-muted/40"
                   >
-                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
+                    <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">
                       {r.code}
                     </td>
-                    <td className="px-4 py-3 text-foreground">{r.propertyName}</td>
-                    <td className="px-4 py-3 text-foreground">{r.guestName}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
+                    <td className="px-4 py-2.5 text-foreground">{r.propertyName}</td>
+                    <td className="px-4 py-2.5 text-foreground">{r.guestName}</td>
+                    <td className="px-4 py-2.5 whitespace-nowrap text-muted-foreground">
                       {formatDateRange(r.checkIn, r.checkOut)}
                       <span className="ml-1.5 text-xs">({r.nights}n)</span>
                     </td>
@@ -179,7 +180,7 @@ export function ReservationsTable({
                         {STATUS_LABELS[r.status]}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 text-right font-medium tabular-nums text-foreground">
+                    <td className="px-4 py-2.5 text-right font-medium tabular-nums text-foreground">
                       {formatINR(r.total)}
                     </td>
                   </tr>

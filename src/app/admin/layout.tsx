@@ -22,7 +22,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   ]);
 
   return (
-    <div className="flex min-h-svh bg-brand-ivory">
+    <div className="flex min-h-svh bg-muted/30">
       <AdminSidebar role={user.role} userName={user.name} />
 
       <div className="flex min-w-0 flex-1 flex-col pb-16 lg:pb-0">

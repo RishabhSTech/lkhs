@@ -37,12 +37,12 @@ export default function AboutPage() {
     <>
       <SiteHeader />
       <main className="flex-1">
-        <div className="border-b border-border bg-white">
+        <div className="border-b border-border bg-muted/40">
           <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 lg:py-20">
             <p className="text-[0.6875rem] font-semibold tracking-[0.18em] text-brand-sage uppercase">
               About Lime Kraft
             </p>
-            <h1 className="mt-3 max-w-2xl font-heading text-4xl leading-tight text-brand-green sm:text-5xl">
+            <h1 className="mt-3 max-w-2xl font-heading text-4xl leading-tight text-foreground sm:text-5xl">
               Boutique hospitality, run by people who actually live here.
             </h1>
             <p className="mt-5 max-w-xl text-[0.9375rem] leading-relaxed text-muted-foreground">
@@ -55,15 +55,15 @@ export default function AboutPage() {
           </div>
         </div>
 
-        <Section>
+        <Section tight>
           <Reveal>
             <SectionHeading eyebrow="How we work" title="Four things we don't compromise on" />
           </Reveal>
           <div className="mt-9 grid gap-6 sm:grid-cols-2">
             {PRINCIPLES.map((principle, i) => (
               <Reveal key={principle.title} delay={i * 0.06}>
-                <div className="h-full rounded-xl border border-border bg-white p-6">
-                  <h2 className="font-heading text-xl text-brand-green">
+                <div className="h-full rounded-xl border border-border bg-card p-6">
+                  <h2 className="font-heading text-xl text-foreground">
                     {principle.title}
                   </h2>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
@@ -75,7 +75,7 @@ export default function AboutPage() {
           </div>
         </Section>
 
-        <Section className="bg-white">
+        <Section tight className="border-y border-border bg-muted/40">
           <Reveal>
             <div className="rounded-2xl bg-brand-green px-6 py-14 text-center sm:px-12">
               <h2 className="mx-auto max-w-lg font-heading text-3xl leading-tight text-white sm:text-4xl">

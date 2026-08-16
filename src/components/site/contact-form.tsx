@@ -21,9 +21,9 @@ export function ContactForm() {
 
   if (sent) {
     return (
-      <div className="flex flex-col items-start rounded-xl border border-border bg-white p-8">
-        <CheckCircle2 className="size-8 text-brand-green" />
-        <h2 className="mt-4 font-heading text-2xl text-brand-green">
+      <div className="flex flex-col items-start rounded-xl border border-border bg-card p-8">
+        <CheckCircle2 className="size-8 text-foreground" />
+        <h2 className="mt-4 font-heading text-2xl text-foreground">
           Thanks — we've got it.
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
@@ -40,7 +40,7 @@ export function ContactForm() {
   return (
     <form
       onSubmit={submit}
-      className="space-y-5 rounded-xl border border-border bg-white p-6"
+      className="space-y-5 rounded-xl border border-border bg-card p-6"
     >
       <div className="grid gap-5 sm:grid-cols-2">
         <div>

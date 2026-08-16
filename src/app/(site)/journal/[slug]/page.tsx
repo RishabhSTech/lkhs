@@ -39,7 +39,7 @@ export default async function JournalPostPage({
         <article className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6 lg:py-14">
           <Link
             href="/journal"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-brand-green"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="size-4" />
             Back to journal
@@ -48,7 +48,7 @@ export default async function JournalPostPage({
           <p className="mt-6 text-[0.6875rem] font-semibold tracking-[0.16em] text-brand-sage uppercase">
             {post.readMinutes} min read
           </p>
-          <h1 className="mt-2 font-heading text-4xl leading-tight text-brand-green sm:text-5xl">
+          <h1 className="mt-2 font-heading text-4xl leading-tight text-foreground sm:text-5xl">
             {post.title}
           </h1>
 
@@ -63,7 +63,7 @@ export default async function JournalPostPage({
             />
           </div>
 
-          <div className="mt-8 space-y-5 text-[1.0625rem] leading-relaxed text-brand-ink">
+          <div className="mt-8 space-y-5 text-[1.0625rem] leading-relaxed text-foreground">
             {post.body.split("\n\n").map((paragraph, i) => (
               <p key={i}>{paragraph}</p>
             ))}

@@ -58,7 +58,7 @@ export function SignInForm() {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-white p-6">
+    <div className="rounded-xl border border-border bg-card p-6">
       {step === "identifier" ? (
         <form onSubmit={requestCode} className="space-y-4">
           <div>
@@ -90,7 +90,7 @@ export function SignInForm() {
               setCode("");
               setError(null);
             }}
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-brand-green"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="size-3.5" />
             Change {identifier.includes("@") ? "email" : "number"}

@@ -89,7 +89,7 @@ export default async function PropertyPage({
         <div className="mx-auto w-full max-w-6xl px-4 pt-5 sm:px-6">
           <Link
             href="/stays"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-brand-green"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="size-4" />
             Back to stays
@@ -103,7 +103,7 @@ export default async function PropertyPage({
         <div className="mx-auto mt-8 grid w-full max-w-6xl gap-10 px-4 sm:px-6 lg:mt-10 lg:grid-cols-[1fr_22rem] lg:gap-14">
           <div className="min-w-0">
             <header>
-              <h1 className="font-heading text-3xl leading-tight text-brand-green sm:text-4xl">
+              <h1 className="font-heading text-3xl leading-tight text-foreground sm:text-4xl">
                 {property.name}
               </h1>
               <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
@@ -112,7 +112,7 @@ export default async function PropertyPage({
                   {property.locationArea}, {property.city}
                 </span>
                 {property.rating !== null && (
-                  <span className="flex items-center gap-1.5 text-brand-ink">
+                  <span className="flex items-center gap-1.5 text-foreground">
                     <Star className="size-4 fill-brand-terracotta text-brand-terracotta" />
                     <span className="font-medium">{property.rating.toFixed(1)}</span>
                     <span className="text-muted-foreground">
@@ -126,7 +126,7 @@ export default async function PropertyPage({
                 {facts.map((fact) => (
                   <span
                     key={fact.label}
-                    className="flex items-center gap-2 text-sm text-brand-ink"
+                    className="flex items-center gap-2 text-sm text-foreground"
                   >
                     <fact.icon className="size-4 text-brand-sage" />
                     {fact.label}
@@ -137,7 +137,7 @@ export default async function PropertyPage({
 
             <Prose title="Overview">
               {property.tagline && (
-                <p className="font-heading text-xl leading-snug text-brand-green">
+                <p className="font-heading text-xl leading-snug text-foreground">
                   {property.tagline}
                 </p>
               )}
@@ -153,9 +153,9 @@ export default async function PropertyPage({
                 {Array.from({ length: property.bedrooms }, (_, i) => (
                   <div
                     key={i}
-                    className="rounded-lg border border-border bg-white p-4"
+                    className="rounded-lg border border-border bg-card p-4"
                   >
-                    <p className="font-medium text-brand-ink">Bedroom {i + 1}</p>
+                    <p className="font-medium text-foreground">Bedroom {i + 1}</p>
                     <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
                       <BedDouble className="size-3.5" />
                       {i === 0 ? "1 king bed" : "1 queen bed"}
@@ -181,7 +181,7 @@ export default async function PropertyPage({
 
             {property.cancellationPolicy && (
               <Prose title="Cancellation policy">
-                <p className="flex gap-3 rounded-lg border border-border bg-white p-4 text-sm">
+                <p className="flex gap-3 rounded-lg border border-border bg-card p-4 text-sm">
                   <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand-sage" />
                   <span>{property.cancellationPolicy}</span>
                 </p>
@@ -199,7 +199,7 @@ export default async function PropertyPage({
                   {property.reviews.slice(0, 6).map((review) => (
                     <figure
                       key={review.id}
-                      className="rounded-lg border border-border bg-white p-5"
+                      className="rounded-lg border border-border bg-card p-5"
                     >
                       <div
                         className="flex gap-0.5"
@@ -213,7 +213,7 @@ export default async function PropertyPage({
                         ))}
                       </div>
                       {review.title && (
-                        <p className="mt-3 font-heading text-lg text-brand-green">
+                        <p className="mt-3 font-heading text-lg text-foreground">
                           {review.title}
                         </p>
                       )}
@@ -221,7 +221,7 @@ export default async function PropertyPage({
                         {review.body}
                       </blockquote>
                       <figcaption className="mt-4 text-xs text-muted-foreground">
-                        <span className="font-medium text-brand-ink">
+                        <span className="font-medium text-foreground">
                           {review.guest.name}
                         </span>{" "}
                         · {formatDateLong(review.createdAt)}
@@ -265,8 +265,8 @@ function Prose({
 }) {
   return (
     <section className="mt-9 border-t border-border pt-8 first:border-0">
-      <h2 className="font-heading text-2xl text-brand-green">{title}</h2>
-      <div className="mt-4 text-[0.9375rem] leading-relaxed text-brand-ink">
+      <h2 className="font-heading text-2xl text-foreground">{title}</h2>
+      <div className="mt-4 text-[0.9375rem] leading-relaxed text-foreground">
         {children}
       </div>
     </section>

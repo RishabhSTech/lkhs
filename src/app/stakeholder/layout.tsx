@@ -12,8 +12,8 @@ export default async function StakeholderLayout({
   const { stakeholder, isDemoFallback } = await getCurrentStakeholder();
 
   return (
-    <div className="flex min-h-svh flex-col bg-brand-ivory">
-      <header className="border-b border-border bg-white">
+    <div className="flex min-h-svh flex-col bg-background">
+      <header className="border-b border-border bg-card">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <Link href="/stakeholder">
             <LogoStacked />
@@ -21,7 +21,7 @@ export default async function StakeholderLayout({
 
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="text-sm font-medium text-brand-ink">
+              <p className="text-sm font-medium text-foreground">
                 {stakeholder.name}
               </p>
               <p className="text-xs capitalize text-muted-foreground">
@@ -36,7 +36,7 @@ export default async function StakeholderLayout({
             <Link
               href="/api/auth/signout"
               aria-label="Sign out"
-              className="text-muted-foreground transition-colors hover:text-brand-green"
+              className="text-muted-foreground transition-colors hover:text-foreground"
             >
               <LogOut className="size-4" />
             </Link>
@@ -46,7 +46,7 @@ export default async function StakeholderLayout({
 
       <main className="flex-1">{children}</main>
 
-      <footer className="border-t border-border bg-white py-5">
+      <footer className="border-t border-border bg-card py-5">
         <p className="mx-auto max-w-6xl px-4 text-xs text-muted-foreground sm:px-6">
           You're seeing only the properties assigned to you. For anything else,
           contact the Lime Kraft team.

@@ -10,7 +10,7 @@ export default function SiteError({ reset }: { reset: () => void }) {
       <div className="grid size-11 place-items-center rounded-full bg-destructive/10">
         <AlertTriangle className="size-5 text-destructive" />
       </div>
-      <h1 className="mt-4 font-heading text-3xl text-brand-green">
+      <h1 className="mt-4 font-heading text-3xl text-foreground">
         That didn't load properly
       </h1>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">

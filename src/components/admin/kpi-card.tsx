@@ -19,28 +19,43 @@ export function KpiCard({
   return (
     <div
       className={cn(
-        "rounded-xl border border-border bg-card p-4",
-        tone === "warning" && "border-chart-4/40",
-        tone === "critical" && "border-destructive/40",
+        "group relative overflow-hidden rounded-xl border border-border bg-card p-4 transition-colors hover:border-ring/40",
         className,
       )}
     >
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-[0.6875rem] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
-          {label}
-        </p>
-        {Icon && <Icon className="size-3.5 shrink-0 text-muted-foreground" />}
+      {/* Left rule carries tone without tinting the whole tile. */}
+      <span
+        aria-hidden
+        className={cn(
+          "absolute inset-y-0 left-0 w-0.5",
+          tone === "critical"
+            ? "bg-destructive"
+            : tone === "warning"
+              ? "bg-chart-4"
+              : "bg-transparent",
+        )}
+      />
+
+      <div className="flex items-start justify-between gap-2">
+        <p className="label-eyebrow leading-tight">{label}</p>
+        {Icon && (
+          <Icon className="size-3.5 shrink-0 text-muted-foreground/60" />
+        )}
       </div>
+
       <p
         className={cn(
-          "mt-2 font-heading text-2xl leading-none",
-          tone === "critical" ? "text-destructive" : "text-brand-green",
+          "mt-2.5 font-heading text-[1.625rem] leading-none tabular-nums",
+          tone === "critical" ? "text-destructive" : "text-foreground",
         )}
       >
         {value}
       </p>
+
       {hint && (
-        <p className="mt-1.5 text-xs text-muted-foreground">{hint}</p>
+        <p className="mt-1.5 text-xs leading-snug text-muted-foreground">
+          {hint}
+        </p>
       )}
     </div>
   );

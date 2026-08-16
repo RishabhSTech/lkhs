@@ -22,7 +22,6 @@ function todayISO(offsetDays = 0) {
 }
 
 export function SearchPanel({
-  variant = "floating",
   className,
   defaults,
 }: {
@@ -46,29 +45,27 @@ export function SearchPanel({
     router.push(`/stays?${params.toString()}`);
   }
 
-  const fieldClass =
-    "w-full bg-transparent text-sm font-medium text-brand-ink outline-none placeholder:text-muted-foreground";
-  const labelClass =
-    "flex items-center gap-1.5 text-[0.6875rem] font-semibold tracking-[0.1em] text-muted-foreground uppercase";
+  const field =
+    "w-full bg-transparent text-sm font-medium text-foreground outline-none";
+  const label = "flex items-center gap-1.5 label-eyebrow";
 
   return (
     <form
       onSubmit={submit}
       className={cn(
-        "rounded-2xl bg-white p-2 shadow-[0_8px_40px_-12px_rgba(36,58,50,0.28)]",
-        variant === "floating" && "ring-1 ring-black/5",
+        "rounded-xl border border-border bg-card p-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_16px_40px_-20px_rgba(0,0,0,0.25)]",
         className,
       )}
     >
-      <div className="grid gap-px overflow-hidden rounded-xl bg-border/60 sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_0.8fr_auto]">
-        <label className="flex flex-col gap-1.5 bg-white px-4 py-3">
-          <span className={labelClass}>
+      <div className="grid gap-px overflow-hidden rounded-lg bg-border sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_0.7fr_auto]">
+        <label className="flex flex-col gap-1 bg-card px-3.5 py-2.5">
+          <span className={label}>
             <MapPin className="size-3" /> Where
           </span>
           <select
             value={where}
             onChange={(e) => setWhere(e.target.value)}
-            className={cn(fieldClass, "cursor-pointer")}
+            className={cn(field, "cursor-pointer")}
           >
             {AREAS.map((a) => (
               <option key={a} value={a}>
@@ -78,8 +75,8 @@ export function SearchPanel({
           </select>
         </label>
 
-        <label className="flex flex-col gap-1.5 bg-white px-4 py-3">
-          <span className={labelClass}>
+        <label className="flex flex-col gap-1 bg-card px-3.5 py-2.5">
+          <span className={label}>
             <CalendarDays className="size-3" /> Check-in
           </span>
           <input
@@ -90,12 +87,12 @@ export function SearchPanel({
               setCheckIn(e.target.value);
               if (checkOut && e.target.value >= checkOut) setCheckOut("");
             }}
-            className={fieldClass}
+            className={field}
           />
         </label>
 
-        <label className="flex flex-col gap-1.5 bg-white px-4 py-3">
-          <span className={labelClass}>
+        <label className="flex flex-col gap-1 bg-card px-3.5 py-2.5">
+          <span className={label}>
             <CalendarDays className="size-3" /> Check-out
           </span>
           <input
@@ -103,12 +100,12 @@ export function SearchPanel({
             value={checkOut}
             min={checkIn || todayISO(1)}
             onChange={(e) => setCheckOut(e.target.value)}
-            className={fieldClass}
+            className={field}
           />
         </label>
 
-        <label className="flex flex-col gap-1.5 bg-white px-4 py-3">
-          <span className={labelClass}>
+        <label className="flex flex-col gap-1 bg-card px-3.5 py-2.5">
+          <span className={label}>
             <Users className="size-3" /> Guests
           </span>
           <input
@@ -117,12 +114,12 @@ export function SearchPanel({
             max={16}
             value={guests}
             onChange={(e) => setGuests(Math.max(1, Number(e.target.value)))}
-            className={fieldClass}
+            className={field}
           />
         </label>
 
-        <div className="flex items-stretch bg-white p-2 sm:col-span-2 lg:col-span-1">
-          <Button type="submit" size="lg" className="w-full lg:aspect-square lg:w-auto lg:px-5">
+        <div className="flex items-stretch bg-card p-1.5 sm:col-span-2 lg:col-span-1">
+          <Button type="submit" size="lg" className="w-full lg:aspect-square lg:w-auto lg:px-4">
             <Search />
             <span className="lg:hidden">Find a stay</span>
           </Button>

@@ -11,7 +11,7 @@ export function Logo({
     <span
       className={cn(
         "inline-flex items-baseline gap-1.5 font-heading text-lg leading-none tracking-tight",
-        tone === "light" ? "text-brand-ivory" : "text-brand-green",
+        tone === "light" ? "text-white" : "text-foreground",
         className,
       )}
     >
@@ -34,7 +34,7 @@ export function LogoStacked({ tone = "dark" }: { tone?: "dark" | "light" }) {
       <span
         className={cn(
           "mt-1 pl-3.5 font-sans text-[0.625rem] font-medium tracking-[0.18em] uppercase",
-          tone === "light" ? "text-brand-ivory/60" : "text-muted-foreground",
+          tone === "light" ? "text-white/55" : "text-muted-foreground",
         )}
       >
         Home Stays

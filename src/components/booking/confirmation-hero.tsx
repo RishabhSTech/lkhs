@@ -26,7 +26,7 @@ export function ConfirmationHero({ guestName }: { guestName: string }) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
       >
-        <h1 className="mt-6 font-heading text-4xl leading-tight text-brand-green sm:text-5xl">
+        <h1 className="mt-6 font-heading text-4xl leading-tight text-foreground sm:text-5xl">
           Your stay is confirmed.
         </h1>
         <p className="mt-3 text-[0.9375rem] text-muted-foreground">

@@ -19,7 +19,7 @@ export function MobileTabBar() {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-brand-ivory/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
     >
       <ul className="mx-auto grid max-w-md grid-cols-5">
         {TABS.map((tab) => {
@@ -35,8 +35,8 @@ export function MobileTabBar() {
                 className={cn(
                   "flex flex-col items-center gap-1 py-2.5 text-[0.625rem] font-medium transition-colors",
                   active
-                    ? "text-brand-green"
-                    : "text-muted-foreground hover:text-brand-green",
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 <Icon className={cn("size-5", active && "stroke-[2.25]")} />

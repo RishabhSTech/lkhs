@@ -67,13 +67,13 @@ export default async function DestinationPage({
         <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:py-14">
           <Link
             href="/destinations"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-brand-green"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="size-4" />
             All destinations
           </Link>
 
-          <h2 className="mt-6 font-heading text-2xl text-brand-green">
+          <h2 className="mt-6 font-heading text-2xl text-foreground">
             {properties.length} {properties.length === 1 ? "home" : "homes"} here
           </h2>
 

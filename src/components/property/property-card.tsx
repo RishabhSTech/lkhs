@@ -76,7 +76,7 @@ export function PropertyCard({
             fill
             priority={priority}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
           />
           <button
             type="button"
@@ -90,19 +90,19 @@ export function PropertyCard({
                 "size-4 transition-all duration-200",
                 saved
                   ? "scale-110 fill-brand-terracotta text-brand-terracotta"
-                  : "text-brand-ink/70",
+                  : "text-foreground/70",
               )}
             />
           </button>
         </div>
 
-        <div className="pt-3.5">
+        <div className="pt-3">
           <div className="flex items-start justify-between gap-3">
-            <h3 className="font-heading text-lg leading-snug text-brand-green">
+            <h3 className="font-heading text-[1.0625rem] leading-snug text-foreground">
               {property.name}
             </h3>
             {property.rating !== null && (
-              <span className="mt-0.5 flex shrink-0 items-center gap-1 text-sm text-brand-ink">
+              <span className="mt-0.5 flex shrink-0 items-center gap-1 text-sm text-foreground">
                 <Star className="size-3.5 fill-brand-terracotta text-brand-terracotta" />
                 <span className="font-medium">{property.rating.toFixed(1)}</span>
                 <span className="text-muted-foreground">
@@ -134,8 +134,8 @@ export function PropertyCard({
             </p>
           )}
 
-          <p className="mt-3 text-sm text-brand-ink">
-            <span className="font-heading text-xl text-brand-green">
+          <p className="mt-2.5 text-sm text-foreground">
+            <span className="font-heading text-lg text-foreground">
               {formatINR(property.basePrice)}
             </span>
             <span className="text-muted-foreground"> / night</span>

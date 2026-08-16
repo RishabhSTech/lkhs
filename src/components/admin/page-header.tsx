@@ -10,13 +10,13 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h1 className="font-heading text-2xl leading-tight text-brand-green sm:text-3xl">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="min-w-0">
+        <h1 className="font-heading text-[1.5rem] leading-tight text-foreground sm:text-[1.75rem]">
           {title}
         </h1>
         {description && (
-          <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         )}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
@@ -25,5 +25,9 @@ export function PageHeader({
 }
 
 export function AdminPage({ children }: { children: ReactNode }) {
-  return <div className="mx-auto w-full max-w-7xl p-4 sm:p-6 lg:p-8">{children}</div>;
+  return (
+    <div className="mx-auto w-full max-w-[86rem] px-4 py-5 sm:px-6 lg:px-7 lg:py-7">
+      {children}
+    </div>
+  );
 }

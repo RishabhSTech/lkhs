@@ -34,13 +34,13 @@ export default async function AccountPage() {
       <SiteHeader />
       <main className="flex-1">
         <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 lg:py-14">
-          <h1 className="font-heading text-3xl leading-tight text-brand-green sm:text-4xl">
+          <h1 className="font-heading text-3xl leading-tight text-foreground sm:text-4xl">
             {session ? `Hello, ${session.name.split(" ")[0]}` : "Your account"}
           </h1>
 
           {!session && (
-            <div className="mt-6 rounded-xl border border-border bg-white p-6">
-              <h2 className="font-heading text-xl text-brand-green">
+            <div className="mt-6 rounded-xl border border-border bg-card p-6">
+              <h2 className="font-heading text-xl text-foreground">
                 Sign in to see your trips
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
@@ -59,16 +59,16 @@ export default async function AccountPage() {
             </p>
           )}
 
-          <ul className="mt-8 divide-y divide-border overflow-hidden rounded-xl border border-border bg-white">
+          <ul className="mt-8 divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
             {LINKS.map((link) => (
               <li key={link.label}>
                 <Link
                   href={link.href}
-                  className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-brand-ivory"
+                  className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/40"
                 >
                   <link.icon className="size-5 shrink-0 text-brand-sage" />
                   <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium text-brand-ink">
+                    <span className="block text-sm font-medium text-foreground">
                       {link.label}
                     </span>
                     <span className="block text-xs text-muted-foreground">

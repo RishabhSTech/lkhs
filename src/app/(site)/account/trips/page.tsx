@@ -49,7 +49,7 @@ export default async function TripsPage() {
       <SiteHeader />
       <main className="flex-1">
         <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 lg:py-14">
-          <h1 className="font-heading text-3xl leading-tight text-brand-green sm:text-4xl">
+          <h1 className="font-heading text-3xl leading-tight text-foreground sm:text-4xl">
             My trips
           </h1>
 
@@ -89,7 +89,7 @@ export default async function TripsPage() {
                       {tab.list.map((r) => (
                         <li
                           key={r.id}
-                          className="overflow-hidden rounded-xl border border-border bg-white sm:flex"
+                          className="overflow-hidden rounded-xl border border-border bg-card sm:flex"
                         >
                           {r.property.images[0] && (
                             <div className="relative aspect-[16/9] sm:aspect-auto sm:w-48 sm:shrink-0">
@@ -105,7 +105,7 @@ export default async function TripsPage() {
                           <div className="flex-1 p-5">
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0">
-                                <h2 className="font-heading text-lg text-brand-green">
+                                <h2 className="font-heading text-lg text-foreground">
                                   {r.property.name}
                                 </h2>
                                 <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -118,7 +118,7 @@ export default async function TripsPage() {
                               </Badge>
                             </div>
 
-                            <p className="mt-3 text-sm text-brand-ink">
+                            <p className="mt-3 text-sm text-foreground">
                               {formatDateRange(r.checkIn, r.checkOut)}
                               <span className="text-muted-foreground">
                                 {" "}

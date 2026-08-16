@@ -13,7 +13,7 @@ export default function SignInPage() {
       <SiteHeader />
       <main className="flex flex-1 items-center">
         <div className="mx-auto w-full max-w-md px-4 py-12 sm:px-6">
-          <h1 className="font-heading text-3xl leading-tight text-brand-green">
+          <h1 className="font-heading text-3xl leading-tight text-foreground">
             Sign in
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">

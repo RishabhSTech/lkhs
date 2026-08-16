@@ -40,116 +40,121 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
 
-  /* Lime Kraft brand palette, always available as bg-brand-*, text-brand-* etc. */
-  --color-brand-green: #243a32;
-  --color-brand-green-light: #35544a;
-  --color-brand-sage: #879a82;
-  --color-brand-ivory: #f7f4ee;
-  --color-brand-terracotta: #c8755a;
-  --color-brand-ink: #202522;
+  /* Brand tokens. Colour is deliberately scarce — photography carries it. */
+  --color-brand-green: #1f4536;
+  --color-brand-green-light: #2c5a48;
+  --color-brand-sage: #7f9184;
+  --color-brand-ivory: #fafaf9;
+  --color-brand-terracotta: #c25a38;
+  --color-brand-ink: #1c1c1a;
 
   --radius-sm: calc(var(--radius) * 0.5);
   --radius-md: calc(var(--radius) * 0.75);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.3);
-  --radius-2xl: calc(var(--radius) * 1.6);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
 }
 
 :root {
-  /* Warm ivory is the public-site canvas; white is reserved for cards/surfaces. */
-  --background: #f7f4ee;
-  --foreground: #202522;
+  --background: #ffffff;
+  --foreground: #1c1c1a;
   --card: #ffffff;
-  --card-foreground: #202522;
+  --card-foreground: #1c1c1a;
   --popover: #ffffff;
-  --popover-foreground: #202522;
-  --primary: #243a32;
-  --primary-foreground: #f7f4ee;
-  --secondary: #eef0e9;
-  --secondary-foreground: #243a32;
-  --muted: #eeece4;
-  --muted-foreground: #6b7268;
-  --accent: #c8755a;
+  --popover-foreground: #1c1c1a;
+  --primary: #1f4536;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f2;
+  --secondary-foreground: #1f4536;
+  --muted: #f6f6f4;
+  --muted-foreground: #71716b;
+  --accent: #c25a38;
   --accent-foreground: #ffffff;
-  --destructive: #b3432f;
-  --border: #e4e0d4;
-  --input: #e4e0d4;
-  --ring: #879a82;
+  --destructive: #b23c26;
+  --border: #e8e7e3;
+  --input: #e0dfda;
+  --ring: #1f4536;
 
-  /* Chart series. Brand-sympathetic (deep teal-green lead, terracotta second)
-     but stepped up in chroma so they survive colour-vision deficiency — the
-     literal brand hues measure as near-gray and collapse under protanopia.
-     Validated on white: worst adjacent CVD ΔE 10.2, normal-vision 23.3. */
+  /* Chart series: brand-sympathetic but stepped up in chroma so they survive
+     colour-vision deficiency. Validated on white — worst adjacent CVD ΔE 10.2,
+     normal-vision 23.3. The literal brand hues measure as near-gray. */
   --chart-1: #00826d;
   --chart-2: #c85a15;
   --chart-3: #2172b8;
   --chart-4: #b8862a;
   --chart-5: #8d4f8a;
 
-  --radius: 0.5rem;
+  --radius: 0.625rem;
 
-  /* Admin sidebar — dark green, per spec. */
-  --sidebar: #1c2e28;
-  --sidebar-foreground: #f0efe6;
-  --sidebar-primary: #c8755a;
+  /* Admin sidebar stays dark per the brief, deepened to sit against white. */
+  --sidebar: #16221c;
+  --sidebar-foreground: #eef0ec;
+  --sidebar-primary: #c25a38;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #2c4038;
-  --sidebar-accent-foreground: #f7f4ee;
-  --sidebar-border: #33473f;
-  --sidebar-ring: #879a82;
+  --sidebar-accent: #24352c;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #2a3b32;
+  --sidebar-ring: #7f9184;
 }
 
 .dark {
-  --background: #1a201d;
-  --foreground: #f0efe6;
-  --card: #212822;
-  --card-foreground: #f0efe6;
-  --popover: #212822;
-  --popover-foreground: #f0efe6;
-  --primary: #cfe0ce;
-  --primary-foreground: #1c2e28;
-  --secondary: #2a332c;
-  --secondary-foreground: #f0efe6;
-  --muted: #2a332c;
-  --muted-foreground: #a3ab9d;
-  --accent: #c8755a;
+  --background: #131513;
+  --foreground: #f2f2ef;
+  --card: #1a1d1a;
+  --card-foreground: #f2f2ef;
+  --popover: #1a1d1a;
+  --popover-foreground: #f2f2ef;
+  --primary: #cfe0d5;
+  --primary-foreground: #16221c;
+  --secondary: #242724;
+  --secondary-foreground: #f2f2ef;
+  --muted: #242724;
+  --muted-foreground: #a1a19a;
+  --accent: #d46b4b;
   --accent-foreground: #ffffff;
-  --destructive: #e08066;
-  --border: #33473f;
-  --input: #33473f;
-  --ring: #879a82;
-  /* Same five hues re-stepped for the dark surface, validated as a set. */
+  --destructive: #e07a5f;
+  --border: #2b2f2c;
+  --input: #343833;
+  --ring: #7f9184;
   --chart-1: #1ea78d;
   --chart-2: #d4661f;
   --chart-3: #4b96dd;
   --chart-4: #b08019;
   --chart-5: #a76ba3;
-  --sidebar: #161f1b;
-  --sidebar-foreground: #f0efe6;
-  --sidebar-primary: #c8755a;
+  --sidebar: #101610;
+  --sidebar-foreground: #eef0ec;
+  --sidebar-primary: #c25a38;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #223028;
-  --sidebar-accent-foreground: #f7f4ee;
-  --sidebar-border: #2c3a33;
-  --sidebar-ring: #879a82;
+  --sidebar-accent: #1d271f;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #232d25;
+  --sidebar-ring: #7f9184;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring/40;
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "cv11", "ss01";
   }
   html {
     @apply font-sans;
+    -webkit-font-smoothing: antialiased;
   }
+  /* Tighter optical tracking — Manrope runs loose at display sizes. */
   h1,
   h2,
   h3,
+  h4,
   .font-heading {
     font-family: var(--font-heading);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.018em;
+    line-height: 1.1;
+  }
+  ::selection {
+    background: color-mix(in oklch, var(--primary), transparent 82%);
   }
 }
 
@@ -160,5 +165,12 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+  /* Small caps label used across both sides of the product. */
+  .label-eyebrow {
+    @apply text-[0.6875rem] font-semibold tracking-[0.14em] text-muted-foreground uppercase;
+  }
+  .card-surface {
+    @apply rounded-xl border border-border bg-card;
   }
 }

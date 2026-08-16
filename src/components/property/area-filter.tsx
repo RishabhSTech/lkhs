@@ -56,8 +56,8 @@ function FilterChip({
       className={cn(
         "shrink-0 rounded-full border px-3.5 py-1.5 text-[0.8125rem] font-medium transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
         active
-          ? "border-brand-green bg-brand-green text-brand-ivory"
-          : "border-border bg-white text-muted-foreground hover:border-brand-sage hover:text-brand-green",
+          ? "border-foreground bg-foreground text-background"
+          : "border-border bg-card text-muted-foreground hover:border-ring hover:text-foreground",
       )}
     >
       {children}

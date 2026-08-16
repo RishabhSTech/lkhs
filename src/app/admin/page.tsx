@@ -10,6 +10,7 @@ import { OccupancyChart } from "@/components/charts/occupancy-chart";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/site/empty-state";
+import { Panel } from "@/components/admin/panel";
 import { getCurrentAdminUser } from "@/lib/auth/current-user";
 import {
   getChannelHealth, getOccupancySeries, getPortfolioKpis, getRevenueSeries,
@@ -271,44 +272,6 @@ export default async function AdminOverviewPage() {
         </div>
       </Panel>
     </AdminPage>
-  );
-}
-
-function Panel({
-  title,
-  description,
-  children,
-  className,
-  action,
-}: {
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-  className?: string;
-  action?: { href: string; label: string };
-}) {
-  return (
-    <section
-      className={`rounded-xl border border-border bg-card p-5 ${className ?? ""}`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-          {description && (
-            <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
-          )}
-        </div>
-        {action && (
-          <Link
-            href={action.href}
-            className="shrink-0 text-xs font-medium text-brand-terracotta hover:underline"
-          >
-            {action.label}
-          </Link>
-        )}
-      </div>
-      <div className="mt-4">{children}</div>
-    </section>
   );
 }
 

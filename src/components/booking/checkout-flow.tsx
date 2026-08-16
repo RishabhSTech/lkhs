@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateRangePicker } from "@/components/property/date-range-picker";
 import { Label } from "@/components/ui/label";
 import { formatDateRange, formatINR } from "@/lib/format";
 import type { Quote } from "@/lib/pricing/engine";
@@ -32,12 +33,6 @@ const PAYMENT_METHODS = [
   { value: "CARD", label: "Card", hint: "Credit or debit", icon: CreditCard },
   { value: "NETBANKING", label: "Net banking", hint: "All major banks", icon: Building2 },
 ] as const;
-
-function todayISO(offset = 0) {
-  const d = new Date();
-  d.setDate(d.getDate() + offset);
-  return d.toISOString().slice(0, 10);
-}
 
 export function CheckoutFlow({
   property,
@@ -125,13 +120,13 @@ export function CheckoutFlow({
       <button
         type="button"
         onClick={() => (step === 0 ? router.back() : setStep((s) => s - 1))}
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-brand-green"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="size-4" />
         {step === 0 ? "Back to stay" : `Back to ${STEPS[step - 1]}`}
       </button>
 
-      <h1 className="mt-5 font-heading text-3xl leading-tight text-brand-green sm:text-4xl">
+      <h1 className="mt-5 font-heading text-3xl leading-tight text-foreground sm:text-4xl">
         Complete your booking
       </h1>
 
@@ -142,7 +137,7 @@ export function CheckoutFlow({
               className={cn(
                 "grid size-6 shrink-0 place-items-center rounded-full text-xs font-semibold transition-colors",
                 i < step
-                  ? "bg-brand-green text-brand-ivory"
+                  ? "bg-primary text-primary-foreground"
                   : i === step
                     ? "bg-brand-terracotta text-white"
                     : "bg-muted text-muted-foreground",
@@ -153,7 +148,7 @@ export function CheckoutFlow({
             <span
               className={cn(
                 "hidden text-sm font-medium sm:block",
-                i === step ? "text-brand-green" : "text-muted-foreground",
+                i === step ? "text-foreground" : "text-muted-foreground",
               )}
             >
               {label}
@@ -177,27 +172,17 @@ export function CheckoutFlow({
             >
               {step === 0 && (
                 <StepCard title="When are you staying?">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Check-in">
-                      <Input
-                        type="date"
-                        value={checkIn}
-                        min={todayISO()}
-                        onChange={(e) => {
-                          setCheckIn(e.target.value);
-                          if (checkOut && e.target.value >= checkOut) setCheckOut("");
-                        }}
-                      />
-                    </Field>
-                    <Field label="Check-out">
-                      <Input
-                        type="date"
-                        value={checkOut}
-                        min={checkIn || todayISO(1)}
-                        onChange={(e) => setCheckOut(e.target.value)}
-                      />
-                    </Field>
-                  </div>
+                  <Field label="Dates">
+                    <DateRangePicker
+                      propertySlug={property.slug}
+                      checkIn={checkIn}
+                      checkOut={checkOut}
+                      onChange={(next) => {
+                        setCheckIn(next.checkIn);
+                        setCheckOut(next.checkOut);
+                      }}
+                    />
+                  </Field>
                   <Field label="Guests" className="mt-4 max-w-[12rem]">
                     <Input
                       type="number"
@@ -291,8 +276,8 @@ export function CheckoutFlow({
                         className={cn(
                           "flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors",
                           paymentMethod === method.value
-                            ? "border-brand-green bg-brand-green/4"
-                            : "border-border bg-white hover:border-brand-sage",
+                            ? "border-primary bg-primary/5"
+                            : "border-border bg-card hover:border-ring",
                         )}
                       >
                         <input
@@ -305,7 +290,7 @@ export function CheckoutFlow({
                         />
                         <method.icon className="size-5 text-brand-sage" />
                         <span className="flex-1">
-                          <span className="block text-sm font-medium text-brand-ink">
+                          <span className="block text-sm font-medium text-foreground">
                             {method.label}
                           </span>
                           <span className="block text-xs text-muted-foreground">
@@ -316,12 +301,12 @@ export function CheckoutFlow({
                           className={cn(
                             "grid size-4 place-items-center rounded-full border-2 transition-colors",
                             paymentMethod === method.value
-                              ? "border-brand-green"
+                              ? "border-primary"
                               : "border-border",
                           )}
                         >
                           {paymentMethod === method.value && (
-                            <span className="size-2 rounded-full bg-brand-green" />
+                            <span className="size-2 rounded-full bg-primary" />
                           )}
                         </span>
                       </label>
@@ -354,7 +339,7 @@ export function CheckoutFlow({
         </div>
 
         <aside className="lg:sticky lg:top-24 lg:self-start">
-          <div className="overflow-hidden rounded-xl border border-border bg-white">
+          <div className="overflow-hidden rounded-xl border border-border bg-card">
             {property.heroImage && (
               <div className="relative aspect-[16/10]">
                 <Image
@@ -367,7 +352,7 @@ export function CheckoutFlow({
               </div>
             )}
             <div className="p-5">
-              <h2 className="font-heading text-xl leading-snug text-brand-green">
+              <h2 className="font-heading text-xl leading-snug text-foreground">
                 {property.name}
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -375,7 +360,7 @@ export function CheckoutFlow({
               </p>
 
               {checkIn && checkOut && checkOut > checkIn && (
-                <p className="mt-4 border-t border-border pt-4 text-sm text-brand-ink">
+                <p className="mt-4 border-t border-border pt-4 text-sm text-foreground">
                   {formatDateRange(checkIn, checkOut)}
                   <span className="block text-muted-foreground">
                     {guests} {guests === 1 ? "guest" : "guests"}
@@ -399,8 +384,8 @@ export function CheckoutFlow({
                   <SummaryRow label="Cleaning fee" value={formatINR(quote.cleaningFee)} />
                   <SummaryRow label="Taxes" value={formatINR(quote.taxes)} />
                   <div className="flex items-baseline justify-between border-t border-border pt-3">
-                    <dt className="font-medium text-brand-ink">Total</dt>
-                    <dd className="font-heading text-xl text-brand-green">
+                    <dt className="font-medium text-foreground">Total</dt>
+                    <dd className="font-heading text-xl text-foreground">
                       {formatINR(quote.total)}
                     </dd>
                   </div>
@@ -424,8 +409,8 @@ function StepCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-white p-6">
-      <h2 className="font-heading text-2xl text-brand-green">{title}</h2>
+    <div className="rounded-xl border border-border bg-card p-6">
+      <h2 className="font-heading text-2xl text-foreground">{title}</h2>
       {description && (
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           {description}
@@ -482,7 +467,7 @@ function SummaryRow({
   return (
     <div className="flex items-baseline justify-between">
       <dt className="text-muted-foreground">{label}</dt>
-      <dd className={accent ? "text-brand-terracotta" : "text-brand-ink"}>
+      <dd className={accent ? "text-brand-terracotta" : "text-foreground"}>
         {value}
       </dd>
     </div>

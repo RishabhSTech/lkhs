@@ -38,7 +38,7 @@ export function SiteHeader({ transparent = false }: { transparent?: boolean }) {
       className={cn(
         "sticky top-0 z-50 transition-colors duration-300",
         solid
-          ? "border-b border-border/70 bg-brand-ivory/85 backdrop-blur-md"
+          ? "border-b border-border bg-background/85 backdrop-blur-md"
           : "bg-transparent",
       )}
     >
@@ -58,8 +58,8 @@ export function SiteHeader({ transparent = false }: { transparent?: boolean }) {
                   "rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   solid
                     ? active
-                      ? "text-brand-green"
-                      : "text-muted-foreground hover:text-brand-green"
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
                     : active
                       ? "text-white"
                       : "text-white/75 hover:text-white",
@@ -105,13 +105,13 @@ export function SiteHeader({ transparent = false }: { transparent?: boolean }) {
       </div>
 
       {menuOpen && (
-        <div className="border-t border-border/70 bg-brand-ivory lg:hidden">
+        <div className="border-t border-border bg-background lg:hidden">
           <nav className="mx-auto flex max-w-6xl flex-col px-4 py-2 sm:px-6">
             {NAV.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="border-b border-border/50 py-3 text-sm font-medium text-brand-green last:border-0"
+                className="border-b border-border py-3 text-sm font-medium text-foreground last:border-0"
               >
                 {item.label}
               </Link>

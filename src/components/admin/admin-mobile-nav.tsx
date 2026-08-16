@@ -77,7 +77,7 @@ export function AdminMobileNav({ role }: { role: RoleName }) {
                     <Link
                       href={item.href}
                       onClick={() => setOpen(false)}
-                      className="flex items-center gap-2.5 rounded-lg border border-border bg-white px-3 py-3 text-sm font-medium text-brand-ink"
+                      className="flex items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-3 text-sm font-medium text-foreground"
                     >
                       <item.icon className="size-4 text-brand-sage" />
                       {item.label}

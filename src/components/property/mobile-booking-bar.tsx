@@ -22,10 +22,10 @@ export function MobileBookingBar(props: {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="fixed inset-x-0 bottom-16 z-40 border-t border-border bg-white/95 px-4 py-3 backdrop-blur-md lg:hidden">
+    <div className="fixed inset-x-0 bottom-16 z-40 border-t border-border bg-muted/40/95 px-4 py-3 backdrop-blur-md lg:hidden">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="font-heading text-xl leading-none text-brand-green">
+          <p className="font-heading text-xl leading-none text-foreground">
             {formatINR(props.basePrice)}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">per night</p>
@@ -35,7 +35,7 @@ export function MobileBookingBar(props: {
           <SheetTrigger render={<Button size="lg">Check availability</Button>} />
           <SheetContent side="bottom" className="max-h-[92svh] overflow-y-auto">
             <SheetHeader>
-              <SheetTitle className="font-heading text-2xl text-brand-green">
+              <SheetTitle className="font-heading text-2xl text-foreground">
                 Your stay
               </SheetTitle>
               <SheetDescription>

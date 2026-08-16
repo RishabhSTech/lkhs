@@ -3,17 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DateRangePicker } from "@/components/property/date-range-picker";
 import { formatINR } from "@/lib/format";
 import type { Quote } from "@/lib/pricing/engine";
 import { cn } from "@/lib/utils";
-
-function todayISO(offset = 0) {
-  const d = new Date();
-  d.setDate(d.getDate() + offset);
-  return d.toISOString().slice(0, 10);
-}
 
 export function BookingCard({
   propertyId,
@@ -84,7 +79,7 @@ export function BookingCard({
   return (
     <div
       className={cn(
-        "rounded-xl border border-border bg-white p-5 shadow-[0_4px_24px_-8px_rgba(36,58,50,0.12)]",
+        "rounded-xl border border-border bg-card p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_12px_32px_-16px_rgba(0,0,0,0.12)]",
         className,
       )}
     >
@@ -92,11 +87,11 @@ export function BookingCard({
         <AnimatePresence mode="wait" initial={false}>
           <motion.span
             key={quote?.averageNightlyRate ?? basePrice}
-            initial={{ opacity: 0, y: 6 }}
+            initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.2 }}
-            className="font-heading text-3xl text-brand-green"
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.18 }}
+            className="font-heading text-[1.75rem] leading-none text-foreground"
           >
             {formatINR(quote?.averageNightlyRate ?? basePrice)}
           </motion.span>
@@ -104,72 +99,38 @@ export function BookingCard({
         <span className="text-sm text-muted-foreground">/ night</span>
       </div>
 
-      <div className="mt-4 grid gap-px overflow-hidden rounded-lg bg-border">
-        <div className="grid grid-cols-2 gap-px bg-border">
-          <label className="flex flex-col gap-1 bg-white px-3 py-2.5">
-            <span className="text-[0.625rem] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
-              Check-in
-            </span>
-            <input
-              type="date"
-              value={checkIn}
-              min={todayISO()}
-              onChange={(e) => {
-                setCheckIn(e.target.value);
-                if (checkOut && e.target.value >= checkOut) setCheckOut("");
-              }}
-              className="bg-transparent text-sm font-medium text-brand-ink outline-none"
-            />
-          </label>
-          <label className="flex flex-col gap-1 bg-white px-3 py-2.5">
-            <span className="text-[0.625rem] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
-              Check-out
-            </span>
-            <input
-              type="date"
-              value={checkOut}
-              min={checkIn || todayISO(1)}
-              onChange={(e) => setCheckOut(e.target.value)}
-              className="bg-transparent text-sm font-medium text-brand-ink outline-none"
-            />
-          </label>
-        </div>
-        <label className="flex flex-col gap-1 bg-white px-3 py-2.5">
-          <span className="text-[0.625rem] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
-            Guests
-          </span>
+      <div className="mt-4 space-y-2">
+        <DateRangePicker
+          propertySlug={propertySlug}
+          checkIn={checkIn}
+          checkOut={checkOut}
+          onChange={(next) => {
+            setCheckIn(next.checkIn);
+            setCheckOut(next.checkOut);
+          }}
+        />
+
+        <label className="flex items-center gap-2.5 rounded-lg border border-input bg-background px-3 py-2.5">
+          <Users className="size-4 shrink-0 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">Guests</span>
           <select
             value={guests}
             onChange={(e) => setGuests(Number(e.target.value))}
-            className="cursor-pointer bg-transparent text-sm font-medium text-brand-ink outline-none"
+            className="ml-auto cursor-pointer bg-transparent text-sm font-medium text-foreground outline-none"
           >
             {Array.from({ length: maxGuests }, (_, i) => i + 1).map((n) => (
               <option key={n} value={n}>
-                {n} {n === 1 ? "guest" : "guests"}
+                {n}
               </option>
             ))}
           </select>
         </label>
       </div>
 
-      {error && (
-        <p
-          role="alert"
-          className="mt-3 flex items-start gap-2 rounded-lg bg-destructive/8 p-3 text-xs text-destructive"
-        >
-          <AlertCircle className="mt-px size-3.5 shrink-0" />
-          {error}
-        </p>
-      )}
+      {error && <Alert>{error}</Alert>}
 
       {available === false && !loading && (
-        <p
-          role="alert"
-          className="mt-3 flex items-start gap-2 rounded-lg bg-destructive/8 p-3 text-xs text-destructive"
-        >
-          <AlertCircle className="mt-px size-3.5 shrink-0" />
-          Those dates are already booked. Try shifting by a day or two.
-        </p>
+        <Alert>Those dates are already booked. Try shifting by a day or two.</Alert>
       )}
 
       <AnimatePresence initial={false}>
@@ -178,7 +139,7 @@ export function BookingCard({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="mt-4 space-y-2 overflow-hidden text-sm"
           >
             <Row
@@ -197,8 +158,8 @@ export function BookingCard({
             <Row label="Cleaning fee" value={formatINR(quote.cleaningFee)} />
             <Row label="Taxes (GST 12%)" value={formatINR(quote.taxes)} />
             <div className="flex items-baseline justify-between border-t border-border pt-3 text-base">
-              <dt className="font-medium text-brand-ink">Total</dt>
-              <dd className="font-heading text-xl text-brand-green">
+              <dt className="font-medium text-foreground">Total</dt>
+              <dd className="font-heading text-lg text-foreground">
                 {formatINR(quote.total)}
               </dd>
             </div>
@@ -208,7 +169,7 @@ export function BookingCard({
 
       <Button
         size="lg"
-        className="mt-5 w-full"
+        className="mt-4 w-full"
         disabled={!canReserve}
         onClick={reserve}
       >
@@ -216,10 +177,22 @@ export function BookingCard({
         {!checkIn || !checkOut ? "Select your dates" : "Reserve this stay"}
       </Button>
 
-      <p className="mt-3 text-center text-xs text-muted-foreground">
+      <p className="mt-2.5 text-center text-xs text-muted-foreground">
         You won't be charged yet. No account needed to book.
       </p>
     </div>
+  );
+}
+
+function Alert({ children }: { children: React.ReactNode }) {
+  return (
+    <p
+      role="alert"
+      className="mt-3 flex items-start gap-2 rounded-lg bg-destructive/8 p-2.5 text-xs text-destructive"
+    >
+      <AlertCircle className="mt-px size-3.5 shrink-0" />
+      {children}
+    </p>
   );
 }
 
@@ -235,7 +208,7 @@ function Row({
   return (
     <div className="flex items-baseline justify-between">
       <dt className="text-muted-foreground">{label}</dt>
-      <dd className={accent ? "text-brand-terracotta" : "text-brand-ink"}>
+      <dd className={accent ? "text-brand-terracotta" : "text-foreground"}>
         {value}
       </dd>
     </div>

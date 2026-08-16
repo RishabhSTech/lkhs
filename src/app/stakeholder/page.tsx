@@ -15,7 +15,7 @@ export default async function StakeholderDashboard() {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:py-12">
-      <h1 className="font-heading text-3xl leading-tight text-brand-green sm:text-4xl">
+      <h1 className="font-heading text-3xl leading-tight text-foreground sm:text-4xl">
         Your portfolio
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">
@@ -62,11 +62,11 @@ export default async function StakeholderDashboard() {
           </div>
 
           <section className="mt-8">
-            <h2 className="font-heading text-2xl text-brand-green">
+            <h2 className="font-heading text-2xl text-foreground">
               Property performance
             </h2>
 
-            <div className="mt-4 hidden overflow-x-auto rounded-xl border border-border bg-white lg:block">
+            <div className="mt-4 hidden overflow-x-auto rounded-xl border border-border bg-card lg:block">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border text-left">
@@ -88,7 +88,7 @@ export default async function StakeholderDashboard() {
                       <td className="px-4 py-3">
                         <Link
                           href={`/stakeholder/${p.id}`}
-                          className="group flex items-center gap-1.5 font-medium text-brand-ink hover:text-brand-terracotta"
+                          className="group flex items-center gap-1.5 font-medium text-foreground hover:text-brand-terracotta"
                         >
                           {p.name}
                           <ArrowUpRight className="size-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
@@ -107,10 +107,10 @@ export default async function StakeholderDashboard() {
                           p.pl.operatingExpenses + p.pl.otaFees + p.pl.paymentFees,
                         )}
                       </td>
-                      <td className="px-4 py-3 font-medium tabular-nums text-brand-ink">
+                      <td className="px-4 py-3 font-medium tabular-nums text-foreground">
                         {formatINR(p.pl.netOperatingIncome)}
                       </td>
-                      <td className="px-4 py-3 tabular-nums text-brand-ink">
+                      <td className="px-4 py-3 tabular-nums text-foreground">
                         {formatPercent(p.capital.roiPercent)}
                       </td>
                       <td className="px-4 py-3 tabular-nums text-muted-foreground">
@@ -127,7 +127,7 @@ export default async function StakeholderDashboard() {
                 <li key={p.id}>
                   <Link
                     href={`/stakeholder/${p.id}`}
-                    className="block overflow-hidden rounded-xl border border-border bg-white"
+                    className="block overflow-hidden rounded-xl border border-border bg-card"
                   >
                     {p.image && (
                       <div className="relative aspect-[16/9]">
@@ -141,7 +141,7 @@ export default async function StakeholderDashboard() {
                       </div>
                     )}
                     <div className="p-4">
-                      <p className="font-heading text-lg text-brand-green">
+                      <p className="font-heading text-lg text-foreground">
                         {p.name}
                       </p>
                       <p className="text-xs text-muted-foreground">
@@ -174,7 +174,7 @@ function Stat({ label, value }: { label: string; value: string }) {
       <dt className="text-[0.625rem] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
         {label}
       </dt>
-      <dd className="mt-0.5 font-medium tabular-nums text-brand-ink">{value}</dd>
+      <dd className="mt-0.5 font-medium tabular-nums text-foreground">{value}</dd>
     </div>
   );
 }

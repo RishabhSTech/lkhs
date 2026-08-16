@@ -29,7 +29,7 @@ export default async function StakeholderPropertyPage({
     <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:py-12">
       <Link
         href="/stakeholder"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-brand-green"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="size-4" />
         Back to portfolio
@@ -49,7 +49,7 @@ export default async function StakeholderPropertyPage({
             </div>
           )}
           <div>
-            <h1 className="font-heading text-3xl leading-tight text-brand-green">
+            <h1 className="font-heading text-3xl leading-tight text-foreground">
               {property.name}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -87,8 +87,8 @@ export default async function StakeholderPropertyPage({
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
-        <section className="rounded-xl border border-border bg-white p-5">
-          <h2 className="text-sm font-semibold text-brand-ink">
+        <section className="rounded-xl border border-border bg-card p-5">
+          <h2 className="text-sm font-semibold text-foreground">
             Monthly performance
           </h2>
           <p className="mt-0.5 text-xs text-muted-foreground">Last six months</p>
@@ -107,8 +107,8 @@ export default async function StakeholderPropertyPage({
           channels={channels}
         />
 
-        <section className="rounded-xl border border-border bg-white p-5">
-          <h2 className="text-sm font-semibold text-brand-ink">
+        <section className="rounded-xl border border-border bg-card p-5">
+          <h2 className="text-sm font-semibold text-foreground">
             Where bookings come from
           </h2>
           <p className="mt-0.5 text-xs text-muted-foreground">

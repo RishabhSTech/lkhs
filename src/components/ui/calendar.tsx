@@ -127,7 +127,9 @@ function Calendar({
           defaultClassNames.outside
         ),
         disabled: cn(
-          "text-muted-foreground opacity-50",
+          // Struck through as well as dimmed: "booked" must not rely on
+          // opacity alone, which reads as merely low-contrast.
+          "text-muted-foreground opacity-45 line-through",
           defaultClassNames.disabled
         ),
         hidden: cn("invisible", defaultClassNames.hidden),

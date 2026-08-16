@@ -36,7 +36,7 @@ export function AdminTopBar({
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-brand-ivory/85 px-4 backdrop-blur-md sm:px-6">
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-md sm:px-6">
         <button
           type="button"
           onClick={() => setCommandOpen(true)}
