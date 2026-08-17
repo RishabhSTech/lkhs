@@ -1,16 +1,22 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  ArrowLeft, BedDouble, Bath, CalendarX2, MapPin, ShieldCheck, Star, Users,
-} from "lucide-react";
+import { BedDouble, Bath, MapPin, Star, Users } from "lucide-react";
 import { SiteHeader } from "@/components/site/site-header";
+import { Breadcrumbs } from "@/components/site/breadcrumbs";
+import { JsonLd } from "@/components/seo/json-ld";
 import { Gallery } from "@/components/property/gallery";
 import { BookingCard } from "@/components/property/booking-card";
 import { MobileBookingBar } from "@/components/property/mobile-booking-bar";
-import { AmenityList } from "@/components/property/amenity-list";
+import { PlaceOffers } from "@/components/property/place-offers";
+import { ListingHighlights } from "@/components/property/listing-highlights";
+import { ThingsToKnow } from "@/components/property/things-to-know";
+import { ReviewsSection } from "@/components/property/reviews/reviews-section";
+import { Laurel } from "@/components/property/reviews/laurel";
 import { getPropertyBySlug, getPropertySlugs } from "@/lib/queries/properties";
-import { formatDateLong } from "@/lib/format";
+import { getReviewableStay } from "@/lib/queries/reviews";
+import { breadcrumbJsonLd, lodgingJsonLd } from "@/lib/seo/jsonld";
+import { COLLECTIONS, kindForType } from "@/lib/seo/collections";
+import { slugify } from "@/lib/seo/slug";
 
 export const dynamic = "force-dynamic";
 
@@ -24,17 +30,45 @@ export async function generateMetadata({
 }: PageProps<"/stays/[property]">): Promise<Metadata> {
   const { property: slug } = await params;
   const property = await getPropertyBySlug(slug).catch(() => null);
-  if (!property) return { title: "Stay not found" };
+  if (!property) {
+    return { title: "Stay not found", robots: { index: false, follow: false } };
+  }
+
+  // A listing's own name only wins the branded query. The type, size and city
+  // are what let it also compete for "3 bedroom villa in Goa" — so they go in
+  // the title, front-loaded, rather than being left to the description alone.
+  const kind = kindForType(property.propertyType);
+  const noun = kind ? COLLECTIONS[kind].singular.toLowerCase() : "stay";
+  // Most of our names already contain their neighbourhood ("The Vijay Nagar
+  // Residence"); repeating it reads as keyword stuffing and pushes the city
+  // past where Google truncates.
+  const place = property.name.toLowerCase().includes(property.locationArea.toLowerCase())
+    ? property.city
+    : `${property.locationArea}, ${property.city}`;
+
+  const title = `${property.name} — ${property.bedrooms}-bedroom ${noun} in ${place}`;
+
+  const description =
+    property.tagline
+      ? `${property.tagline}. Sleeps ${property.maxGuests} in ${property.locationArea}, ${property.city}. Book direct — no channel mark-up, no booking fee.`
+      : property.description.slice(0, 155);
 
   return {
-    title: property.name,
-    description: property.tagline ?? property.description.slice(0, 155),
+    title,
+    description,
     alternates: { canonical: `/stays/${property.slug}` },
     openGraph: {
-      title: property.name,
-      description: property.tagline ?? undefined,
+      title,
+      description,
+      url: `/stays/${property.slug}`,
       images: property.images[0]?.url ? [property.images[0].url] : undefined,
       type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: property.images[0]?.url ? [property.images[0].url] : undefined,
     },
   };
 }
@@ -46,54 +80,53 @@ export default async function PropertyPage({
   const property = await getPropertyBySlug(slug);
   if (!property) notFound();
 
+  const reviewableStay = await getReviewableStay(property.id);
+
   const facts = [
     { icon: Users, label: `${property.maxGuests} guests` },
     { icon: BedDouble, label: `${property.bedrooms} bedrooms · ${property.beds} beds` },
     { icon: Bath, label: `${property.bathrooms} bathrooms` },
   ];
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "LodgingBusiness",
-    name: property.name,
-    description: property.description,
-    image: property.images.map((i) => i.url),
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: property.addressLine,
-      addressLocality: property.city,
-      addressRegion: property.state,
-      addressCountry: "IN",
-    },
-    priceRange: `₹${property.basePriceNumber}`,
-    ...(property.rating
-      ? {
-          aggregateRating: {
-            "@type": "AggregateRating",
-            ratingValue: property.rating.toFixed(1),
-            reviewCount: property.reviewCount,
-          },
-        }
-      : {}),
-  };
+  // Routed through the city hub and its type page rather than through
+  // `/stays`. Listings are where inbound links and shares land, so their
+  // breadcrumb is the main path by which authority reaches the collection
+  // pages — pointing it at the un-indexed search surface wasted that entirely.
+  const citySlug = slugify(property.city);
+  const kind = kindForType(property.propertyType);
+
+  const trail = [
+    { name: "Home", href: "/" },
+    { name: "Destinations", href: "/destinations" },
+    { name: property.city, href: `/stays-in-${citySlug}` },
+    ...(kind
+      ? [{ name: COLLECTIONS[kind].plural, href: `/${kind}-in-${citySlug}` }]
+      : []),
+    { name: property.name, href: `/stays/${property.slug}` },
+  ];
 
   return (
     <>
       <SiteHeader />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      <JsonLd
+        data={[
+          breadcrumbJsonLd(trail),
+          lodgingJsonLd({
+            property: {
+              ...property,
+              amenityNames: property.offeredAmenities
+                .filter((amenity) => !amenity.isUnavailable)
+                .map((amenity) => amenity.name),
+            },
+            // Only the reviews the page actually renders get marked up.
+            reviews: property.publicReviews.slice(0, 10),
+          }),
+        ]}
       />
 
       <main className="flex-1 pb-24 lg:pb-0">
         <div className="mx-auto w-full max-w-6xl px-4 pt-5 sm:px-6">
-          <Link
-            href="/stays"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <ArrowLeft className="size-4" />
-            Back to stays
-          </Link>
+          <Breadcrumbs trail={trail} />
         </div>
 
         <div className="mx-auto mt-4 w-full max-w-6xl px-4 sm:px-6">
@@ -112,13 +145,30 @@ export default async function PropertyPage({
                   {property.locationArea}, {property.city}
                 </span>
                 {property.rating !== null && (
-                  <span className="flex items-center gap-1.5 text-foreground">
+                  <a
+                    href="#reviews"
+                    className="flex items-center gap-1.5 text-foreground underline-offset-4 hover:underline"
+                  >
                     <Star className="size-4 fill-brand-terracotta text-brand-terracotta" />
-                    <span className="font-medium">{property.rating.toFixed(1)}</span>
+                    <span className="font-medium">
+                      {property.rating.toFixed(2)}
+                    </span>
                     <span className="text-muted-foreground">
                       · {property.reviewCount} reviews
                     </span>
-                  </span>
+                  </a>
+                )}
+                {property.showGuestFavourite && (
+                  <a
+                    href="#reviews"
+                    className="inline-flex h-7 items-center gap-1 rounded-full border border-border px-2.5 font-medium text-foreground"
+                  >
+                    <span className="flex h-4 items-center text-brand-terracotta">
+                      <Laurel />
+                      <Laurel flipped />
+                    </span>
+                    Guest favourite
+                  </a>
                 )}
               </div>
 
@@ -135,6 +185,12 @@ export default async function PropertyPage({
               </div>
             </header>
 
+            {property.highlights.length > 0 && (
+              <section className="mt-7">
+                <ListingHighlights highlights={property.highlights} />
+              </section>
+            )}
+
             <Prose title="Overview">
               {property.tagline && (
                 <p className="font-heading text-xl leading-snug text-foreground">
@@ -144,8 +200,8 @@ export default async function PropertyPage({
               <p className="mt-3 whitespace-pre-line">{property.description}</p>
             </Prose>
 
-            <Prose title="Amenities">
-              <AmenityList amenities={property.amenities.map((a) => a.amenity)} />
+            <Prose title="What this place offers">
+              <PlaceOffers amenities={property.offeredAmenities} />
             </Prose>
 
             <Prose title="Sleeping arrangements">
@@ -173,64 +229,6 @@ export default async function PropertyPage({
               </p>
             </Prose>
 
-            {property.houseRules && (
-              <Prose title="House rules">
-                <p className="whitespace-pre-line">{property.houseRules}</p>
-              </Prose>
-            )}
-
-            {property.cancellationPolicy && (
-              <Prose title="Cancellation policy">
-                <p className="flex gap-3 rounded-lg border border-border bg-card p-4 text-sm">
-                  <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand-sage" />
-                  <span>{property.cancellationPolicy}</span>
-                </p>
-              </Prose>
-            )}
-
-            <Prose title={`Reviews${property.reviewCount ? ` (${property.reviewCount})` : ""}`}>
-              {property.reviews.length === 0 ? (
-                <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CalendarX2 className="size-4" />
-                  No reviews yet — this home is new to the collection.
-                </p>
-              ) : (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {property.reviews.slice(0, 6).map((review) => (
-                    <figure
-                      key={review.id}
-                      className="rounded-lg border border-border bg-card p-5"
-                    >
-                      <div
-                        className="flex gap-0.5"
-                        aria-label={`${review.rating} out of 5`}
-                      >
-                        {Array.from({ length: review.rating }).map((_, s) => (
-                          <Star
-                            key={s}
-                            className="size-3.5 fill-brand-terracotta text-brand-terracotta"
-                          />
-                        ))}
-                      </div>
-                      {review.title && (
-                        <p className="mt-3 font-heading text-lg text-foreground">
-                          {review.title}
-                        </p>
-                      )}
-                      <blockquote className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                        {review.body}
-                      </blockquote>
-                      <figcaption className="mt-4 text-xs text-muted-foreground">
-                        <span className="font-medium text-foreground">
-                          {review.guest.name}
-                        </span>{" "}
-                        · {formatDateLong(review.createdAt)}
-                      </figcaption>
-                    </figure>
-                  ))}
-                </div>
-              )}
-            </Prose>
           </div>
 
           <aside className="hidden lg:block">
@@ -243,6 +241,43 @@ export default async function PropertyPage({
               />
             </div>
           </aside>
+        </div>
+
+        {/* Reviews and Things to know run the full width of the page rather
+            than the narrow content column: the rating breakdown is a
+            seven-column strip and the closing block is three columns, and
+            neither survives being squeezed beside the booking card. */}
+        <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
+          <section
+            id="reviews"
+            className="mt-12 scroll-mt-24 border-t border-border pt-10"
+          >
+            <h2 className="sr-only">
+              Reviews{property.reviewCount > 0 && ` (${property.reviewCount})`}
+            </h2>
+            <ReviewsSection
+              summary={property.reviewSummary}
+              reviews={property.publicReviews}
+              topics={property.reviewTopics}
+              isGuestFavourite={property.showGuestFavourite}
+              reviewableStay={reviewableStay}
+            />
+          </section>
+
+          <section className="mt-12 border-t border-border pt-10 pb-16">
+            <h2 className="font-heading text-2xl text-foreground">
+              Things to know
+            </h2>
+            <div className="mt-6">
+              <ThingsToKnow
+                items={property.thingsToKnow}
+                fallbacks={{
+                  HOUSE_RULES: property.houseRules,
+                  CANCELLATION: property.cancellationPolicy,
+                }}
+              />
+            </div>
+          </section>
         </div>
       </main>
 

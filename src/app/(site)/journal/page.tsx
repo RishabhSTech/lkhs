@@ -8,7 +8,7 @@ import { JOURNAL_POSTS } from "../../../../prisma/seed-data";
 export const metadata: Metadata = {
   title: "Journal",
   description:
-    "Notes from the Lime Kraft team on how we choose homes, what to do in Indore, and how we price.",
+    "Notes from the Lime Kraft team on how we choose homes, where to stay in the cities we run, and how we price.",
   alternates: { canonical: "/journal" },
 };
 

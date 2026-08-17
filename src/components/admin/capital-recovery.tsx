@@ -15,7 +15,7 @@ export function CapitalRecovery({ capital }: { capital: CapitalPosition }) {
         Earnings returned against capital deployed
       </p>
 
-      <p className="mt-5 font-heading text-4xl leading-none text-brand-green">
+      <p className="mt-5 text-[2.25rem] font-semibold leading-none tracking-[-0.03em] tabular-nums text-foreground">
         {formatPercent(capital.capitalRecoveredPercent)}
       </p>
       <p className="mt-1.5 text-xs text-muted-foreground">recovered so far</p>

@@ -55,8 +55,8 @@ export function PLStatement({
           <dd
             className={
               pl.netOperatingIncome >= 0
-                ? "font-heading text-xl tabular-nums text-brand-green"
-                : "font-heading text-xl tabular-nums text-destructive"
+                ? "text-lg font-semibold tabular-nums text-foreground"
+                : "text-lg font-semibold tabular-nums text-destructive"
             }
           >
             {formatINR(pl.netOperatingIncome)}

@@ -1,6 +1,6 @@
 import {
   BarChart3, Building2, CalendarDays, CreditCard, LayoutDashboard, MessageSquare,
-  Plug, Settings, Sparkles, Tags, Users, Wrench,
+  Plug, Settings, Sparkles, Star, Tags, Users, Wrench,
 } from "lucide-react";
 import type { RoleName } from "@prisma/client";
 
@@ -17,6 +17,8 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/reservations", label: "Reservations", icon: Tags },
   { href: "/admin/properties", label: "Properties", icon: Building2 },
   { href: "/admin/guests", label: "Guests", icon: Users },
+  { href: "/admin/reviews", label: "Reviews", icon: Star },
+  { href: "/admin/reviews", label: "Reviews", icon: Star },
   { href: "/admin/pricing", label: "Pricing", icon: Sparkles },
   { href: "/admin/channels", label: "Channels", icon: Plug },
   {

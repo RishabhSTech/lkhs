@@ -7,9 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/site/empty-state";
+import { WriteReview } from "@/components/property/reviews/write-review";
 import { getSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { todayUTC } from "@/lib/dates";
+import { differenceInNights, todayUTC } from "@/lib/dates";
 import { STATUS_LABELS, statusBadgeClass } from "@/lib/admin/sources";
 import { formatDateRange, formatINR } from "@/lib/format";
 
@@ -30,6 +31,7 @@ export default async function TripsPage() {
           property: {
             include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
           },
+          review: { select: { id: true } },
         },
         orderBy: { checkIn: "desc" },
       })
@@ -138,6 +140,24 @@ export default async function TripsPage() {
                               >
                                 View booking
                               </Button>
+                              {r.checkOut < today &&
+                                r.status !== "CANCELLED" &&
+                                !r.review && (
+                                  <WriteReview
+                                    stay={{
+                                      reservationId: r.id,
+                                      code: r.code,
+                                      propertyName: r.property.name,
+                                      checkOut: r.checkOut.toISOString(),
+                                      nights: differenceInNights(
+                                        r.checkIn,
+                                        r.checkOut,
+                                      ),
+                                    }}
+                                    variant="outline"
+                                    className="h-8 px-3 text-sm"
+                                  />
+                                )}
                               <Button
                                 render={<Link href="/contact" />}
                                 variant="outline"

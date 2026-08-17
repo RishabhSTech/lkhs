@@ -98,7 +98,7 @@ export function PropertyCard({
 
         <div className="pt-3">
           <div className="flex items-start justify-between gap-3">
-            <h3 className="font-heading text-[1.0625rem] leading-snug text-foreground">
+            <h3 className="text-[0.9375rem] font-semibold leading-snug tracking-[-0.011em] text-foreground">
               {property.name}
             </h3>
             {property.rating !== null && (
@@ -135,7 +135,7 @@ export function PropertyCard({
           )}
 
           <p className="mt-2.5 text-sm text-foreground">
-            <span className="font-heading text-lg text-foreground">
+            <span className="text-base font-semibold tabular-nums text-foreground">
               {formatINR(property.basePrice)}
             </span>
             <span className="text-muted-foreground"> / night</span>

@@ -1,79 +1,158 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { SiteHeader } from "@/components/site/site-header";
-import { Reveal } from "@/components/site/reveal";
+import { Breadcrumbs } from "@/components/site/breadcrumbs";
+import { Reveal, RevealGroup } from "@/components/site/reveal";
+import { JsonLd } from "@/components/seo/json-ld";
+import { getCities } from "@/lib/queries/locations";
+import { COLLECTIONS, COLLECTION_KINDS } from "@/lib/seo/collections";
+import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { db } from "@/lib/db";
-import { DESTINATIONS } from "../../../../prisma/seed-data";
+import { formatINR } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Destinations",
-  description:
-    "Where Lime Kraft homes are across Indore — Vijay Nagar, Palasia, Central Indore, Rau and Bicholi Mardana.",
-  alternates: { canonical: "/destinations" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const cities = await getCities().catch(() => []);
+  const names = cities.map((c) => c.name);
+  const list =
+    names.length > 1
+      ? `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`
+      : (names[0] ?? "India");
 
+  return {
+    title: "Destinations",
+    description: `Every city where Lime Kraft runs homes — ${list}. Villas, serviced apartments and whole houses, booked direct.`,
+    alternates: { canonical: "/destinations" },
+  };
+}
+
+/**
+ * The city index. This is the hub of the location hierarchy: it links down to
+ * every city hub, and each hub links on to its type pages, so the whole SEO
+ * matrix is reachable in two clicks from here.
+ */
 export default async function DestinationsPage() {
-  const counts = await db.property.groupBy({
-    by: ["locationArea"],
-    where: { status: "ACTIVE" },
-    _count: true,
-  });
-  const countByArea = new Map(counts.map((c) => [c.locationArea, c._count]));
+  const [cities, typeCounts] = await Promise.all([
+    getCities(),
+    db.property.groupBy({
+      by: ["city", "propertyType"],
+      where: { status: "ACTIVE" },
+      _count: { _all: true },
+    }),
+  ]);
+
+  const trail = [
+    { name: "Home", href: "/" },
+    { name: "Destinations", href: "/destinations" },
+  ];
 
   return (
     <>
+      <JsonLd data={breadcrumbJsonLd(trail)} />
       <SiteHeader />
+
       <main className="flex-1">
         <div className="border-b border-border bg-muted/40">
-          <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 lg:py-16">
-            <h1 className="font-heading text-4xl leading-tight text-foreground sm:text-5xl">
-              Where we are
+          <div className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-6 lg:py-14">
+            <Breadcrumbs trail={trail} />
+            <h1 className="mt-6 font-display text-[2.25rem] text-foreground sm:text-[3rem]">
+              Where you&apos;ll find us
             </h1>
-            <p className="mt-3 max-w-lg text-[0.9375rem] leading-relaxed text-muted-foreground">
-              Five neighbourhoods across Indore, each with a different pace.
+            <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground">
+              {cities.length === 1
+                ? `Every Lime Kraft home is in ${cities[0].name} today — and the list grows as we open new cities.`
+                : `Homes across ${cities.length} cities, each one set up and run by our own team.`}
             </p>
           </div>
         </div>
 
-        <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 lg:py-16">
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {DESTINATIONS.map((destination, i) => {
-              const count = countByArea.get(destination.name) ?? 0;
+        <div className="mx-auto w-full max-w-6xl px-5 py-12 sm:px-6 lg:py-16">
+          <RevealGroup className="grid gap-8 sm:grid-cols-2">
+            {cities.map((city) => {
+              const kinds = COLLECTION_KINDS.filter((kind) => {
+                const spec = COLLECTIONS[kind];
+                if (spec.propertyType === null) return false;
+                return typeCounts.some(
+                  (t) =>
+                    t.city === city.name &&
+                    t.propertyType === spec.propertyType &&
+                    t._count._all > 0,
+                );
+              });
+
               return (
-                <Reveal key={destination.slug} delay={i * 0.05}>
+                <div key={city.slug}>
                   <Link
-                    href={`/destinations/${destination.slug}`}
-                    className="group block overflow-hidden rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                    href={`/stays-in-${city.slug}`}
+                    className="group block overflow-hidden rounded-2xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                   >
-                    <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-muted">
-                      <Image
-                        src={destination.image}
-                        alt=""
-                        fill
-                        sizes="(max-width: 640px) 100vw, 33vw"
-                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-brand-ink/80 via-brand-ink/15 to-transparent" />
-                      <div className="absolute inset-x-5 bottom-5">
-                        <h2 className="font-heading text-2xl text-white">
-                          {destination.name}
+                    <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-muted">
+                      {city.image && (
+                        <Image
+                          src={city.image}
+                          alt=""
+                          fill
+                          sizes="(max-width: 640px) 100vw, 50vw"
+                          className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-brand-ink/85 via-brand-ink/20 to-transparent" />
+                      <div className="absolute inset-x-6 bottom-6">
+                        <h2 className="font-display text-3xl text-white">
+                          {city.name}
                         </h2>
-                        <p className="mt-1 text-sm text-white/80">
-                          {count} {count === 1 ? "home" : "homes"}
+                        <p className="mt-1.5 text-sm text-white/80">
+                          {city.propertyCount}{" "}
+                          {city.propertyCount === 1 ? "home" : "homes"} ·{" "}
+                          {city.state}
+                          {city.minPrice !== null &&
+                            ` · from ${formatINR(city.minPrice)} a night`}
                         </p>
                       </div>
                     </div>
-                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                      {destination.blurb}
-                    </p>
                   </Link>
-                </Reveal>
+
+                  {/* Straight into the type pages for this city. */}
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {kinds.map((kind) => (
+                      <Link
+                        key={kind}
+                        href={`/${kind}-in-${city.slug}`}
+                        className="rounded-full border border-border bg-card px-3.5 py-1.5 text-[0.8125rem] text-muted-foreground transition-colors hover:border-brand-terracotta hover:text-brand-terracotta"
+                      >
+                        {COLLECTIONS[kind].plural}
+                      </Link>
+                    ))}
+                  </div>
+
+                  {city.areas.length > 0 && (
+                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                      {city.areas.slice(0, 5).join(" · ")}
+                    </p>
+                  )}
+
+                  <Link
+                    href={`/stays-in-${city.slug}`}
+                    className="group mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-foreground transition-colors hover:text-brand-terracotta"
+                  >
+                    All stays in {city.name}
+                    <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+                  </Link>
+                </div>
               );
             })}
-          </div>
+          </RevealGroup>
+
+          {cities.length === 0 && (
+            <Reveal>
+              <p className="text-sm text-muted-foreground">
+                No active homes right now — check back shortly.
+              </p>
+            </Reveal>
+          )}
         </div>
       </main>
     </>

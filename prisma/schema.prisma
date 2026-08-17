@@ -115,22 +115,82 @@ model Wishlist {
   @@unique([guestId, propertyId])
 }
 
+enum ReviewStatus {
+  PENDING
+  PUBLISHED
+  HIDDEN
+}
+
+enum ReviewSource {
+  DIRECT
+  AIRBNB
+  BOOKING_COM
+  AGODA
+  GOOGLE
+  OTHER
+}
+
+enum TripType {
+  SOLO
+  COUPLE
+  FAMILY
+  FRIENDS
+  BUSINESS
+  GROUP
+}
+
 model Review {
   id            String   @id @default(cuid())
   propertyId    String
-  guestId       String
+  // Null for reviews an admin imports from an OTA, where there is no guest
+  // record on our side.
+  guestId       String?
   reservationId String?  @unique
+
   rating        Int
+  // Category sub-scores. Optional so an imported review with only an overall
+  // score is still valid; averages are computed over whoever answered.
+  cleanliness   Int?
+  accuracy      Int?
+  checkIn       Int?
+  communication Int?
+  location      Int?
+  value         Int?
+
   title         String?
   body          String
+  // Codes from src/lib/property/review-topics.ts, driving the emoji chips
+  // above the reviews. Left empty, the topics are inferred from the body.
+  topics        String[] @default([])
+  // Trust signals shown next to the reviewer. `nightsStayed` is derived from
+  // the reservation when one is linked, and only typed in for imports.
+  nightsStayed  Int?
+  stayedOn      DateTime? @db.Date
+  tripType      TripType?
+
   response      String?
+  respondedAt   DateTime?
+
+  status        ReviewStatus @default(PUBLISHED)
+  source        ReviewSource @default(DIRECT)
+  isFeatured    Boolean      @default(false)
+
+  // Display identity for imported / admin-entered reviews. When `guestId` is
+  // set the guest record wins and these stay null.
+  authorName      String?
+  authorLocation  String?
+  authorAvatarUrl String?
+  authorSince     Int?
+
   createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   property    Property     @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  guest       Guest        @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  guest       Guest?       @relation(fields: [guestId], references: [id], onDelete: SetNull)
   reservation Reservation? @relation(fields: [reservationId], references: [id])
 
-  @@index([propertyId])
+  @@index([propertyId, status])
+  @@index([status])
 }
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -172,11 +232,21 @@ model Property {
   cleaningFee  Decimal        @default(0) @db.Decimal(12, 2)
   houseRules   String?
   cancellationPolicy String?
+
+  // Listing presentation. `isGuestFavourite` drives the laurel badge above the
+  // reviews; the check-in window feeds the templated "Things to know" items.
+  isGuestFavourite Boolean @default(false)
+  checkInFrom      String? @default("2:00 pm")
+  checkInTo        String? @default("9:00 pm")
+  checkOutBy       String? @default("11:00 am")
+
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 
   images              PropertyImage[]
   amenities           PropertyAmenity[]
+  highlights          PropertyHighlight[]
+  thingsToKnow        PropertyThingToKnow[]
   units               Unit[]
   pricingRules        PricingRule[]
   dailyRates          DailyRate[]
@@ -208,31 +278,86 @@ model PropertyImage {
   @@index([propertyId])
 }
 
+// Mirrors the sections Airbnb groups "What this place offers" into. The
+// catalogue itself lives in src/lib/property/amenities.ts and is seeded from
+// there, so admins pick from a fixed, icon-mapped list.
 enum AmenityCategory {
-  BASIC
-  SAFETY
-  KITCHEN
-  OUTDOOR
+  SCENIC_VIEWS
+  BATHROOM
+  BEDROOM_LAUNDRY
   ENTERTAINMENT
+  FAMILY
+  HEATING_COOLING
+  HOME_SAFETY
+  INTERNET_OFFICE
+  KITCHEN_DINING
+  LOCATION_FEATURES
+  OUTDOOR
+  PARKING_FACILITIES
+  SERVICES
 }
 
 model Amenity {
-  id       String          @id @default(cuid())
-  name     String          @unique
-  icon     String
-  category AmenityCategory @default(BASIC)
+  id        String          @id @default(cuid())
+  name      String          @unique
+  icon      String
+  category  AmenityCategory @default(SERVICES)
+  sortOrder Int             @default(0)
 
   properties PropertyAmenity[]
+
+  @@index([category])
 }
 
 model PropertyAmenity {
   propertyId String
   amenityId  String
+  // Airbnb's struck-through "Not included" block at the foot of the amenity
+  // list: the property is explicitly declaring the amenity absent.
+  isUnavailable Boolean @default(false)
+  note          String?
 
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   amenity  Amenity  @relation(fields: [amenityId], references: [id], onDelete: Cascade)
 
   @@id([propertyId, amenityId])
+}
+
+// Icon + headline + one-liner block under the listing header. `code` keys into
+// HIGHLIGHTS in src/lib/property/highlights.ts; `subtitle` overrides that
+// entry's default copy when an admin writes their own.
+model PropertyHighlight {
+  id         String  @id @default(cuid())
+  propertyId String
+  code       String
+  subtitle   String?
+  sortOrder  Int     @default(0)
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([propertyId, code])
+  @@index([propertyId])
+}
+
+enum ThingToKnowGroup {
+  HOUSE_RULES
+  SAFETY_PROPERTY
+  CANCELLATION
+}
+
+// The three-column "Things to know" block. `code` keys into THINGS_TO_KNOW,
+// with `label` holding the resolved (and admin-editable) wording.
+model PropertyThingToKnow {
+  id         String           @id @default(cuid())
+  propertyId String
+  group      ThingToKnowGroup
+  code       String
+  label      String
+  sortOrder  Int              @default(0)
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, group])
 }
 
 model Unit {

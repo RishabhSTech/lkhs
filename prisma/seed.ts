@@ -4,9 +4,15 @@ import {
   PrismaClient,
   Prisma,
   type BookingSource,
+  type ReviewSource,
   type TransactionCategoryGroup,
+  type TripType,
 } from "@prisma/client";
 import { pgPoolConfig } from "../src/lib/db-config";
+import {
+  THING_TO_KNOW_BY_CODE,
+  THING_TO_KNOW_GROUP_ORDER,
+} from "../src/lib/property/things-to-know";
 import {
   AMENITIES,
   GUEST_NAMES,
@@ -125,6 +131,8 @@ async function reset() {
   await db.pricingRule.deleteMany();
   await db.propertyAmenity.deleteMany();
   await db.amenity.deleteMany();
+  await db.propertyHighlight.deleteMany();
+  await db.propertyThingToKnow.deleteMany();
   await db.propertyImage.deleteMany();
   await db.unit.deleteMany();
   await db.stakeholderProperty.deleteMany();
@@ -191,8 +199,11 @@ async function main() {
   // ── amenities ───────────────────────────────────────────────────────────
   console.log("Seeding amenities…");
   const amenityMap = new Map<string, string>();
-  for (const a of AMENITIES) {
-    const created = await db.amenity.create({ data: a });
+  for (const [index, a] of AMENITIES.entries()) {
+    // Catalogue order is the display order inside each section.
+    const created = await db.amenity.create({
+      data: { ...a, sortOrder: index },
+    });
     amenityMap.set(a.name, created.id);
   }
 
@@ -222,6 +233,9 @@ async function main() {
         tagline: p.tagline,
         description: p.description,
         locationArea: p.locationArea,
+        // Fall through to the schema defaults when a seed entry does not say.
+        ...(p.city ? { city: p.city } : {}),
+        ...(p.state ? { state: p.state } : {}),
         addressLine: p.addressLine,
         latitude: p.latitude,
         longitude: p.longitude,
@@ -232,6 +246,10 @@ async function main() {
         beds: p.beds,
         basePrice: D(p.basePrice),
         cleaningFee: D(p.cleaningFee),
+        isGuestFavourite: p.isGuestFavourite ?? false,
+        checkInFrom: p.checkInFrom ?? "2:00 pm",
+        checkInTo: p.checkInTo ?? "9:00 pm",
+        checkOutBy: p.checkOutBy ?? "11:00 am",
         houseRules:
           "Check-in from 2:00 PM · Checkout by 11:00 AM\nNo parties or events\nNo smoking indoors\nPets by prior arrangement\nQuiet hours 10:00 PM – 7:00 AM",
         cancellationPolicy:
@@ -245,9 +263,33 @@ async function main() {
           })),
         },
         amenities: {
-          create: p.amenities
-            .filter((name) => amenityMap.has(name))
-            .map((name) => ({ amenityId: amenityMap.get(name)! })),
+          create: [
+            ...p.amenities
+              .filter((name) => amenityMap.has(name))
+              .map((name) => ({ amenityId: amenityMap.get(name)! })),
+            // "Not included" — the struck-through block at the foot of the
+            // amenity dialog.
+            ...(p.unavailableAmenities ?? [])
+              .filter((name) => amenityMap.has(name))
+              .map((name) => ({
+                amenityId: amenityMap.get(name)!,
+                isUnavailable: true,
+              })),
+          ],
+        },
+        highlights: {
+          create: p.highlights.map((code, i) => ({ code, sortOrder: i })),
+        },
+        thingsToKnow: {
+          // The label is snapshotted from the catalogue at seed time so an
+          // admin can reword it per property without touching the code.
+          create: THING_TO_KNOW_GROUP_ORDER.flatMap((group) =>
+            (p.thingsToKnow[group] ?? []).flatMap((code, i) => {
+              const definition = THING_TO_KNOW_BY_CODE.get(code);
+              if (!definition) return [];
+              return [{ group, code, label: definition.label, sortOrder: i }];
+            }),
+          ),
         },
         units: { create: p.units },
       },
@@ -362,6 +404,9 @@ async function main() {
           name,
           email: `${slug}@example.com`,
           phone: `+9198${String(20000000 + i * 137).slice(0, 8)}`,
+          // Staggered so the reviews carry a believable "3 years on Lime
+          // Kraft" line — every guest created today reads as brand new.
+          createdAt: addDays(today, -randInt(40, 1500)),
         },
       }),
     );
@@ -688,9 +733,108 @@ async function main() {
         guestId: res.guestId,
         reservationId: res.id,
         rating: snippet.rating,
+        cleanliness: snippet.cleanliness ?? null,
+        accuracy: snippet.accuracy ?? null,
+        checkIn: snippet.checkIn ?? null,
+        communication: snippet.communication ?? null,
+        location: snippet.location ?? null,
+        value: snippet.value ?? null,
+        tripType: snippet.tripType,
+        topics: snippet.topics,
         title: snippet.title,
         body: snippet.body,
+        // Nights are derived from the linked reservation at render time, so
+        // they are deliberately not duplicated onto the review here.
+        stayedOn: res.checkOut,
+        source: "DIRECT",
+        status: "PUBLISHED",
         createdAt: addDays(res.checkOut, randInt(1, 6)),
+      },
+    });
+  }
+
+  // A handful of reviews imported from the OTAs by hand: no guest record on
+  // our side, so they carry their own author fields and a self-declared stay
+  // length, and one of them shows the reply flow.
+  const importedReviews: {
+    slug: string;
+    source: ReviewSource;
+    authorName: string;
+    authorLocation: string;
+    authorSince: number;
+    rating: number;
+    title: string;
+    body: string;
+    nightsStayed: number;
+    tripType: TripType;
+    topics: string[];
+    cleanliness?: number;
+    accuracy?: number;
+    checkIn?: number;
+    communication?: number;
+    location?: number;
+    value?: number;
+    response?: string;
+  }[] = [
+    {
+      slug: "the-vijay-nagar-residence",
+      source: "AIRBNB" as const,
+      authorName: "Daniel R.",
+      topics: ["WORKSPACE", "WIFI", "CHECK_IN"],
+      authorLocation: "Melbourne, Australia",
+      authorSince: 2019,
+      rating: 5,
+      title: "Ideal base for a work week",
+      body: "Booked five nights around a conference and barely used the hotel booking I'd held as backup. Desk, chair, wifi and coffee all sorted from the first morning.",
+      nightsStayed: 5,
+      tripType: "BUSINESS" as const,
+      cleanliness: 5, accuracy: 5, checkIn: 5, communication: 5, location: 5, value: 5,
+    },
+    {
+      slug: "the-rau-garden-house",
+      source: "BOOKING_COM" as const,
+      authorName: "Sunita Bhargava",
+      topics: ["OUTDOORS", "KITCHEN", "LOCATION"],
+      authorLocation: "Bhopal, India",
+      authorSince: 2021,
+      rating: 4,
+      title: "Lovely house, a little far out",
+      body: "The garden and the kitchen were the stars. Do factor in the drive back into town at dinner time — it is further than it looks on the map.",
+      nightsStayed: 3,
+      tripType: "FAMILY" as const,
+      cleanliness: 5, accuracy: 4, checkIn: 5, communication: 5, location: 3, value: 4,
+      response:
+        "Thank you Sunita — you're right that Rau trades a little distance for the garden. We now send a shortlist of places to eat within ten minutes of the house before every stay.",
+    },
+    {
+      slug: "bicholi-courtyard-villa",
+      source: "AIRBNB" as const,
+      authorName: "Meghna & Arun",
+      topics: ["GROUPS", "POOL", "CLEANLINESS"],
+      authorLocation: "Bengaluru, India",
+      authorSince: 2018,
+      rating: 5,
+      title: "The courtyard makes it",
+      body: "We had eleven people for a family weekend and everyone gravitated to the courtyard. Pool was spotless. The team dropped in twice to reset the kitchen without ever being in the way.",
+      nightsStayed: 4,
+      tripType: "GROUP" as const,
+      cleanliness: 5, accuracy: 5, checkIn: 5, communication: 5, location: 4, value: 5,
+    },
+  ];
+
+  for (const imported of importedReviews) {
+    const { slug, response, ...fields } = imported;
+    const record = propertyRecords.find((r) => r.seed.slug === slug);
+    if (!record) continue;
+    await db.review.create({
+      data: {
+        ...fields,
+        propertyId: record.id,
+        response: response ?? null,
+        respondedAt: response ? addDays(today, -randInt(4, 20)) : null,
+        status: "PUBLISHED",
+        stayedOn: addDays(today, -randInt(30, 150)),
+        createdAt: addDays(today, -randInt(25, 140)),
       },
     });
   }

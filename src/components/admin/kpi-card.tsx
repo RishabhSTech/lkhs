@@ -45,7 +45,7 @@ export function KpiCard({
 
       <p
         className={cn(
-          "mt-2.5 font-heading text-[1.625rem] leading-none tabular-nums",
+          "mt-2.5 text-[1.5rem] font-semibold leading-none tracking-[-0.02em] tabular-nums",
           tone === "critical" ? "text-destructive" : "text-foreground",
         )}
       >

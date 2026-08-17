@@ -4,30 +4,58 @@ import { SearchPanel } from "@/components/site/search-panel";
 import { PropertyCard } from "@/components/property/property-card";
 import { Reveal } from "@/components/site/reveal";
 import { getDistinctAreas, getPropertyCards } from "@/lib/queries/properties";
+import { getAreasByCity, getCities } from "@/lib/queries/locations";
 import { EmptyState } from "@/components/site/empty-state";
 import { AreaFilter } from "@/components/property/area-filter";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "All stays",
-  description:
-    "Browse every Lime Kraft home across Indore — apartments, villas and family houses, all run by our own team.",
-  alternates: { canonical: "/stays" },
-};
+/**
+ * `/stays` is the working search surface, not a landing page. Any filtered
+ * state is kept out of the index — those queries are served far better by the
+ * `/villas-in-<city>` pages, and letting a faceted URL space into the index
+ * spends crawl budget on thousands of near-duplicates.
+ */
+export async function generateMetadata({
+  searchParams,
+}: PageProps<"/stays">): Promise<Metadata> {
+  const params = await searchParams;
+  const filtered = ["area", "city", "guests", "checkIn", "checkOut", "category"].some(
+    (key) => typeof params[key] === "string" && params[key] !== "",
+  );
+
+  return {
+    title: "All stays",
+    description:
+      "Browse every Lime Kraft home — serviced apartments, private villas and family houses, all run by our own team.",
+    alternates: { canonical: "/stays" },
+    robots: filtered ? { index: false, follow: true } : undefined,
+  };
+}
 
 export default async function StaysPage({ searchParams }: PageProps<"/stays">) {
   const params = await searchParams;
   const area = typeof params.area === "string" ? params.area : undefined;
+  const city = typeof params.city === "string" ? params.city : undefined;
   const guests =
     typeof params.guests === "string" ? Number(params.guests) || undefined : undefined;
   const checkIn = typeof params.checkIn === "string" ? params.checkIn : undefined;
   const checkOut = typeof params.checkOut === "string" ? params.checkOut : undefined;
 
-  const [properties, areas] = await Promise.all([
-    getPropertyCards({ area, guests }),
+  const [properties, areas, areasByCity, cities] = await Promise.all([
+    getPropertyCards({ area, city, guests }),
     getDistinctAreas(),
+    getAreasByCity(),
+    getCities(),
   ]);
+
+  const locations = [...areasByCity.values()].map((entry) => ({
+    city: entry.city,
+    areas: entry.areas,
+  }));
+
+  const scope = area ?? city;
+  const totalHomes = cities.reduce((sum, c) => sum + c.propertyCount, 0);
 
   return (
     <>
@@ -39,13 +67,17 @@ export default async function StaysPage({ searchParams }: PageProps<"/stays">) {
               Every Lime Kraft home
             </h1>
             <p className="mt-3 max-w-lg text-[0.9375rem] leading-relaxed text-muted-foreground">
-              Five homes across Indore. Pick your dates and we'll show you what's
-              free.
+              {totalHomes} {totalHomes === 1 ? "home" : "homes"} across{" "}
+              {cities.length === 1
+                ? cities[0].name
+                : `${cities.length} cities`}
+              . Pick your dates and we&apos;ll show you what&apos;s free.
             </p>
             <div className="mt-7">
               <SearchPanel
                 variant="inline"
-                defaults={{ where: area, checkIn, checkOut, guests }}
+                locations={locations}
+                defaults={{ city, area, checkIn, checkOut, guests }}
               />
             </div>
           </div>
@@ -58,7 +90,7 @@ export default async function StaysPage({ searchParams }: PageProps<"/stays">) {
                 {properties.length}
               </span>{" "}
               {properties.length === 1 ? "home" : "homes"}
-              {area ? ` in ${area}` : " available"}
+              {scope ? ` in ${scope}` : " available"}
               {guests ? ` for ${guests} guests` : ""}
             </p>
             <AreaFilter areas={areas} active={area} />

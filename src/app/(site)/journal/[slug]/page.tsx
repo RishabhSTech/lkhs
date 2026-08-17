@@ -15,7 +15,11 @@ export async function generateMetadata({
 }: PageProps<"/journal/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const post = JOURNAL_POSTS.find((p) => p.slug === slug);
-  if (!post) return { title: "Post not found" };
+  if (!post) {
+    // Root metadata sets index/follow, so a not-found state must opt out
+    // explicitly or it advertises itself as indexable.
+    return { title: "Post not found", robots: { index: false, follow: false } };
+  }
 
   return {
     title: post.title,

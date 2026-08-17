@@ -1,19 +1,41 @@
 import type { Metadata } from "next";
-import { DM_Serif_Display, Manrope, Geist_Mono } from "next/font/google";
+import { Fraunces, Instrument_Sans, Inter, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { SITE } from "@/lib/seo/site";
 import "./globals.css";
 
-const manrope = Manrope({
-  variable: "--font-manrope",
+/**
+ * Three roles, deliberately separated:
+ *
+ * - `display` (Fraunces) is the brand voice — hero and section headlines on
+ *   the marketing site only. Its optical-size axis is what makes it work at
+ *   both 64px and 20px; `font-optical-sizing: auto` drives it from font-size.
+ * - `heading` (Instrument Sans) carries product surfaces — admin, tables,
+ *   dialogs — where a serif would read as decoration rather than structure.
+ * - `body` (Inter) handles UI and long text at small sizes.
+ *
+ * Italic is loaded for Fraunces because the accent word in a headline is the
+ * cheapest editorial signal we have; WONK is what makes that italic distinct
+ * rather than a slanted roman.
+ */
+const display = Fraunces({
+  variable: "--font-display-serif",
+  subsets: ["latin"],
+  axes: ["SOFT", "WONK", "opsz"],
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
+const heading = Instrument_Sans({
+  variable: "--font-heading-sans",
   subsets: ["latin"],
   display: "swap",
 });
 
-const dmSerifDisplay = DM_Serif_Display({
-  variable: "--font-dm-serif",
+const body = Inter({
+  variable: "--font-body-sans",
   subsets: ["latin"],
-  weight: "400",
   display: "swap",
 });
 
@@ -23,20 +45,48 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.APP_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(SITE.url),
   title: {
-    default: "Lime Kraft Home Stays — Stay somewhere worth remembering",
-    template: "%s · Lime Kraft Home Stays",
+    default: `${SITE.name} — Villas, apartments and homes across India`,
+    template: `%s · ${SITE.name}`,
   },
-  description:
-    "Beautiful homes, thoughtful spaces and stays made for feeling at home. Boutique hospitality across Indore, booked direct.",
+  description: SITE.description,
+  applicationName: SITE.name,
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: SITE.name,
+    locale: SITE.locale,
+    url: SITE.url,
+    title: `${SITE.name} — Villas, apartments and homes across India`,
+    description: SITE.description,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE.name} — Villas, apartments and homes across India`,
+    description: SITE.description,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    // Let Google build full-size previews and long snippets; the defaults are
+    // conservative and cost impressions on listing pages.
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  formatDetection: { telephone: false },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${manrope.variable} ${dmSerifDisplay.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${body.variable} ${heading.variable} ${display.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <TooltipProvider delay={150}>

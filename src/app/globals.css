@@ -7,9 +7,10 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-manrope);
+  --font-sans: var(--font-body-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-dm-serif);
+  --font-heading: var(--font-heading-sans);
+  --font-display: var(--font-display-serif);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -137,21 +138,56 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "cv11", "ss01";
+    font-feature-settings: "cv11", "ss03";
+    letter-spacing: -0.006em;
   }
   html {
     @apply font-sans;
     -webkit-font-smoothing: antialiased;
   }
-  /* Tighter optical tracking — Manrope runs loose at display sizes. */
+  /* A single over-long headline must never widen the page and clip every
+     other element on small screens. */
+  html,
+  body {
+    overflow-x: clip;
+  }
+  /* Headings: tight tracking and medium weight is what reads "designed"
+     rather than "default". Tracking scales with size. */
   h1,
   h2,
   h3,
   h4,
   .font-heading {
     font-family: var(--font-heading);
+    font-weight: 500;
+    letter-spacing: -0.028em;
+    line-height: 1.08;
+  }
+  h1 {
+    letter-spacing: -0.038em;
+  }
+  /* Display serif. Marketing voice only — never the admin. Serifs need far
+     less negative tracking than Instrument Sans does, so this deliberately
+     resets the tighter heading values above rather than inheriting them.
+     opsz is driven by font-size; SOFT rounds the terminals a little and WONK
+     turns on the alternate italic forms that give the face its character. */
+  .font-display {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-optical-sizing: auto;
+    font-variation-settings: "SOFT" 24, "WONK" 1;
     letter-spacing: -0.018em;
-    line-height: 1.1;
+    line-height: 1.04;
+  }
+  /* Below ~24px the optical-size axis has already thickened the face; extra
+     negative tracking closes the counters and it turns to mud. */
+  .font-display-sm {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-optical-sizing: auto;
+    font-variation-settings: "SOFT" 24, "WONK" 1;
+    letter-spacing: -0.005em;
+    line-height: 1.2;
   }
   ::selection {
     background: color-mix(in oklch, var(--primary), transparent 82%);
@@ -172,5 +208,59 @@
   }
   .card-surface {
     @apply rounded-xl border border-border bg-card;
+  }
+
+  /* Grid stagger without one motion component per child. `RevealGroup` runs a
+     single IntersectionObserver and flips `data-in-view`; the delay ladder
+     below does the rest, so a nine-card grid costs one observer instead of
+     nine React trees. Caps at six — past that the last card arrives so late it
+     reads as a stall rather than a stagger. */
+  .reveal-stagger > * {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .reveal-stagger > *:nth-child(2) {
+    transition-delay: 70ms;
+  }
+  .reveal-stagger > *:nth-child(3) {
+    transition-delay: 140ms;
+  }
+  .reveal-stagger > *:nth-child(4) {
+    transition-delay: 210ms;
+  }
+  .reveal-stagger > *:nth-child(5) {
+    transition-delay: 260ms;
+  }
+  .reveal-stagger > *:nth-child(n + 6) {
+    transition-delay: 300ms;
+  }
+  .reveal-stagger[data-in-view="true"] > * {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Horizontal rails: the first and last tile must line up with the page
+     gutter even though the track itself bleeds edge to edge. */
+  .rail {
+    @apply flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-1;
+    scroll-padding-inline: 1.25rem;
+  }
+  .rail > * {
+    @apply shrink-0 snap-start;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal-stagger > *,
+    .reveal-stagger[data-in-view="true"] > * {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+    .rail {
+      scroll-behavior: auto;
+    }
   }
 }

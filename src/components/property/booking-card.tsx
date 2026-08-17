@@ -91,7 +91,7 @@ export function BookingCard({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -5 }}
             transition={{ duration: 0.18 }}
-            className="font-heading text-[1.75rem] leading-none text-foreground"
+            className="text-[1.5rem] font-semibold leading-none tracking-[-0.02em] tabular-nums text-foreground"
           >
             {formatINR(quote?.averageNightlyRate ?? basePrice)}
           </motion.span>
@@ -159,7 +159,7 @@ export function BookingCard({
             <Row label="Taxes (GST 12%)" value={formatINR(quote.taxes)} />
             <div className="flex items-baseline justify-between border-t border-border pt-3 text-base">
               <dt className="font-medium text-foreground">Total</dt>
-              <dd className="font-heading text-lg text-foreground">
+              <dd className="text-base font-semibold tabular-nums text-foreground">
                 {formatINR(quote.total)}
               </dd>
             </div>

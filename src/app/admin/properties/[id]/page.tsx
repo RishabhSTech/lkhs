@@ -7,6 +7,7 @@ import { KpiCard } from "@/components/admin/kpi-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ListingEditor } from "@/components/admin/listing-editor";
 import { db } from "@/lib/db";
 import { buildPL, type TxWithCategory } from "@/lib/finance/calculations";
 import { SOURCE_LABELS, STATUS_LABELS, sourceBadgeClass, statusBadgeClass } from "@/lib/admin/sources";
@@ -24,6 +25,8 @@ export default async function AdminPropertyPage({
     include: {
       images: { orderBy: { sortOrder: "asc" } },
       amenities: { include: { amenity: true } },
+      highlights: { orderBy: { sortOrder: "asc" } },
+      thingsToKnow: { orderBy: { sortOrder: "asc" } },
       units: true,
       pricingRules: { orderBy: { priority: "desc" } },
       transactions: { include: { category: true } },
@@ -44,6 +47,32 @@ export default async function AdminPropertyPage({
   if (!property) notFound();
 
   const pl = buildPL(property.transactions as TxWithCategory[]);
+
+  const amenityCatalog = await db.amenity.findMany({
+    orderBy: [{ category: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
+    select: { id: true, name: true, icon: true, category: true },
+  });
+
+  const listingValue = {
+    isGuestFavourite: property.isGuestFavourite,
+    checkInFrom: property.checkInFrom ?? "",
+    checkInTo: property.checkInTo ?? "",
+    checkOutBy: property.checkOutBy ?? "",
+    amenities: property.amenities.map((a) => ({
+      amenityId: a.amenityId,
+      isUnavailable: a.isUnavailable,
+      note: a.note,
+    })),
+    highlights: property.highlights.map((h) => ({
+      code: h.code,
+      subtitle: h.subtitle,
+    })),
+    thingsToKnow: property.thingsToKnow.map((t) => ({
+      group: t.group,
+      code: t.code,
+      label: t.label,
+    })),
+  };
 
   return (
     <AdminPage>
@@ -92,8 +121,9 @@ export default async function AdminPropertyPage({
       </div>
 
       <Tabs defaultValue="overview" className="mt-6">
-        <TabsList className="w-full max-w-2xl">
+        <TabsList className="w-full max-w-3xl">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="listing">Listing</TabsTrigger>
           <TabsTrigger value="rooms">Rooms</TabsTrigger>
           <TabsTrigger value="pricing">Pricing</TabsTrigger>
           <TabsTrigger value="channels">Channels</TabsTrigger>
@@ -138,6 +168,16 @@ export default async function AdminPropertyPage({
               ))}
             </ul>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="listing" className="mt-5">
+          <ListingEditor
+            propertyId={property.id}
+            propertyName={property.name}
+            maxGuests={property.maxGuests}
+            amenityCatalog={amenityCatalog}
+            initial={listingValue}
+          />
         </TabsContent>
 
         <TabsContent value="rooms" className="mt-5">
