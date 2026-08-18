@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: lime_kraft
+          POSTGRES_PASSWORD: lime_kraft
+          POSTGRES_DB: lime_kraft
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lime_kraft"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://lime_kraft:lime_kraft@localhost:5432/lime_kraft
+      DIRECT_URL: postgresql://lime_kraft:lime_kraft@localhost:5432/lime_kraft
+      # The CI postgres service container doesn't speak TLS — see PGSSL_DISABLE
+      # in src/lib/db-config.ts. Never set this against a real deployment.
+      PGSSL_DISABLE: "true"
+      AUTH_SECRET: ci-only-secret-not-for-real-use-32-characters
+      APP_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_NAME: Lime Kraft Home Stays
+      # Deliberately not setting NODE_ENV: next build sets it to "production"
+      # itself, and forcing it from the job env collides with that (breaks
+      # the build with a React context error from a dev/prod bundle mismatch).
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx prisma generate
+
+      - run: npx prisma migrate deploy
+
+      # Booking/finance code assumes a handful of TransactionCategory rows
+      # exist by name (see prisma/seed-reference-data.ts) — a fresh migrated
+      # DB has none. The full demo seed (prisma/seed.ts) would also work but
+      # wipes and recreates every table, which is unnecessary here.
+      - run: npm run seed:reference
+
+      - run: npm run typecheck
+
+      - run: npm run lint
+
+      - run: npm test
+
+      - run: npm run build

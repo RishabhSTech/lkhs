@@ -5,19 +5,37 @@ import { Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
-export function SyncButton({ channelName }: { channelName: string }) {
+export function SyncButton({
+  channelName,
+  channelPropertyId,
+  onSynced,
+}: {
+  channelName: string;
+  channelPropertyId: string;
+  onSynced?: () => void;
+}) {
   const [syncing, setSyncing] = useState(false);
 
   async function sync() {
     setSyncing(true);
-    // Deliberately does not pretend to reach the OTA: with no credentials
-    // configured, the honest outcome is "not connected", not a fake success.
-    await new Promise((r) => setTimeout(r, 700));
-    setSyncing(false);
-    toast.error(`${channelName} is not connected`, {
-      description:
-        "Add channel manager credentials in Settings to enable live syncing. Nothing was sent.",
-    });
+    try {
+      const res = await fetch("/api/admin/channels/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ channelPropertyId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Sync failed.");
+
+      toast.success(`Sync queued for ${channelName}`, {
+        description: "The worker will push availability and rates shortly.",
+      });
+      onSynced?.();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Sync failed.");
+    } finally {
+      setSyncing(false);
+    }
   }
 
   return (

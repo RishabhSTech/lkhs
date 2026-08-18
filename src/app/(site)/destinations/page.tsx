@@ -121,7 +121,7 @@ export default async function DestinationsPage() {
                       <Link
                         key={kind}
                         href={`/${kind}-in-${city.slug}`}
-                        className="rounded-full border border-border bg-card px-3.5 py-1.5 text-[0.8125rem] text-muted-foreground transition-colors hover:border-brand-terracotta hover:text-brand-terracotta"
+                        className="rounded-full border border-border bg-card px-3.5 py-1.5 text-[0.8125rem] text-muted-foreground transition-colors hover:border-brand-azure hover:text-brand-azure"
                       >
                         {COLLECTIONS[kind].plural}
                       </Link>
@@ -136,7 +136,7 @@ export default async function DestinationsPage() {
 
                   <Link
                     href={`/stays-in-${city.slug}`}
-                    className="group mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-foreground transition-colors hover:text-brand-terracotta"
+                    className="group mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-foreground transition-colors hover:text-brand-azure"
                   >
                     All stays in {city.name}
                     <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />

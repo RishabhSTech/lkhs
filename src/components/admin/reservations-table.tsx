@@ -237,7 +237,7 @@ export function ReservationsTable({
           {selected && (
             <>
               <SheetHeader>
-                <SheetTitle className="font-heading text-xl text-brand-green">
+                <SheetTitle className="font-heading text-xl text-brand-blue">
                   {selected.guest.name}
                 </SheetTitle>
                 <SheetDescription className="font-mono text-xs">

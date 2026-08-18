@@ -49,7 +49,7 @@ export default async function JournalPostPage({
             Back to journal
           </Link>
 
-          <p className="mt-6 text-[0.6875rem] font-semibold tracking-[0.16em] text-brand-sage uppercase">
+          <p className="mt-6 text-[0.6875rem] font-semibold tracking-[0.16em] text-brand-mist uppercase">
             {post.readMinutes} min read
           </p>
           <h1 className="mt-2 font-heading text-4xl leading-tight text-foreground sm:text-5xl">

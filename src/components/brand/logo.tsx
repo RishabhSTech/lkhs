@@ -19,7 +19,7 @@ export function Logo({
         aria-hidden
         className={cn(
           "size-2 translate-y-[-2px] rounded-full",
-          tone === "light" ? "bg-brand-terracotta" : "bg-brand-terracotta",
+          tone === "light" ? "bg-brand-azure" : "bg-brand-azure",
         )}
       />
       Lime Kraft

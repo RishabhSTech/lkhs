@@ -45,8 +45,40 @@ export function ExpenseForm({
   const [paymentMethod, setPaymentMethod] = useState("BANK_TRANSFER");
   const [status, setStatus] = useState("PAID");
   const [receiptName, setReceiptName] = useState<string | null>(null);
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function handleReceipt(file: File | undefined) {
+    if (!file) return;
+    setReceiptName(file.name);
+    setReceiptUrl(null);
+    setUploadingReceipt(true);
+    try {
+      const presign = await fetch("/api/admin/uploads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ folder: "receipts", filename: file.name, contentType: file.type }),
+      });
+      const presignData = await presign.json();
+      if (!presign.ok) throw new Error(presignData.error ?? "Could not get an upload URL.");
+
+      const putRes = await fetch(presignData.uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!putRes.ok) throw new Error("Upload to storage failed.");
+
+      setReceiptUrl(presignData.publicUrl);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Receipt upload failed.");
+      setReceiptName(null);
+    } finally {
+      setUploadingReceipt(false);
+    }
+  }
 
   const grouped = useMemo(() => {
     const map = new Map<string, Category[]>();
@@ -82,6 +114,7 @@ export function ExpenseForm({
           description,
           paymentMethod,
           status,
+          receiptUrl: receiptUrl || undefined,
         }),
       });
       const data = await res.json();
@@ -205,8 +238,12 @@ export function ExpenseForm({
         </Field>
 
         <Field label="Receipt">
-          <label className="flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border px-3 text-sm text-muted-foreground transition-colors hover:border-brand-sage">
-            <Upload className="size-4" />
+          <label className="flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border px-3 text-sm text-muted-foreground transition-colors hover:border-brand-mist">
+            {uploadingReceipt ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Upload className="size-4" />
+            )}
             <span className="truncate">
               {receiptName ?? "Attach invoice or photo"}
             </span>
@@ -214,7 +251,8 @@ export function ExpenseForm({
               type="file"
               accept="image/*,application/pdf"
               className="sr-only"
-              onChange={(e) => setReceiptName(e.target.files?.[0]?.name ?? null)}
+              disabled={uploadingReceipt}
+              onChange={(e) => handleReceipt(e.target.files?.[0])}
             />
           </label>
         </Field>
@@ -246,10 +284,10 @@ export function ExpenseForm({
         </p>
       )}
 
-      {receiptName && (
-        <p className="text-xs text-muted-foreground">
-          Receipt uploads need object storage configured (MinIO / S3). The file
-          name is captured but the file is not stored in this environment.
+      {receiptName && !receiptUrl && !uploadingReceipt && (
+        <p className="text-xs text-destructive">
+          That receipt didn&apos;t upload — object storage may not be configured. The
+          expense will still save, just without the attachment.
         </p>
       )}
 
@@ -294,7 +332,7 @@ function Field({
     <div>
       <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
         {label}
-        {required && <span className="text-brand-terracotta"> *</span>}
+        {required && <span className="text-brand-azure"> *</span>}
       </Label>
       {children}
     </div>

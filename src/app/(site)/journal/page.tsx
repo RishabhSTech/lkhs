@@ -46,7 +46,7 @@ export default function JournalPage() {
                     />
                   </div>
                   <div>
-                    <p className="text-[0.6875rem] font-semibold tracking-[0.16em] text-brand-sage uppercase">
+                    <p className="text-[0.6875rem] font-semibold tracking-[0.16em] text-brand-mist uppercase">
                       {post.readMinutes} min read
                     </p>
                     <h2 className="mt-2 font-heading text-2xl leading-snug text-foreground">

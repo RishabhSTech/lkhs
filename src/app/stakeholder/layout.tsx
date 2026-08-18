@@ -48,7 +48,7 @@ export default async function StakeholderLayout({
 
       <footer className="border-t border-border bg-card py-5">
         <p className="mx-auto max-w-6xl px-4 text-xs text-muted-foreground sm:px-6">
-          You're seeing only the properties assigned to you. For anything else,
+          You&apos;re seeing only the properties assigned to you. For anything else,
           contact the Lime Kraft team.
         </p>
       </footer>

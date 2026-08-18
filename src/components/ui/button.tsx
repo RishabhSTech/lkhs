@@ -9,9 +9,13 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground hover:bg-brand-green-light active:translate-y-px",
+          "bg-primary text-primary-foreground hover:bg-brand-blue-light active:translate-y-px",
         accent:
-          "bg-brand-terracotta text-white hover:bg-brand-terracotta/90 active:translate-y-px",
+          // Gold on the deep-blue bands. Azure-on-blue is the one pairing the
+          // palette cannot make work, so the accent button carries the warm
+          // counterweight instead — with ink text, since gold cannot hold
+          // white legibly.
+          "bg-brand-gold text-brand-ink hover:bg-brand-gold/90 active:translate-y-px",
         outline:
           "border-border bg-transparent hover:bg-muted hover:text-foreground aria-expanded:bg-muted",
         secondary:

@@ -1,6 +1,7 @@
 import type {
   PropertyType,
   ThingToKnowGroup,
+  TransactionCategoryGroup,
   TripType,
 } from "@prisma/client";
 import type { HighlightCode } from "../src/lib/property/highlights";
@@ -1053,6 +1054,45 @@ export const DESTINATIONS: {
 
 // Interiors rather than landmarks: this is a homes business, and the stock
 // travel shots (a tropical lagoon, the Taj Mahal) had nothing to do with Indore.
+// Every one of these is reference data the application depends on existing
+// by (group, name) — postBookingFinancials, the budget routes and the
+// recurring-expense rollover all look categories up this way. Shared between
+// the full demo seed (prisma/seed.ts, which wipes and recreates everything)
+// and prisma/seed-reference-data.ts, an idempotent subset for CI and any
+// fresh, non-demo deployment that just needs these to exist.
+export const TRANSACTION_CATEGORY_DEFS: {
+  group: TransactionCategoryGroup;
+  names: string[];
+  refundable?: string[];
+}[] = [
+  {
+    group: "INITIAL_INVESTMENT",
+    names: [
+      "Security Deposit", "Furniture", "Interior", "Paint", "Appliances",
+      "Kitchen Setup", "Electronics", "Decor", "Repairs", "Miscellaneous",
+    ],
+    refundable: ["Security Deposit"],
+  },
+  {
+    group: "RECURRING_EXPENSE",
+    names: [
+      "Rent", "Cleaning", "Laundry", "Electricity", "Internet", "Maintenance",
+      "Consumables", "Staff", "Property Management", "Miscellaneous",
+    ],
+  },
+  {
+    group: "ONE_TIME_EXPENSE",
+    names: [
+      "Emergency Repair", "Replacement", "Plumbing", "Electrical",
+      "Appliance Repair", "Deep Cleaning", "Miscellaneous",
+    ],
+  },
+  { group: "REVENUE", names: ["Accommodation", "Extra Guest", "Late Checkout"] },
+  { group: "OTA_FEE", names: ["Channel Commission"] },
+  { group: "PAYMENT_FEE", names: ["Gateway Fee"] },
+  { group: "DEPOSIT", names: ["Refundable Security Deposit"], refundable: ["Refundable Security Deposit"] },
+];
+
 export const CATEGORIES = [
   { slug: "weekend-escape", label: "Weekend Escape", image: U("1560448204-e02f11c3d0e2") },
   { slug: "work-trip", label: "Work Trip", image: U("1497366754035-f200968a6e72") },

@@ -1,8 +1,17 @@
 import { AlertTriangle } from "lucide-react";
 import type { BudgetVariance } from "@/lib/finance/calculations";
 import { formatINR } from "@/lib/format";
+import { BudgetForm } from "@/components/admin/budget-form";
 
-export function BudgetTable({ budgets }: { budgets: BudgetVariance[] }) {
+export function BudgetTable({
+  budgets,
+  propertyId,
+  categories,
+}: {
+  budgets: BudgetVariance[];
+  propertyId: string;
+  categories: { id: string; name: string }[];
+}) {
   const overCount = budgets.filter((b) => b.isOverBudget).length;
 
   return (
@@ -14,12 +23,15 @@ export function BudgetTable({ budgets }: { budgets: BudgetVariance[] }) {
           </h2>
           <p className="mt-0.5 text-xs text-muted-foreground">This month</p>
         </div>
-        {overCount > 0 && (
-          <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-destructive/25 bg-destructive/10 px-2.5 py-1 text-xs font-medium text-destructive">
-            <AlertTriangle className="size-3" />
-            {overCount} over
-          </span>
-        )}
+        <div className="flex shrink-0 items-center gap-2">
+          {overCount > 0 && (
+            <span className="flex items-center gap-1.5 rounded-full border border-destructive/25 bg-destructive/10 px-2.5 py-1 text-xs font-medium text-destructive">
+              <AlertTriangle className="size-3" />
+              {overCount} over
+            </span>
+          )}
+          <BudgetForm propertyId={propertyId} categories={categories} />
+        </div>
       </div>
 
       {budgets.length === 0 ? (

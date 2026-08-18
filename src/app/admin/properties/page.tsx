@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { AdminPage, PageHeader } from "@/components/admin/page-header";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { db } from "@/lib/db";
 import { buildPL, type TxWithCategory } from "@/lib/finance/calculations";
 import { endOfMonthUTC, startOfMonthUTC, todayUTC } from "@/lib/dates";
@@ -47,6 +49,12 @@ export default async function PropertiesPage() {
       <PageHeader
         title="Properties"
         description={`${properties.length} homes in the portfolio.`}
+        actions={
+          <Link href="/admin/properties/new" className={buttonVariants({ size: "sm" })}>
+            <Plus />
+            Add property
+          </Link>
+        }
       />
 
       <ul className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -54,7 +62,7 @@ export default async function PropertiesPage() {
           <li key={property.id}>
             <Link
               href={`/admin/properties/${property.id}`}
-              className="group block overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-brand-sage"
+              className="group block overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-brand-mist"
             >
               {property.images[0] && (
                 <div className="relative aspect-[16/9] overflow-hidden bg-muted">
@@ -71,7 +79,7 @@ export default async function PropertiesPage() {
               <div className="p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <h2 className="truncate font-heading text-lg text-brand-green">
+                    <h2 className="truncate font-heading text-lg text-brand-blue">
                       {property.name}
                     </h2>
                     <p className="truncate text-xs text-muted-foreground">

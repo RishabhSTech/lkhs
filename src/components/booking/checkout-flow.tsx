@@ -28,6 +28,23 @@ type PropertySummary = {
 
 const STEPS = ["Dates & guests", "Your details", "Payment"] as const;
 
+declare global {
+  interface Window {
+    Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
+  }
+}
+
+function loadRazorpayScript(): Promise<boolean> {
+  if (window.Razorpay) return Promise.resolve(true);
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
+
 const PAYMENT_METHODS = [
   { value: "UPI", label: "UPI", hint: "GPay, PhonePe, Paytm", icon: Smartphone },
   { value: "CARD", label: "Card", hint: "Credit or debit", icon: CreditCard },
@@ -37,9 +54,11 @@ const PAYMENT_METHODS = [
 export function CheckoutFlow({
   property,
   initial,
+  isMockPayment,
 }: {
   property: PropertySummary;
   initial: { checkIn: string; checkOut: string; guests: number };
+  isMockPayment: boolean;
 }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -108,11 +127,67 @@ export function CheckoutFlow({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Booking failed.");
-      router.push(`/booking-confirmation/${data.code}`);
+
+      if (data.status === "CONFIRMED" || !data.clientCheckout) {
+        router.push(`/booking-confirmation/${data.code}`);
+        return;
+      }
+
+      await openRazorpayCheckout(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Booking failed.");
       setSubmitting(false);
     }
+  }
+
+  async function openRazorpayCheckout(booking: {
+    id: string;
+    code: string;
+    clientCheckout: { keyId: string; orderId: string; amountPaise: number; currency: string };
+  }) {
+    const loaded = await loadRazorpayScript();
+    if (!loaded || !window.Razorpay) {
+      setError("Couldn't load the payment gateway. Check your connection and try again.");
+      setSubmitting(false);
+      return;
+    }
+
+    const { clientCheckout } = booking;
+    const razorpay = new window.Razorpay({
+      key: clientCheckout.keyId,
+      order_id: clientCheckout.orderId,
+      amount: clientCheckout.amountPaise,
+      currency: clientCheckout.currency,
+      name: "Lime Kraft Home Stays",
+      description: `Booking ${booking.code}`,
+      prefill: { name, email: email || undefined, contact: phone || undefined },
+      handler: async (response: {
+        razorpay_order_id: string;
+        razorpay_payment_id: string;
+        razorpay_signature: string;
+      }) => {
+        try {
+          const confirmRes = await fetch("/api/bookings/confirm", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reservationId: booking.id, ...response }),
+          });
+          const confirmData = await confirmRes.json();
+          if (!confirmRes.ok) throw new Error(confirmData.error ?? "Payment verification failed.");
+          router.push(`/booking-confirmation/${booking.code}`);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Payment verification failed.");
+          setSubmitting(false);
+        }
+      },
+      modal: {
+        ondismiss: () => {
+          setError("Payment was cancelled. Your dates are held for 20 minutes — try again anytime before then.");
+          setSubmitting(false);
+        },
+      },
+    });
+    razorpay.open();
   }
 
   return (
@@ -139,7 +214,7 @@ export function CheckoutFlow({
                 i < step
                   ? "bg-primary text-primary-foreground"
                   : i === step
-                    ? "bg-brand-terracotta text-white"
+                    ? "bg-brand-azure text-white"
                     : "bg-muted text-muted-foreground",
               )}
             >
@@ -288,7 +363,7 @@ export function CheckoutFlow({
                           onChange={() => setPaymentMethod(method.value)}
                           className="sr-only"
                         />
-                        <method.icon className="size-5 text-brand-sage" />
+                        <method.icon className="size-5 text-brand-mist" />
                         <span className="flex-1">
                           <span className="block text-sm font-medium text-foreground">
                             {method.label}
@@ -314,9 +389,9 @@ export function CheckoutFlow({
                   </div>
 
                   <p className="mt-4 rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
-                    Demo environment — no payment gateway is connected, so no money
-                    moves. The booking is created for real and appears in the Lime
-                    Kraft dashboard.
+                    {isMockPayment
+                      ? "Demo environment — no payment gateway is connected, so no money moves. The booking is created for real and appears in the Lime Kraft dashboard."
+                      : "You'll be asked to complete payment via Razorpay next. Your dates are held for 20 minutes while you do."}
                   </p>
 
                   {error && <Alert>{error}</Alert>}
@@ -436,7 +511,7 @@ function Field({
     <div className={className}>
       <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
         {label}
-        {required && <span className="text-brand-terracotta"> *</span>}
+        {required && <span className="text-brand-azure"> *</span>}
       </Label>
       {children}
     </div>
@@ -467,7 +542,7 @@ function SummaryRow({
   return (
     <div className="flex items-baseline justify-between">
       <dt className="text-muted-foreground">{label}</dt>
-      <dd className={accent ? "text-brand-terracotta" : "text-foreground"}>
+      <dd className={accent ? "text-brand-azure" : "text-foreground"}>
         {value}
       </dd>
     </div>

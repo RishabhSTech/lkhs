@@ -178,7 +178,7 @@ export function BookingCard({
       </Button>
 
       <p className="mt-2.5 text-center text-xs text-muted-foreground">
-        You won't be charged yet. No account needed to book.
+        You won&apos;t be charged yet. No account needed to book.
       </p>
     </div>
   );
@@ -208,7 +208,7 @@ function Row({
   return (
     <div className="flex items-baseline justify-between">
       <dt className="text-muted-foreground">{label}</dt>
-      <dd className={accent ? "text-brand-terracotta" : "text-foreground"}>
+      <dd className={accent ? "text-brand-azure" : "text-foreground"}>
         {value}
       </dd>
     </div>

@@ -317,7 +317,7 @@ export function ListingEditor({
                         key={highlight.code}
                         className={
                           checked
-                            ? "rounded-lg border border-brand-sage bg-muted/40 p-3"
+                            ? "rounded-lg border border-brand-mist bg-muted/40 p-3"
                             : "rounded-lg border border-border p-3"
                         }
                       >
@@ -338,7 +338,7 @@ export function ListingEditor({
                           />
                           <DynamicIcon
                             name={highlight.icon}
-                            className="mt-0.5 size-4 text-brand-sage"
+                            className="mt-0.5 size-4 text-brand-mist"
                           />
                           <span className="min-w-0">
                             <span className="block text-sm font-medium text-foreground">
@@ -347,7 +347,7 @@ export function ListingEditor({
                             <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
                               {highlight.subtitle}
                               {highlight.dynamic && (
-                                <span className="mt-0.5 block text-brand-sage">
+                                <span className="mt-0.5 block text-brand-mist">
                                   Filled in from live review scores when left
                                   blank.
                                 </span>

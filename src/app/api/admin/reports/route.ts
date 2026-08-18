@@ -1,8 +1,7 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { buildPL, type TxWithCategory } from "@/lib/finance/calculations";
-
-/** CSV export for financial reports. PDF export is not implemented. */
+import { buildPortfolioReportPdf, buildTransactionsReportPdf } from "@/lib/finance/pdf";
 
 function toCsv(rows: (string | number)[][]) {
   return rows
@@ -20,6 +19,7 @@ function toCsv(rows: (string | number)[][]) {
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;
   const type = params.get("type") ?? "portfolio";
+  const format = params.get("format") ?? "csv";
   const propertyId = params.get("property");
 
   if (type === "transactions") {
@@ -32,6 +32,26 @@ export async function GET(request: Request) {
       },
       orderBy: { date: "desc" },
     });
+
+    if (format === "pdf") {
+      const pdf = await buildTransactionsReportPdf(
+        txs.map((t) => ({
+          date: t.date.toISOString().slice(0, 10),
+          property: t.property.name,
+          type: t.type,
+          category: t.category.name,
+          description: t.description ?? "",
+          status: t.status,
+          amount: Number(t.amount),
+        })),
+      );
+      return new NextResponse(new Uint8Array(pdf), {
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="lime-kraft-transactions.pdf"`,
+        },
+      });
+    }
 
     const csv = toCsv([
       ["Date", "Property", "Type", "Category", "Description", "Channel", "Status", "Amount"],
@@ -59,22 +79,42 @@ export async function GET(request: Request) {
     include: { transactions: { include: { category: true } } },
     orderBy: { name: "asc" },
   });
+  const portfolioRows = properties.map((p) => {
+    const pl = buildPL(p.transactions as TxWithCategory[]);
+    return {
+      name: p.name,
+      locationArea: p.locationArea,
+      grossRevenue: pl.grossRevenue,
+      otaFees: pl.otaFees,
+      paymentFees: pl.paymentFees,
+      netRevenue: pl.netRevenue,
+      operatingExpenses: pl.operatingExpenses,
+      netOperatingIncome: pl.netOperatingIncome,
+    };
+  });
+
+  if (format === "pdf") {
+    const pdf = await buildPortfolioReportPdf(portfolioRows);
+    return new NextResponse(new Uint8Array(pdf), {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="lime-kraft-portfolio.pdf"`,
+      },
+    });
+  }
 
   const csv = toCsv([
     ["Property", "Location", "Gross revenue", "OTA fees", "Payment fees", "Net revenue", "Operating expenses", "Net operating income"],
-    ...properties.map((p) => {
-      const pl = buildPL(p.transactions as TxWithCategory[]);
-      return [
-        p.name,
-        p.locationArea,
-        pl.grossRevenue,
-        pl.otaFees,
-        pl.paymentFees,
-        pl.netRevenue,
-        pl.operatingExpenses,
-        pl.netOperatingIncome,
-      ];
-    }),
+    ...portfolioRows.map((r) => [
+      r.name,
+      r.locationArea,
+      r.grossRevenue,
+      r.otaFees,
+      r.paymentFees,
+      r.netRevenue,
+      r.operatingExpenses,
+      r.netOperatingIncome,
+    ]),
   ]);
 
   return new NextResponse(csv, {

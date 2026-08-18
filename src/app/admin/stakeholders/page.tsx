@@ -49,7 +49,7 @@ export default async function StakeholdersPage() {
             >
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-5">
                 <div>
-                  <h2 className="font-heading text-lg text-brand-green">
+                  <h2 className="font-heading text-lg text-brand-blue">
                     {s.name}
                   </h2>
                   <p className="text-xs text-muted-foreground">
@@ -83,7 +83,7 @@ export default async function StakeholdersPage() {
                       <div>
                         <Link
                           href={`/admin/finance/property/${link.propertyId}`}
-                          className="text-sm font-medium text-foreground hover:text-brand-terracotta"
+                          className="text-sm font-medium text-foreground hover:text-brand-azure"
                         >
                           {link.property.name}
                         </Link>

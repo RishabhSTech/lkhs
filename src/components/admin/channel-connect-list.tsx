@@ -13,9 +13,11 @@ import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { formatDateLong } from "@/lib/format";
+import { SyncButton } from "@/components/admin/sync-button";
 
 type PropertyRow = {
   id: string;
+  channelPropertyId: string | null;
   name: string;
   locationArea: string;
   status: string;
@@ -147,6 +149,13 @@ export function ChannelConnectList({
 
                 {!isDirect && (
                   <>
+                    {property.channelPropertyId && property.externalListingId && (
+                      <SyncButton
+                        channelName={channelName}
+                        channelPropertyId={property.channelPropertyId}
+                        onSynced={() => router.refresh()}
+                      />
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
@@ -177,7 +186,7 @@ export function ChannelConnectList({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Plug className="size-4 text-brand-terracotta" />
+              <Plug className="size-4 text-brand-azure" />
               Connect {editing?.name}
             </DialogTitle>
             <DialogDescription>

@@ -88,7 +88,7 @@ export default async function StakeholderDashboard() {
                       <td className="px-4 py-3">
                         <Link
                           href={`/stakeholder/${p.id}`}
-                          className="group flex items-center gap-1.5 font-medium text-foreground hover:text-brand-terracotta"
+                          className="group flex items-center gap-1.5 font-medium text-foreground hover:text-brand-azure"
                         >
                           {p.name}
                           <ArrowUpRight className="size-3.5 opacity-0 transition-opacity group-hover:opacity-100" />

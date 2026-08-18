@@ -194,7 +194,7 @@ export default async function AdminOverviewPage() {
                       {alert.link && (
                         <Link
                           href={alert.link}
-                          className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-brand-terracotta hover:underline"
+                          className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-brand-azure hover:underline"
                         >
                           Review
                           <ArrowUpRight className="size-3" />

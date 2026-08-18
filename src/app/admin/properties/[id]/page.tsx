@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
@@ -8,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ListingEditor } from "@/components/admin/listing-editor";
+import { PhotoManager } from "@/components/admin/photo-manager";
 import { db } from "@/lib/db";
 import { buildPL, type TxWithCategory } from "@/lib/finance/calculations";
 import { SOURCE_LABELS, STATUS_LABELS, sourceBadgeClass, statusBadgeClass } from "@/lib/admin/sources";
@@ -78,7 +78,7 @@ export default async function AdminPropertyPage({
     <AdminPage>
       <Link
         href="/admin/properties"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-brand-green"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-brand-blue"
       >
         <ArrowLeft className="size-4" />
         Back to properties
@@ -132,23 +132,12 @@ export default async function AdminPropertyPage({
         </TabsList>
 
         <TabsContent value="overview" className="mt-5 space-y-5">
-          <Card title="Photos">
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-              {property.images.map((img) => (
-                <div
-                  key={img.id}
-                  className="relative aspect-square overflow-hidden rounded-lg bg-muted"
-                >
-                  <Image
-                    src={img.url}
-                    alt={img.alt ?? property.name}
-                    fill
-                    sizes="20vw"
-                    className="object-cover"
-                  />
-                </div>
-              ))}
-            </div>
+          <Card title="Photos" description="First photo is the hero shown across the site.">
+            <PhotoManager
+              propertyId={property.id}
+              propertyName={property.name}
+              photos={property.images.map((img) => ({ id: img.id, url: img.url, alt: img.alt }))}
+            />
           </Card>
 
           <Card title="Description">

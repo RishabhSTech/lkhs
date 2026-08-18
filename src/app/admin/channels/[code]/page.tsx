@@ -93,6 +93,7 @@ export default async function ChannelGuidePage({
             const connection = connections.get(p.id);
             return {
               id: p.id,
+              channelPropertyId: connection?.id ?? null,
               name: p.name,
               locationArea: p.locationArea,
               status: connection?.status ?? "NOT_CONFIGURED",
@@ -137,7 +138,7 @@ export default async function ChannelGuidePage({
             </p>
             <Link
               href="/admin/finance"
-              className="mt-3 inline-block text-xs font-medium text-brand-terracotta hover:underline"
+              className="mt-3 inline-block text-xs font-medium text-brand-azure hover:underline"
             >
               See what each channel actually nets →
             </Link>

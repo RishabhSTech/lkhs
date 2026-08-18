@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { parseISODate } from "@/lib/dates";
 import {
   InventoryConflictError,
+  PaymentIntentError,
   createReservation,
 } from "@/lib/booking/create-reservation";
 import { getSession } from "@/lib/auth/session";
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
   const session = await getSession();
 
   try {
-    const { reservation } = await createReservation({
+    const { reservation, status, clientCheckout } = await createReservation({
       propertyId: property.id,
       checkIn: parseISODate(data.checkIn),
       checkOut: parseISODate(data.checkOut),
@@ -62,10 +63,18 @@ export async function POST(request: Request) {
       userId: session?.userId ?? null,
     });
 
-    return NextResponse.json({ code: reservation.code, id: reservation.id });
+    return NextResponse.json({
+      code: reservation.code,
+      id: reservation.id,
+      status,
+      clientCheckout: clientCheckout ?? null,
+    });
   } catch (error) {
     if (error instanceof InventoryConflictError) {
       return NextResponse.json({ error: error.message }, { status: 409 });
+    }
+    if (error instanceof PaymentIntentError) {
+      return NextResponse.json({ error: error.message }, { status: 402 });
     }
     console.error("Booking failed", error);
     return NextResponse.json(

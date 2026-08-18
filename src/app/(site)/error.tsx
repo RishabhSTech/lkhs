@@ -11,7 +11,7 @@ export default function SiteError({ reset }: { reset: () => void }) {
         <AlertTriangle className="size-5 text-destructive" />
       </div>
       <h1 className="mt-4 font-heading text-3xl text-foreground">
-        That didn't load properly
+        That didn&apos;t load properly
       </h1>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
         Something went wrong on our end. Try again, or head back and pick up

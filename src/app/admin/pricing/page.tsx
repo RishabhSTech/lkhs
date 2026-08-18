@@ -1,20 +1,25 @@
 import Link from "next/link";
 import { AdminPage, PageHeader } from "@/components/admin/page-header";
-import { Badge } from "@/components/ui/badge";
 import { db } from "@/lib/db";
 import { buildQuote } from "@/lib/pricing/engine";
-import { addDays, todayUTC } from "@/lib/dates";
+import { addDays, addMonths, todayUTC } from "@/lib/dates";
 import { formatDateShort, formatINR } from "@/lib/format";
+import { PricingRuleEditor } from "@/components/admin/pricing-rule-editor";
+import { DailyRateEditor } from "@/components/admin/daily-rate-editor";
 
 export const dynamic = "force-dynamic";
 
 export default async function PricingPage() {
+  const today = todayUTC();
+  const horizon = addMonths(today, 3);
+
   const properties = await db.property.findMany({
-    include: { pricingRules: { orderBy: { priority: "desc" } } },
+    include: {
+      pricingRules: { orderBy: { priority: "desc" } },
+      dailyRates: { where: { date: { gte: today, lte: horizon } }, orderBy: { date: "asc" } },
+    },
     orderBy: { name: "asc" },
   });
-
-  const today = todayUTC();
 
   return (
     <AdminPage>
@@ -43,7 +48,7 @@ export default async function PricingPage() {
                 <div>
                   <Link
                     href={`/admin/properties/${property.id}`}
-                    className="font-heading text-lg text-brand-green hover:text-brand-terracotta"
+                    className="font-heading text-lg text-brand-blue hover:text-brand-azure"
                   >
                     {property.name}
                   </Link>
@@ -55,35 +60,24 @@ export default async function PricingPage() {
 
               <div className="grid gap-5 p-5 lg:grid-cols-2">
                 <div>
-                  <h3 className="text-[0.6875rem] font-semibold tracking-wide text-muted-foreground uppercase">
-                    Active rules
-                  </h3>
-                  <ul className="mt-3 space-y-2">
-                    {property.pricingRules.map((rule) => (
-                      <li
-                        key={rule.id}
-                        className="flex items-center justify-between gap-3 text-sm"
-                      >
-                        <span className="text-foreground">{rule.name}</span>
-                        <span className="flex items-center gap-2">
-                          <Badge className="border-border bg-muted text-muted-foreground">
-                            {rule.type.toLowerCase().replace(/_/g, " ")}
-                          </Badge>
-                          <span
-                            className={
-                              Number(rule.adjustmentValue) >= 0
-                                ? "font-medium tabular-nums text-chart-1"
-                                : "font-medium tabular-nums text-chart-2"
-                            }
-                          >
-                            {Number(rule.adjustmentValue) > 0 ? "+" : ""}
-                            {Number(rule.adjustmentValue)}
-                            {rule.adjustmentType === "PERCENT" ? "%" : "₹"}
-                          </span>
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                  <PricingRuleEditor
+                    propertyId={property.id}
+                    rules={property.pricingRules.map((rule) => ({
+                      id: rule.id,
+                      name: rule.name,
+                      type: rule.type,
+                      adjustmentType: rule.adjustmentType,
+                      adjustmentValue: Number(rule.adjustmentValue),
+                      isActive: rule.isActive,
+                    }))}
+                  />
+                  <DailyRateEditor
+                    propertyId={property.id}
+                    overrides={property.dailyRates.map((o) => ({
+                      date: o.date.toISOString().slice(0, 10),
+                      price: Number(o.price),
+                    }))}
+                  />
                 </div>
 
                 <div>
@@ -107,7 +101,7 @@ export default async function PricingPage() {
                         <span
                           className={
                             night.price !== night.basePrice
-                              ? "font-medium tabular-nums text-brand-terracotta"
+                              ? "font-medium tabular-nums text-brand-azure"
                               : "tabular-nums text-foreground"
                           }
                         >

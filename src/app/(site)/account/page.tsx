@@ -44,8 +44,8 @@ export default async function AccountPage() {
                 Sign in to see your trips
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                We'll send a code to your email or mobile — no password needed.
-                If you've booked with us before, your trips are already here.
+                We&apos;ll send a code to your email or mobile — no password needed.
+                If you&apos;ve booked with us before, your trips are already here.
               </p>
               <Button render={<Link href="/signin" />} size="lg" className="mt-5">
                 Sign in
@@ -66,7 +66,7 @@ export default async function AccountPage() {
                   href={link.href}
                   className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/40"
                 >
-                  <link.icon className="size-5 shrink-0 text-brand-sage" />
+                  <link.icon className="size-5 shrink-0 text-brand-mist" />
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-medium text-foreground">
                       {link.label}

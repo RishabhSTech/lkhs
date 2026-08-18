@@ -15,7 +15,8 @@ export async function POST(request: Request) {
 
   const { devCode } = await requestOtp(parsed.data.identifier);
 
-  // No SMS/email provider is connected, so the code is surfaced here rather
-  // than silently failing. Remove this field once a real provider is wired up.
+  // devCode is only non-null when the channel has no live delivery adapter
+  // yet (see requestOtp) — otherwise the guest actually receives the code
+  // and it has no business being in this response.
   return NextResponse.json({ sent: true, devCode });
 }

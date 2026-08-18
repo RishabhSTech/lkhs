@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { getNotificationProvider } from "@/lib/notifications/provider";
+import { EMAIL_IS_LIVE, getNotificationProvider } from "@/lib/notifications/provider";
 
 const OTP_TTL_MINUTES = 10;
 const MAX_ATTEMPTS = 5;
@@ -22,7 +22,7 @@ export async function requestOtp(identifier: string) {
   });
 
   const notifier = getNotificationProvider();
-  await notifier.send({
+  const result = await notifier.send({
     channel: isEmail(identifier) ? "EMAIL" : "SMS",
     to: identifier,
     subject: "Your Lime Kraft sign-in code",
@@ -30,9 +30,12 @@ export async function requestOtp(identifier: string) {
     templateKey: "OTP",
   });
 
-  // No SMS/email provider is connected in this environment, so the code is
-  // returned to the caller for the demo sign-in flow rather than silently lost.
-  return { devCode: code, expiresAt };
+  // Once a channel actually delivers (email via Resend today), the code
+  // should never also come back in the API response — that would defeat the
+  // point of a one-time code. It's only surfaced here as a fallback for
+  // channels (SMS/WhatsApp) that still have no live adapter.
+  const delivered = isEmail(identifier) && EMAIL_IS_LIVE && result.status === "SENT";
+  return { devCode: delivered ? null : code, expiresAt };
 }
 
 export type VerifyResult =

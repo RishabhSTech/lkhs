@@ -21,7 +21,7 @@ export function HowReviewsWork() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-3 text-sm font-medium text-foreground underline underline-offset-4 transition-colors hover:text-brand-terracotta"
+        className="mt-3 text-sm font-medium text-foreground underline underline-offset-4 transition-colors hover:text-brand-azure"
       >
         How reviews work
       </button>

@@ -285,7 +285,7 @@ export default async function CollectionPage({
                         ? `/destinations/${areaSlug}`
                         : `/stays?area=${encodeURIComponent(area)}`
                     }
-                    className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2 text-sm text-foreground transition-colors hover:border-brand-terracotta hover:text-brand-terracotta"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2 text-sm text-foreground transition-colors hover:border-brand-azure hover:text-brand-azure"
                   >
                     <MapPin className="size-3.5" />
                     {area}
@@ -312,7 +312,7 @@ export default async function CollectionPage({
                 <Link
                   key={sibling.href}
                   href={sibling.href}
-                  className="group flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-5 py-4 transition-colors hover:border-brand-terracotta/50"
+                  className="group flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-5 py-4 transition-colors hover:border-brand-azure/50"
                 >
                   <span>
                     <span className="block font-display-sm text-lg text-foreground">

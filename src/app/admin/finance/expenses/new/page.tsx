@@ -23,7 +23,7 @@ export default async function NewExpensePage({
     <AdminPage>
       <Link
         href="/admin/finance/expenses"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-brand-green"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-brand-blue"
       >
         <ArrowLeft className="size-4" />
         Back to expenses

@@ -319,7 +319,7 @@ function Field({
     <div>
       <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
         {label}
-        {required && <span className="text-brand-terracotta"> *</span>}
+        {required && <span className="text-brand-azure"> *</span>}
       </Label>
       {children}
     </div>

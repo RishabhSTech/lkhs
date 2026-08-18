@@ -114,7 +114,7 @@ export function ReviewRow({ review }: { review: AdminReview }) {
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-foreground">
             {review.author}
             {review.isGuestReview && (
-              <span className="inline-flex items-center gap-1 text-xs font-normal text-brand-sage">
+              <span className="inline-flex items-center gap-1 text-xs font-normal text-brand-mist">
                 <BadgeCheck className="size-3.5" />
                 Verified stay
               </span>
@@ -123,7 +123,7 @@ export function ReviewRow({ review }: { review: AdminReview }) {
           <p className="mt-0.5 text-xs text-muted-foreground">
             <Link
               href={`/admin/properties/${review.propertyId}`}
-              className="hover:text-brand-terracotta"
+              className="hover:text-brand-azure"
             >
               {review.propertyName}
             </Link>{" "}
@@ -139,7 +139,7 @@ export function ReviewRow({ review }: { review: AdminReview }) {
             className="flex items-center gap-1 text-sm font-medium text-foreground"
             aria-label={`${review.rating} out of 5`}
           >
-            <Star className="size-3.5 fill-brand-terracotta text-brand-terracotta" />
+            <Star className="size-3.5 fill-brand-gold text-brand-gold" />
             {review.rating}
           </span>
           <Badge className="border-border bg-muted text-muted-foreground">

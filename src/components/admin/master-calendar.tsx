@@ -99,7 +99,7 @@ export function MasterCalendar({
                   className={cn(
                     "shrink-0 border-r border-border/60 py-2 text-center",
                     isWeekend && "bg-muted/50",
-                    day === todayISO && "bg-brand-terracotta/10",
+                    day === todayISO && "bg-brand-azure/10",
                   )}
                 >
                   <span className="block text-[0.625rem] text-muted-foreground">
@@ -112,7 +112,7 @@ export function MasterCalendar({
                     className={cn(
                       "block text-xs font-medium",
                       day === todayISO
-                        ? "text-brand-terracotta"
+                        ? "text-brand-azure"
                         : "text-foreground",
                     )}
                   >
@@ -131,7 +131,7 @@ export function MasterCalendar({
               <div className="sticky left-0 z-10 w-50 shrink-0 border-r border-border bg-card px-3 py-3">
                 <Link
                   href={`/admin/properties/${row.propertyId}`}
-                  className="block truncate text-sm font-medium text-foreground hover:text-brand-terracotta"
+                  className="block truncate text-sm font-medium text-foreground hover:text-brand-azure"
                 >
                   {row.propertyName}
                 </Link>
@@ -151,7 +151,7 @@ export function MasterCalendar({
                       className={cn(
                         "shrink-0 border-r border-border/50",
                         isWeekend && "bg-muted/30",
-                        day === todayISO && "bg-brand-terracotta/6",
+                        day === todayISO && "bg-brand-azure/6",
                       )}
                     />
                   );
@@ -215,7 +215,7 @@ export function MasterCalendar({
           {selected && (
             <>
               <SheetHeader>
-                <SheetTitle className="font-heading text-xl text-brand-green">
+                <SheetTitle className="font-heading text-xl text-brand-blue">
                   {selected.guestName ?? "Blocked dates"}
                 </SheetTitle>
                 <SheetDescription>

@@ -1,16 +1,23 @@
-import "server-only";
 import { Prisma, type BookingSource, type PaymentMethodType } from "@prisma/client";
 import { db } from "@/lib/db";
 import { eachNight, toUTCDate } from "@/lib/dates";
 import { buildQuote } from "@/lib/pricing/engine";
-import { getPaymentProvider } from "@/lib/payments/provider";
+import { getPaymentProvider, type PaymentIntentResult } from "@/lib/payments/provider";
 import { getNotificationProvider } from "@/lib/notifications/provider";
 import { renderTemplate } from "@/lib/notifications/templates";
+import { enqueueChannelSync, enqueueReservationExpiry } from "@/lib/queue";
 
 export class InventoryConflictError extends Error {
   constructor() {
     super("Those dates were just taken. Please pick different dates.");
     this.name = "InventoryConflictError";
+  }
+}
+
+export class PaymentIntentError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PaymentIntentError";
   }
 }
 
@@ -41,10 +48,16 @@ const OTA_FEE_RATES: Partial<Record<BookingSource, number>> = {
 const PAYMENT_FEE_RATE = 0.02;
 
 /**
- * The one path that creates a booking. Availability check, inventory lock,
- * reservation, payment and revenue posting all happen inside a single
- * transaction — the unique constraint on (unitId, date) is what actually
- * guarantees no double-booking under concurrency.
+ * The one path that creates a booking. Availability check, inventory lock
+ * and reservation creation happen inside a single transaction — the unique
+ * constraint on (unitId, date) is what actually guarantees no double-booking
+ * under concurrency.
+ *
+ * The reservation always starts PENDING, holding the dates. Revenue is only
+ * posted once payment actually settles (see confirmReservation): for the
+ * mock provider that happens synchronously right here; for a real provider
+ * (Razorpay) it happens later, from the checkout-confirm route or webhook,
+ * and a queued job releases the hold if payment never completes.
  */
 export async function createReservation(input: CreateReservationInput) {
   const checkIn = toUTCDate(input.checkIn);
@@ -79,6 +92,7 @@ export async function createReservation(input: CreateReservationInput) {
   });
 
   const source = input.source ?? "DIRECT";
+  const method = input.paymentMethod ?? "UPI";
   const code = generateCode();
 
   const reservation = await db
@@ -95,7 +109,7 @@ export async function createReservation(input: CreateReservationInput) {
           checkOut,
           adults: input.adults,
           children: input.children ?? 0,
-          status: "CONFIRMED",
+          status: "PENDING",
           source,
           nightlyRate: new Prisma.Decimal(quote.averageNightlyRate),
           nights: quote.nightCount,
@@ -125,14 +139,6 @@ export async function createReservation(input: CreateReservationInput) {
         })),
       });
 
-      await postBookingFinancials(tx, {
-        propertyId: property.id,
-        reservationId: created.id,
-        total: quote.total,
-        source,
-        date: checkIn,
-      });
-
       return created;
     })
     .catch((error) => {
@@ -145,18 +151,57 @@ export async function createReservation(input: CreateReservationInput) {
       throw error;
     });
 
-  await recordPaymentAndNotify({
-    reservationId: reservation.id,
-    code: reservation.code,
-    total: quote.total,
-    method: input.paymentMethod ?? "UPI",
-    guest: input.guest,
-    propertyName: property.name,
-    checkIn,
-    checkOut,
+  await notifyChannelsOfAvailabilityChange(property.id);
+
+  const provider = getPaymentProvider();
+  let intent: PaymentIntentResult;
+  try {
+    intent = await provider.createIntent({
+      reservationCode: reservation.code,
+      amount: quote.total,
+      currency: "INR",
+      method,
+      customer: input.guest,
+    });
+  } catch (error) {
+    await releasePendingReservation(reservation.id);
+    throw new PaymentIntentError(
+      error instanceof Error ? error.message : "We couldn't start the payment. Please try again.",
+    );
+  }
+
+  if (intent.status === "FAILED") {
+    await releasePendingReservation(reservation.id);
+    throw new PaymentIntentError(
+      intent.failureReason ?? "We couldn't start the payment. Please try again.",
+    );
+  }
+
+  await db.reservationPayment.create({
+    data: {
+      reservationId: reservation.id,
+      provider: provider.name,
+      method,
+      amount: new Prisma.Decimal(quote.total),
+      status: intent.status === "SUCCEEDED" ? "SUCCEEDED" : "PENDING",
+      providerRef: intent.providerRef,
+    },
   });
 
-  return { reservation, quote };
+  if (intent.status === "SUCCEEDED") {
+    await confirmReservation(reservation.id);
+  } else {
+    // Payment settles asynchronously (real gateway) — release the hold if the
+    // guest never completes checkout.
+    await enqueueReservationExpiry({ reservationId: reservation.id });
+  }
+
+  return {
+    reservation,
+    quote,
+    status: intent.status === "SUCCEEDED" ? ("CONFIRMED" as const) : ("PENDING" as const),
+    clientCheckout: intent.clientCheckout,
+  };
 }
 
 type TxClient = Prisma.TransactionClient;
@@ -262,36 +307,106 @@ async function postBookingFinancials(
   });
 }
 
-async function recordPaymentAndNotify(args: {
+/** A booking (or its cancellation) changes which nights are free, so every
+ * OTA this property is linked to needs its calendar pushed again. Never
+ * blocks the caller. */
+async function notifyChannelsOfAvailabilityChange(propertyId: string) {
+  try {
+    const links = await db.channelProperty.findMany({
+      where: { propertyId, externalListingId: { not: null } },
+      select: { id: true },
+    });
+    await Promise.all(
+      links.map((link) =>
+        enqueueChannelSync({ channelPropertyId: link.id, reason: "AVAILABILITY_CHANGED" }),
+      ),
+    );
+  } catch (error) {
+    console.error("Failed to enqueue channel sync after booking", error);
+  }
+}
+
+/**
+ * Called once payment has actually settled — synchronously for the mock
+ * provider, or from the Razorpay checkout-confirm route / webhook once a
+ * real charge is captured. Idempotent: a reservation that isn't still
+ * PENDING has already been confirmed (or cancelled) and is left alone, so
+ * a client-side confirm racing the webhook can't double-post revenue.
+ */
+export async function confirmReservation(reservationId: string) {
+  const reservation = await db.reservation.findUnique({
+    where: { id: reservationId },
+    include: { property: { select: { id: true, name: true } }, reservationGuests: { where: { isPrimary: true } } },
+  });
+  if (!reservation || reservation.status !== "PENDING") return;
+
+  await db.$transaction(async (tx) => {
+    await tx.reservation.update({
+      where: { id: reservation.id },
+      data: { status: "CONFIRMED" },
+    });
+    await tx.reservationPayment.updateMany({
+      where: { reservationId: reservation.id, status: "PENDING" },
+      data: { status: "SUCCEEDED" },
+    });
+    await postBookingFinancials(tx, {
+      propertyId: reservation.propertyId,
+      reservationId: reservation.id,
+      total: Number(reservation.total),
+      source: reservation.source,
+      date: reservation.checkIn,
+    });
+  });
+
+  const primaryGuest = reservation.reservationGuests[0];
+  await notifyGuestBookingConfirmed({
+    reservationId: reservation.id,
+    code: reservation.code,
+    total: Number(reservation.total),
+    guest: {
+      name: primaryGuest?.name ?? "Guest",
+      email: primaryGuest?.email ?? null,
+      phone: primaryGuest?.phone ?? null,
+    },
+    propertyName: reservation.property.name,
+    checkIn: reservation.checkIn,
+    checkOut: reservation.checkOut,
+  });
+}
+
+/** Releases a PENDING reservation's hold on inventory — used both when an
+ * intent fails to even start, and by the reservation-expiry worker job.
+ * Returns false if there was nothing to release (already confirmed or
+ * already cancelled), so callers can tell a real release from a no-op. */
+export async function releasePendingReservation(reservationId: string): Promise<boolean> {
+  const reservation = await db.reservation.findUnique({
+    where: { id: reservationId },
+    select: { id: true, status: true, propertyId: true },
+  });
+  if (!reservation || reservation.status !== "PENDING") return false;
+
+  await db.$transaction([
+    db.inventoryNight.deleteMany({ where: { reservationId: reservation.id } }),
+    db.reservation.update({ where: { id: reservation.id }, data: { status: "CANCELLED" } }),
+    db.reservationPayment.updateMany({
+      where: { reservationId: reservation.id, status: "PENDING" },
+      data: { status: "FAILED" },
+    }),
+  ]);
+
+  await notifyChannelsOfAvailabilityChange(reservation.propertyId);
+  return true;
+}
+
+async function notifyGuestBookingConfirmed(args: {
   reservationId: string;
   code: string;
   total: number;
-  method: PaymentMethodType;
-  guest: CreateReservationInput["guest"];
+  guest: { name: string; email?: string | null; phone?: string | null };
   propertyName: string;
   checkIn: Date;
   checkOut: Date;
 }) {
-  const provider = getPaymentProvider();
-  const intent = await provider.createIntent({
-    reservationCode: args.code,
-    amount: args.total,
-    currency: "INR",
-    method: args.method,
-    customer: args.guest,
-  });
-
-  await db.reservationPayment.create({
-    data: {
-      reservationId: args.reservationId,
-      provider: provider.name,
-      method: args.method,
-      amount: new Prisma.Decimal(args.total),
-      status: intent.status === "SUCCEEDED" ? "SUCCEEDED" : "PENDING",
-      providerRef: intent.providerRef,
-    },
-  });
-
   const rendered = renderTemplate("BOOKING_CONFIRMED", {
     guestName: args.guest.name,
     propertyName: args.propertyName,

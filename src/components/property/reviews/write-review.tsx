@@ -208,7 +208,7 @@ export function WriteReview({
               htmlFor="review-body"
               className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
             >
-              Your review <span className="text-brand-terracotta">*</span>
+              Your review <span className="text-brand-azure">*</span>
             </Label>
             <Textarea
               id="review-body"

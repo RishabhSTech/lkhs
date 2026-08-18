@@ -139,7 +139,7 @@ export default async function MessagesPage() {
               {COMMUNICATION_JOURNEY.map((step, i) => (
                 <li key={step.key} className="flex gap-4">
                   <div className="flex flex-col items-center">
-                    <span className="grid size-7 shrink-0 place-items-center rounded-full bg-brand-green text-xs font-semibold text-brand-ivory">
+                    <span className="grid size-7 shrink-0 place-items-center rounded-full bg-brand-blue text-xs font-semibold text-brand-ivory">
                       {i + 1}
                     </span>
                     {i < COMMUNICATION_JOURNEY.length - 1 && (

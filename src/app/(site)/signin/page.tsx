@@ -17,7 +17,7 @@ export default function SignInPage() {
             Sign in
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            We'll send you a code. No password to remember.
+            We&apos;ll send you a code. No password to remember.
           </p>
           <div className="mt-7">
             <SignInForm />

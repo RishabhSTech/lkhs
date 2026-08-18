@@ -101,7 +101,7 @@ export function SectionHeading({
           <p
             className={cn(
               "label-eyebrow",
-              invert ? "text-white/50" : "text-brand-terracotta",
+              invert ? "text-white/50" : "text-brand-azure",
             )}
           >
             {eyebrow}
@@ -136,7 +136,7 @@ export function SectionHeading({
             "group inline-flex shrink-0 items-center gap-1.5 text-sm font-medium transition-colors",
             invert
               ? "text-white/80 hover:text-white"
-              : "text-foreground hover:text-brand-terracotta",
+              : "text-foreground hover:text-brand-azure",
           )}
         >
           {action.label}

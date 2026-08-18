@@ -40,7 +40,7 @@ export function StarInput({
       <div className="min-w-0">
         <span id={id} className="text-sm font-medium text-foreground">
           {label}
-          {required && <span className="text-brand-terracotta"> *</span>}
+          {required && <span className="text-brand-azure"> *</span>}
         </span>
         {hint && (
           <span className="mt-0.5 block text-xs text-muted-foreground">
@@ -71,7 +71,7 @@ export function StarInput({
               className={cn(
                 "size-6 transition-colors peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50 rounded-sm",
                 star <= shown
-                  ? "fill-brand-terracotta text-brand-terracotta"
+                  ? "fill-brand-gold text-brand-gold"
                   : "fill-transparent text-input",
               )}
             />

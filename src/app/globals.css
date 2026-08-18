@@ -41,13 +41,20 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
 
-  /* Brand tokens. Colour is deliberately scarce — photography carries it. */
-  --color-brand-green: #1f4536;
-  --color-brand-green-light: #2c5a48;
-  --color-brand-sage: #7f9184;
-  --color-brand-ivory: #fafaf9;
-  --color-brand-terracotta: #c25a38;
-  --color-brand-ink: #1c1c1a;
+  /* Brand tokens. Blue is the brand; every other hue has one job and is not
+     allowed to drift out of it. `blue` carries structure and the saturated
+     bands, `azure` is the interactive colour (links, eyebrows, focus), `gold`
+     is reserved for ratings so a star never has to borrow the interactive
+     colour, and `mist` is the quiet blue-grey for numerals and rules.
+     Photography still carries most of the colour on the marketing site. */
+  --color-brand-blue: #0b2f6b;
+  --color-brand-blue-light: #124089;
+  --color-brand-blue-deep: #061a3f;
+  --color-brand-azure: #2563eb;
+  --color-brand-mist: #8aa2c4;
+  --color-brand-gold: #d99a1f;
+  --color-brand-ivory: #f7f9fc;
+  --color-brand-ink: #0e1420;
 
   --radius-sm: calc(var(--radius) * 0.5);
   --radius-md: calc(var(--radius) * 0.75);
@@ -58,23 +65,26 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #1c1c1a;
+  --foreground: #0e1420;
   --card: #ffffff;
-  --card-foreground: #1c1c1a;
+  --card-foreground: #0e1420;
   --popover: #ffffff;
-  --popover-foreground: #1c1c1a;
-  --primary: #1f4536;
+  --popover-foreground: #0e1420;
+  --primary: #0b2f6b;
   --primary-foreground: #ffffff;
-  --secondary: #f4f4f2;
-  --secondary-foreground: #1f4536;
-  --muted: #f6f6f4;
-  --muted-foreground: #71716b;
-  --accent: #c25a38;
-  --accent-foreground: #ffffff;
-  --destructive: #b23c26;
-  --border: #e8e7e3;
-  --input: #e0dfda;
-  --ring: #1f4536;
+  --secondary: #eff3fa;
+  --secondary-foreground: #0b2f6b;
+  --muted: #f4f7fc;
+  --muted-foreground: #5b6b82;
+  /* `accent` is the menu/list hover surface that shadcn's primitives paint
+     with, not a brand colour — it was carrying the full-strength brand accent,
+     which is why every dropdown row lit up like a call to action on hover. */
+  --accent: #e9f0fd;
+  --accent-foreground: #0b2f6b;
+  --destructive: #c0392b;
+  --border: #e3e8f1;
+  --input: #d6dfeb;
+  --ring: #2563eb;
 
   /* Chart series: brand-sympathetic but stepped up in chroma so they survive
      colour-vision deficiency. Validated on white — worst adjacent CVD ΔE 10.2,
@@ -88,48 +98,48 @@
   --radius: 0.625rem;
 
   /* Admin sidebar stays dark per the brief, deepened to sit against white. */
-  --sidebar: #16221c;
-  --sidebar-foreground: #eef0ec;
-  --sidebar-primary: #c25a38;
+  --sidebar: #0a1a33;
+  --sidebar-foreground: #e8eef8;
+  --sidebar-primary: #3b82f6;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #24352c;
+  --sidebar-accent: #14294a;
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #2a3b32;
-  --sidebar-ring: #7f9184;
+  --sidebar-border: #1c3357;
+  --sidebar-ring: #5b8def;
 }
 
 .dark {
-  --background: #131513;
-  --foreground: #f2f2ef;
-  --card: #1a1d1a;
-  --card-foreground: #f2f2ef;
-  --popover: #1a1d1a;
-  --popover-foreground: #f2f2ef;
-  --primary: #cfe0d5;
-  --primary-foreground: #16221c;
-  --secondary: #242724;
-  --secondary-foreground: #f2f2ef;
-  --muted: #242724;
-  --muted-foreground: #a1a19a;
-  --accent: #d46b4b;
-  --accent-foreground: #ffffff;
-  --destructive: #e07a5f;
-  --border: #2b2f2c;
-  --input: #343833;
-  --ring: #7f9184;
+  --background: #0a0f18;
+  --foreground: #eaf0f8;
+  --card: #111827;
+  --card-foreground: #eaf0f8;
+  --popover: #111827;
+  --popover-foreground: #eaf0f8;
+  --primary: #9cc2ff;
+  --primary-foreground: #08152c;
+  --secondary: #1a2333;
+  --secondary-foreground: #eaf0f8;
+  --muted: #1a2333;
+  --muted-foreground: #9aa8bd;
+  --accent: #17253c;
+  --accent-foreground: #eaf0f8;
+  --destructive: #e5695a;
+  --border: #232e42;
+  --input: #2c3a52;
+  --ring: #5b8def;
   --chart-1: #1ea78d;
   --chart-2: #d4661f;
   --chart-3: #4b96dd;
   --chart-4: #b08019;
   --chart-5: #a76ba3;
-  --sidebar: #101610;
-  --sidebar-foreground: #eef0ec;
-  --sidebar-primary: #c25a38;
+  --sidebar: #060e1c;
+  --sidebar-foreground: #e8eef8;
+  --sidebar-primary: #3b82f6;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #1d271f;
+  --sidebar-accent: #101f38;
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #232d25;
-  --sidebar-ring: #7f9184;
+  --sidebar-border: #172944;
+  --sidebar-ring: #5b8def;
 }
 
 @layer base {
@@ -242,6 +252,80 @@
     transform: none;
   }
 
+  /* The dwell timer for the how-it-works stepper, expressed as an animation so
+     that hovering can freeze it with `animation-play-state` and resume exactly
+     where it stopped. The `animationend` event is what advances the step, which
+     makes the bar the single source of truth: there is no JS timer that can
+     drift out of sync with what the bar is showing. Under reduced motion the
+     bar never runs, so the section simply never advances on its own. */
+  @keyframes step-dwell {
+    from {
+      transform: scaleY(0);
+    }
+    to {
+      transform: scaleY(1);
+    }
+  }
+  .step-dwell {
+    transform-origin: top;
+    animation: step-dwell 6s linear forwards;
+  }
+  .step-dwell[data-paused="true"] {
+    animation-play-state: paused;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .step-dwell {
+      display: none;
+    }
+  }
+
+  /* Pointer-reactive highlight. The wrapper component writes `--mx`/`--my` on
+     pointermove and nothing else re-renders, so a grid of these costs no React
+     work at all — the whole effect lives in the compositor. Deliberately
+     azure-tinted and very weak: it should register as the surface catching the
+     light, not as a glow. */
+  .spotlight::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    background: radial-gradient(
+      22rem 22rem at var(--mx, 50%) var(--my, 50%),
+      color-mix(in oklch, var(--color-brand-azure), transparent 80%),
+      transparent 68%
+    );
+  }
+  .spotlight:hover::after,
+  .spotlight:focus-within::after {
+    opacity: 1;
+  }
+  /* Touch has no pointer to follow, so the effect would only ever fire as a
+     flash on tap. */
+  @media (hover: none) {
+    .spotlight::after {
+      display: none;
+    }
+  }
+
+  /* Film grain. A flat brand-blue field this large reads as a printed swatch;
+     a few percent of noise is what stops it looking like dead ink. The SVG is
+     inline so it costs no request, and it is `overlay` so it lifts and darkens
+     rather than fogging the colour. */
+  .grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.32;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+  }
+
   /* Horizontal rails: the first and last tile must line up with the page
      gutter even though the track itself bleeds edge to edge. */
   .rail {
@@ -261,6 +345,9 @@
     }
     .rail {
       scroll-behavior: auto;
+    }
+    .spotlight::after {
+      display: none;
     }
   }
 }

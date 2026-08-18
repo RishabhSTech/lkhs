@@ -100,7 +100,7 @@ export default async function ExpensesPage({
                     <td className="px-4 py-3">
                       <Link
                         href={`/admin/finance/property/${e.property.id}`}
-                        className="text-foreground hover:text-brand-terracotta"
+                        className="text-foreground hover:text-brand-azure"
                       >
                         {e.property.name}
                       </Link>

@@ -18,6 +18,7 @@ import {
   GUEST_NAMES,
   PROPERTIES,
   REVIEW_SNIPPETS,
+  TRANSACTION_CATEGORY_DEFS,
   type SeedProperty,
 } from "./seed-data";
 
@@ -55,39 +56,6 @@ const rand = () => {
 const randInt = (min: number, max: number) =>
   Math.floor(rand() * (max - min + 1)) + min;
 const pick = <T>(arr: T[]): T => arr[Math.floor(rand() * arr.length)];
-
-const CATEGORY_DEFS: {
-  group: TransactionCategoryGroup;
-  names: string[];
-  refundable?: string[];
-}[] = [
-  {
-    group: "INITIAL_INVESTMENT",
-    names: [
-      "Security Deposit", "Furniture", "Interior", "Paint", "Appliances",
-      "Kitchen Setup", "Electronics", "Decor", "Repairs", "Miscellaneous",
-    ],
-    refundable: ["Security Deposit"],
-  },
-  {
-    group: "RECURRING_EXPENSE",
-    names: [
-      "Rent", "Cleaning", "Laundry", "Electricity", "Internet", "Maintenance",
-      "Consumables", "Staff", "Property Management", "Miscellaneous",
-    ],
-  },
-  {
-    group: "ONE_TIME_EXPENSE",
-    names: [
-      "Emergency Repair", "Replacement", "Plumbing", "Electrical",
-      "Appliance Repair", "Deep Cleaning", "Miscellaneous",
-    ],
-  },
-  { group: "REVENUE", names: ["Accommodation", "Extra Guest", "Late Checkout"] },
-  { group: "OTA_FEE", names: ["Channel Commission"] },
-  { group: "PAYMENT_FEE", names: ["Gateway Fee"] },
-  { group: "DEPOSIT", names: ["Refundable Security Deposit"], refundable: ["Refundable Security Deposit"] },
-];
 
 const OTA_FEE_RATES: Record<BookingSource, number> = {
   DIRECT: 0,
@@ -152,7 +120,7 @@ async function main() {
   // ── categories ──────────────────────────────────────────────────────────
   console.log("Seeding transaction categories…");
   const categoryMap = new Map<string, string>();
-  for (const def of CATEGORY_DEFS) {
+  for (const def of TRANSACTION_CATEGORY_DEFS) {
     for (const name of def.names) {
       const cat = await db.transactionCategory.create({
         data: {

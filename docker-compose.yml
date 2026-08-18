@@ -20,6 +20,20 @@ services:
     volumes:
       - minio-data:/data
 
+  # One-shot: creates the upload bucket and exits. MinIO doesn't create
+  # buckets on its own, so without this, presigned uploads 404 forever even
+  # with correct credentials.
+  minio-init:
+    image: minio/mc:latest
+    entrypoint: >
+      sh -c "
+      mc alias set local http://minio:9000 limekraft limekraft-dev-secret &&
+      mc mb --ignore-existing local/lime-kraft-media &&
+      mc anonymous set download local/lime-kraft-media
+      "
+    depends_on:
+      - minio
+
   app:
     image: node:20-slim
     working_dir: /app
@@ -31,6 +45,23 @@ services:
       S3_ENDPOINT: http://minio:9000
     ports:
       - "3000:3000"
+    volumes:
+      - .:/app
+      - app-node-modules:/app/node_modules
+    depends_on:
+      - redis
+      - minio
+      - minio-init
+
+  worker:
+    image: node:20-slim
+    working_dir: /app
+    command: sh -c "npm install && npm run worker"
+    env_file:
+      - .env
+    environment:
+      REDIS_URL: redis://redis:6379
+      S3_ENDPOINT: http://minio:9000
     volumes:
       - .:/app
       - app-node-modules:/app/node_modules

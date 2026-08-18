@@ -37,6 +37,12 @@ export const ADMIN_NAV: AdminNavItem[] = [
     roles: ["SUPER_ADMIN", "ADMIN", "FINANCE"],
   },
   {
+    href: "/admin/users",
+    label: "Users",
+    icon: Users,
+    roles: ["SUPER_ADMIN"],
+  },
+  {
     href: "/admin/settings",
     label: "Settings",
     icon: Settings,

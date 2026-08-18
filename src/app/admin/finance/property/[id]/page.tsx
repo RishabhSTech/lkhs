@@ -9,6 +9,7 @@ import { CapitalRecovery } from "@/components/admin/capital-recovery";
 import { PLStatement } from "@/components/admin/pl-statement";
 import { BudgetTable } from "@/components/admin/budget-table";
 import { Button } from "@/components/ui/button";
+import { db } from "@/lib/db";
 import { getPropertyFinance } from "@/lib/queries/finance";
 import { formatINR, formatINRCompact, formatPercent } from "@/lib/format";
 
@@ -19,7 +20,14 @@ export default async function PropertyFinancePage({
 }: PageProps<"/admin/finance/property/[id]">) {
   const { id } = await params;
 
-  const finance = await getPropertyFinance(id).catch(() => null);
+  const [finance, budgetCategories] = await Promise.all([
+    getPropertyFinance(id).catch(() => null),
+    db.transactionCategory.findMany({
+      where: { group: { in: ["RECURRING_EXPENSE", "ONE_TIME_EXPENSE"] } },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
   if (!finance) notFound();
 
   const { property, lifetime, currentMonth, capital, channels, breakEven } =
@@ -29,7 +37,7 @@ export default async function PropertyFinancePage({
     <AdminPage>
       <Link
         href="/admin/finance"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-brand-green"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-brand-blue"
       >
         <ArrowLeft className="size-4" />
         Back to finance
@@ -154,7 +162,7 @@ export default async function PropertyFinancePage({
             </dl>
           </section>
 
-          <BudgetTable budgets={finance.budgets} />
+          <BudgetTable budgets={finance.budgets} propertyId={property.id} categories={budgetCategories} />
         </div>
       </div>
 
@@ -174,7 +182,7 @@ export default async function PropertyFinancePage({
           </h2>
           <Link
             href="/admin/finance/expenses"
-            className="text-xs font-medium text-brand-terracotta hover:underline"
+            className="text-xs font-medium text-brand-azure hover:underline"
           >
             Manage
           </Link>

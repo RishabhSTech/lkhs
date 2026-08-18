@@ -1,4 +1,3 @@
-import "server-only";
 import { db } from "@/lib/db";
 import { eachNight, toUTCDate } from "@/lib/dates";
 

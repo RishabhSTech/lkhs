@@ -27,7 +27,7 @@ export default function ContactPage() {
             Get in touch
           </h1>
           <p className="mt-3 max-w-lg text-[0.9375rem] leading-relaxed text-muted-foreground">
-            Questions about a stay, a booking you've already made, or working
+            Questions about a stay, a booking you&apos;ve already made, or working
             with us — all of it comes to the same small team.
           </p>
 
@@ -41,7 +41,7 @@ export default function ContactPage() {
               <ul className="mt-4 space-y-5">
                 {CHANNELS.map((channel) => (
                   <li key={channel.label} className="flex gap-3">
-                    <channel.icon className="mt-0.5 size-4 shrink-0 text-brand-sage" />
+                    <channel.icon className="mt-0.5 size-4 shrink-0 text-brand-mist" />
                     <div>
                       <p className="text-sm font-medium text-foreground">
                         {channel.value}

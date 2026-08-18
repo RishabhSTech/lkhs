@@ -187,7 +187,7 @@ export function SearchPanel({
                 >
                   {option.label}
                   {selected && (
-                    <Check className="size-3.5 shrink-0 text-brand-terracotta" />
+                    <Check className="size-3.5 shrink-0 text-brand-azure" />
                   )}
                 </button>
               );

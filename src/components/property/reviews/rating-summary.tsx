@@ -51,7 +51,7 @@ export function RatingSummary({
       ) : (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span className="flex items-baseline gap-2 font-heading text-3xl text-foreground">
-            <Star className="size-6 translate-y-0.5 fill-brand-terracotta text-brand-terracotta" />
+            <Star className="size-6 translate-y-0.5 fill-brand-gold text-brand-gold" />
             {headline}
           </span>
           <span className="text-muted-foreground">

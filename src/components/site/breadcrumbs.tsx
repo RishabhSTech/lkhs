@@ -26,7 +26,7 @@ export function Breadcrumbs({
                 <>
                   <Link
                     href={crumb.href}
-                    className="transition-colors hover:text-brand-terracotta"
+                    className="transition-colors hover:text-brand-azure"
                   >
                     {crumb.name}
                   </Link>

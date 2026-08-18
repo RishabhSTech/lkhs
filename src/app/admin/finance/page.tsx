@@ -35,12 +35,22 @@ export default async function FinanceOverviewPage() {
               All expenses
             </Button>
             <Button
+              // eslint-disable-next-line @next/next/no-html-link-for-pages -- file download, not a page route
               render={<a href="/api/admin/reports?type=portfolio" />}
               variant="outline"
               size="sm"
             >
               <Download />
               Export CSV
+            </Button>
+            <Button
+              // eslint-disable-next-line @next/next/no-html-link-for-pages -- file download, not a page route
+              render={<a href="/api/admin/reports?type=portfolio&format=pdf" />}
+              variant="outline"
+              size="sm"
+            >
+              <Download />
+              Export PDF
             </Button>
           </>
         }
@@ -138,7 +148,7 @@ export default async function FinanceOverviewPage() {
                   className="group flex items-center justify-between gap-3"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground group-hover:text-brand-terracotta">
+                    <p className="truncate text-sm font-medium text-foreground group-hover:text-brand-azure">
                       {p.name}
                     </p>
                     <p className="text-xs text-muted-foreground">

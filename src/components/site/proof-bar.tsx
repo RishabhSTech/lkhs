@@ -1,10 +1,18 @@
 import { Star } from "lucide-react";
-import { formatINR } from "@/lib/format";
+import { CountUp, type CountUpFormat } from "@/components/site/count-up";
 
 /**
- * The credibility numbers, one line, no section heading. These used to be
- * crammed under the hero headline where they competed with it; on their own
- * band they read as fact rather than decoration.
+ * The credibility numbers, directly under the hero.
+ *
+ * Deliberately the first thing below the fold, and deliberately nothing but
+ * figures: someone who has never heard of us decides whether we are real
+ * before they decide whether any particular home is nice. The reassurances
+ * that used to sit here as a second row were saying the same four things as
+ * the hero and the direct-booking section — three statements of one argument
+ * is not three times the trust, it is a page that protests too much.
+ *
+ * Every figure is read off the database. Nothing here is a marketing claim —
+ * the moment one of them is, the others stop working.
  */
 export function ProofBar({
   homes,
@@ -20,48 +28,69 @@ export function ProofBar({
   reviews: number;
   fromPrice: number | null;
 }) {
-  // Every figure here is read off the database. Nothing on this band is a
-  // marketing claim — the moment one of them is, the other three stop working.
-  const items: { value: string; label: string; star?: boolean }[] = [
+  const stats: {
+    key: string;
+    value: number;
+    format?: CountUpFormat;
+    label: string;
+    star?: boolean;
+  }[] = [
     {
-      value: String(homes),
-      label:
-        cities > 1
-          ? `homes across ${cities} cities`
-          : homes === 1
-            ? "home, run by us"
-            : "homes, all run by us",
+      key: "homes",
+      value: homes,
+      label: homes === 1 ? "home, run by us" : "homes, all run by us",
     },
   ];
 
+  // A "1" here would be padding, not proof. The stat earns its place from the
+  // second city onwards.
+  if (cities > 1) {
+    stats.push({
+      key: "cities",
+      value: cities,
+      label: "cities, known properly",
+    });
+  }
   if (rating !== null && reviews > 0) {
-    items.push({
-      value: rating.toFixed(1),
-      label: `from ${reviews} guest reviews`,
+    stats.push({
+      key: "rating",
+      value: rating,
+      format: "rating",
+      label: `from ${reviews} guest ${reviews === 1 ? "review" : "reviews"}`,
       star: true,
     });
   }
   if (fromPrice !== null) {
-    items.push({ value: formatINR(fromPrice), label: "lowest nightly rate" });
+    stats.push({
+      key: "from",
+      // The animation runs on the number; the currency shaping is applied to
+      // each frame rather than to the endpoint.
+      value: fromPrice,
+      format: "inr",
+      label: "lowest nightly rate",
+    });
   }
 
   return (
-    <div className="border-y border-border bg-muted/40">
-      <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-y-6 px-5 py-8 sm:grid-cols-3 sm:gap-y-0 sm:px-6 sm:divide-x sm:divide-border">
-        {items.map((item) => (
-          <div key={item.label} className="sm:px-6 sm:first:pl-0 sm:last:pr-0">
-            <p className="flex items-center gap-1.5 font-display text-[1.75rem] text-foreground">
-              {item.star && (
-                <Star className="size-4 fill-brand-terracotta text-brand-terracotta" />
+    <section
+      aria-label="Lime Kraft in numbers"
+      className="border-b border-border bg-gradient-to-b from-brand-ivory to-background"
+    >
+      <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-x-6 gap-y-9 px-5 py-12 sm:px-6 lg:grid-cols-4 lg:gap-x-10 lg:py-14">
+        {stats.map((stat) => (
+          <div key={stat.key}>
+            <p className="flex items-baseline gap-1.5 font-display text-[2.25rem] text-brand-blue tabular-nums sm:text-[2.75rem]">
+              {stat.star && (
+                <Star className="size-4 translate-y-[-0.4rem] fill-brand-gold text-brand-gold sm:size-5" />
               )}
-              {item.value}
+              <CountUp value={stat.value} format={stat.format} />
             </p>
-            <p className="mt-1 text-sm leading-snug text-muted-foreground">
-              {item.label}
+            <p className="mt-2 max-w-[16ch] text-sm leading-snug text-muted-foreground">
+              {stat.label}
             </p>
           </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 }

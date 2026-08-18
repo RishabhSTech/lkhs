@@ -1,8 +1,12 @@
 import { AdminPage, PageHeader } from "@/components/admin/page-header";
+import { UserManager } from "@/components/admin/user-manager";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getCurrentAdminUser } from "@/lib/auth/current-user";
 import { db } from "@/lib/db";
 import { formatDateLong } from "@/lib/format";
+import { PAYMENT_PROVIDER_IS_MOCK } from "@/lib/payments/provider";
+import { EMAIL_IS_LIVE } from "@/lib/notifications/provider";
 
 export const dynamic = "force-dynamic";
 
@@ -19,16 +23,64 @@ const ROLE_DESCRIPTIONS: Record<string, string> = {
   GUEST: "Their own bookings only.",
 };
 
-const INTEGRATIONS = [
-  { name: "Payments", detail: "Razorpay / Stripe", status: "Not connected", note: "Bookings settle through a mock provider." },
-  { name: "Email", detail: "Transactional provider", status: "Not connected", note: "Outbound email is logged, not delivered." },
-  { name: "WhatsApp", detail: "WhatsApp Business API", status: "Not connected", note: "Messages are logged, not delivered." },
-  { name: "Channel manager", detail: "Airbnb / Booking.com / Agoda", status: "Not connected", note: "No live OTA syncing." },
-  { name: "Object storage", detail: "S3-compatible (MinIO)", status: "Configured", note: "Available for receipt uploads." },
-  { name: "Database", detail: "Supabase Postgres", status: "Connected", note: "Source of truth for all records." },
-];
+function buildIntegrations() {
+  const airbnbConfigured = Boolean(process.env.AIRBNB_API_KEY && process.env.AIRBNB_API_BASE_URL);
+  const redisConfigured = Boolean(process.env.REDIS_URL);
+  const s3Configured = Boolean(process.env.S3_ENDPOINT && process.env.S3_ACCESS_KEY);
+
+  return [
+    {
+      name: "Payments",
+      detail: "Razorpay",
+      status: PAYMENT_PROVIDER_IS_MOCK ? "Not connected" : "Connected",
+      note: PAYMENT_PROVIDER_IS_MOCK
+        ? "Bookings settle through a mock provider."
+        : "Bookings settle through Razorpay Checkout + webhook.",
+    },
+    {
+      name: "Email",
+      detail: "Resend",
+      status: EMAIL_IS_LIVE ? "Connected" : "Not connected",
+      note: EMAIL_IS_LIVE
+        ? "Booking confirmations and OTP codes are delivered."
+        : "Outbound email is logged, not delivered.",
+    },
+    {
+      name: "WhatsApp",
+      detail: "WhatsApp Business API",
+      status: "Not connected",
+      note: "Messages are logged, not delivered.",
+    },
+    {
+      name: "Channel manager",
+      detail: "Airbnb / Booking.com / Agoda",
+      status: airbnbConfigured ? "Configured" : "Not connected",
+      note: airbnbConfigured
+        ? "Airbnb syncs live; Booking.com and Agoda have no adapter yet."
+        : "No live OTA syncing.",
+    },
+    {
+      name: "Background jobs",
+      detail: "Redis / BullMQ",
+      status: redisConfigured ? "Connected" : "Not connected",
+      note: redisConfigured
+        ? "Channel sync, payment-hold expiry and recurring expenses run on schedule."
+        : "REDIS_URL not set — jobs are skipped, not queued.",
+    },
+    {
+      name: "Object storage",
+      detail: "S3-compatible (MinIO)",
+      status: s3Configured ? "Configured" : "Not connected",
+      note: "Available for receipt and photo uploads.",
+    },
+    { name: "Database", detail: "Supabase Postgres", status: "Connected", note: "Source of truth for all records." },
+  ];
+}
 
 export default async function SettingsPage() {
+  const integrations = buildIntegrations();
+  const { user } = await getCurrentAdminUser();
+  const isSuperAdmin = user.role === "SUPER_ADMIN";
   const [users, auditLogs] = await Promise.all([
     db.user.findMany({
       include: { propertyAssignments: { include: { property: { select: { name: true } } } } },
@@ -52,6 +104,21 @@ export default async function SettingsPage() {
         </TabsList>
 
         <TabsContent value="team" className="mt-5 space-y-5">
+          {isSuperAdmin && (
+            <UserManager
+              initialUsers={users.map((member) => ({
+                id: member.id,
+                name: member.name,
+                email: member.email,
+                phone: member.phone,
+                role: member.role,
+                propertyAssignments: member.propertyAssignments.map((assignment) => ({
+                  property: { name: assignment.property.name },
+                })),
+              }))}
+            />
+          )}
+
           <section className="rounded-xl border border-border bg-card p-5">
             <h2 className="text-sm font-semibold text-foreground">Team</h2>
             <ul className="mt-4 divide-y divide-border">
@@ -106,7 +173,7 @@ export default async function SettingsPage() {
               Nothing here is faked — anything not connected says so.
             </p>
             <ul className="mt-4 divide-y divide-border">
-              {INTEGRATIONS.map((integration) => (
+              {integrations.map((integration) => (
                 <li
                   key={integration.name}
                   className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"

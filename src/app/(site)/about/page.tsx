@@ -70,7 +70,7 @@ export default async function AboutPage() {
       <main className="flex-1">
         <div className="border-b border-border bg-muted/40">
           <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 lg:py-20">
-            <p className="text-[0.6875rem] font-semibold tracking-[0.18em] text-brand-sage uppercase">
+            <p className="text-[0.6875rem] font-semibold tracking-[0.18em] text-brand-mist uppercase">
               About Lime Kraft
             </p>
             <h1 className="mt-3 max-w-2xl font-heading text-4xl leading-tight text-foreground sm:text-5xl">
@@ -114,7 +114,7 @@ export default async function AboutPage() {
 
         <Section className="border-y border-border bg-muted/40">
           <Reveal>
-            <div className="rounded-3xl bg-brand-green px-6 py-16 text-center sm:px-12">
+            <div className="rounded-3xl bg-brand-blue px-6 py-16 text-center sm:px-12">
               <h2 className="mx-auto max-w-lg font-display text-[2.25rem] text-white sm:text-[3rem]">
                 Come and see for yourself.
               </h2>

@@ -10,7 +10,7 @@ export function ConfirmationHero({ guestName }: { guestName: string }) {
         initial={{ scale: 0.6, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="mx-auto grid size-14 place-items-center rounded-full bg-brand-green"
+        className="mx-auto grid size-14 place-items-center rounded-full bg-brand-blue"
       >
         <motion.span
           initial={{ pathLength: 0, opacity: 0 }}
@@ -30,7 +30,7 @@ export function ConfirmationHero({ guestName }: { guestName: string }) {
           Your stay is confirmed.
         </h1>
         <p className="mt-3 text-[0.9375rem] text-muted-foreground">
-          Thanks, {guestName.split(" ")[0]}. Everything's set — here are the
+          Thanks, {guestName.split(" ")[0]}. Everything&apos;s set — here are the
           details.
         </p>
       </motion.div>

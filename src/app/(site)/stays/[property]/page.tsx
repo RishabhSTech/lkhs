@@ -149,7 +149,7 @@ export default async function PropertyPage({
                     href="#reviews"
                     className="flex items-center gap-1.5 text-foreground underline-offset-4 hover:underline"
                   >
-                    <Star className="size-4 fill-brand-terracotta text-brand-terracotta" />
+                    <Star className="size-4 fill-brand-gold text-brand-gold" />
                     <span className="font-medium">
                       {property.rating.toFixed(2)}
                     </span>
@@ -163,7 +163,7 @@ export default async function PropertyPage({
                     href="#reviews"
                     className="inline-flex h-7 items-center gap-1 rounded-full border border-border px-2.5 font-medium text-foreground"
                   >
-                    <span className="flex h-4 items-center text-brand-terracotta">
+                    <span className="flex h-4 items-center text-brand-azure">
                       <Laurel />
                       <Laurel flipped />
                     </span>
@@ -178,7 +178,7 @@ export default async function PropertyPage({
                     key={fact.label}
                     className="flex items-center gap-2 text-sm text-foreground"
                   >
-                    <fact.icon className="size-4 text-brand-sage" />
+                    <fact.icon className="size-4 text-brand-mist" />
                     {fact.label}
                   </span>
                 ))}

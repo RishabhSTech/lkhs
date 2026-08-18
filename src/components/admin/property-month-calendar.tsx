@@ -271,7 +271,7 @@ function MonthGrid({
                   "text-xs font-semibold",
                   isToday &&
                     !booked &&
-                    "grid size-5 place-items-center rounded-full bg-brand-terracotta text-white",
+                    "grid size-5 place-items-center rounded-full bg-brand-azure text-white",
                 )}
               >
                 {date.getUTCDate()}

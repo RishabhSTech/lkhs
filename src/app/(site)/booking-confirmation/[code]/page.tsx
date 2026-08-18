@@ -109,7 +109,7 @@ export default async function BookingConfirmationPage({
               </dl>
 
               <div className="mt-6 rounded-lg bg-muted/40 p-4 text-sm leading-relaxed text-muted-foreground">
-                We've sent your confirmation
+                We&apos;ve sent your confirmation
                 {reservation.guest.email ? ` to ${reservation.guest.email}` : ""}.
                 Access instructions and the exact address arrive three days before
                 you travel.
@@ -146,7 +146,7 @@ function Detail({
 }) {
   return (
     <div className="flex gap-3">
-      <Icon className="mt-0.5 size-4 shrink-0 text-brand-sage" />
+      <Icon className="mt-0.5 size-4 shrink-0 text-brand-mist" />
       <div>
         <dt className="text-[0.625rem] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
           {label}

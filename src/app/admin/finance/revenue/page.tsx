@@ -32,7 +32,7 @@ export default async function RevenuePage() {
     <AdminPage>
       <Link
         href="/admin/finance"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-brand-green"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-brand-blue"
       >
         <ArrowLeft className="size-4" />
         Back to finance
@@ -91,7 +91,7 @@ export default async function RevenuePage() {
               >
                 <Link
                   href={`/admin/finance/property/${p.id}`}
-                  className="text-foreground hover:text-brand-terracotta"
+                  className="text-foreground hover:text-brand-azure"
                 >
                   {p.name}
                 </Link>

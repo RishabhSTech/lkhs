@@ -38,7 +38,7 @@ export async function SiteFooter() {
   const cities = await getCities().catch(() => []);
 
   return (
-    <footer className="mt-auto border-t border-border bg-brand-green text-white">
+    <footer className="mt-auto border-t border-border bg-brand-blue text-white">
       <div className="mx-auto w-full max-w-6xl px-5 py-12 sm:px-6 lg:py-14">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>

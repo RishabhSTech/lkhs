@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { SiteHeader } from "@/components/site/site-header";
 import { CheckoutFlow } from "@/components/booking/checkout-flow";
 import { getPropertyBySlug } from "@/lib/queries/properties";
+import { PAYMENT_PROVIDER_IS_MOCK } from "@/lib/payments/provider";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,7 @@ export default async function CheckoutPage({
             guests:
               typeof query.guests === "string" ? Number(query.guests) || 2 : 2,
           }}
+          isMockPayment={PAYMENT_PROVIDER_IS_MOCK}
         />
       </main>
     </>

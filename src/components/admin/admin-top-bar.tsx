@@ -40,7 +40,7 @@ export function AdminTopBar({
         <button
           type="button"
           onClick={() => setCommandOpen(true)}
-          className="flex h-9 flex-1 items-center gap-2 rounded-lg border border-border bg-card px-3 text-sm text-muted-foreground transition-colors hover:border-brand-sage sm:max-w-sm"
+          className="flex h-9 flex-1 items-center gap-2 rounded-lg border border-border bg-card px-3 text-sm text-muted-foreground transition-colors hover:border-brand-mist sm:max-w-sm"
         >
           <Search className="size-4" />
           <span className="flex-1 text-left">Search everything…</span>
@@ -58,7 +58,7 @@ export function AdminTopBar({
                 <Button variant="ghost" size="icon-sm" className="relative">
                   <Bell />
                   {notifications.length > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 grid size-4 place-items-center rounded-full bg-brand-terracotta text-[0.5625rem] font-semibold text-white">
+                    <span className="absolute -top-0.5 -right-0.5 grid size-4 place-items-center rounded-full bg-brand-azure text-[0.5625rem] font-semibold text-white">
                       {notifications.length}
                     </span>
                   )}
@@ -76,7 +76,7 @@ export function AdminTopBar({
               </div>
               {notifications.length === 0 ? (
                 <p className="px-4 py-6 text-center text-sm text-muted-foreground">
-                  You're all caught up.
+                  You&apos;re all caught up.
                 </p>
               ) : (
                 <ul className="max-h-80 divide-y divide-border overflow-y-auto">
@@ -106,7 +106,7 @@ export function AdminTopBar({
                           {n.link && (
                             <Link
                               href={n.link}
-                              className="mt-1 inline-block text-xs font-medium text-brand-terracotta hover:underline"
+                              className="mt-1 inline-block text-xs font-medium text-brand-azure hover:underline"
                             >
                               Open
                             </Link>

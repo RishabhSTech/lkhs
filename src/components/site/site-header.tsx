@@ -87,7 +87,7 @@ export function SiteHeader({ transparent = false }: { transparent?: boolean }) {
           <Button
             render={<Link href="/stays" />}
             size="sm"
-            className={cn(!solid && "bg-white text-brand-green hover:bg-white/90")}
+            className={cn(!solid && "bg-white text-brand-blue hover:bg-white/90")}
           >
             Find a stay
           </Button>

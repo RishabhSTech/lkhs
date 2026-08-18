@@ -32,12 +32,12 @@ export function FeaturedStay({ property }: { property: PropertyCardData }) {
       </Link>
 
       <div>
-        <p className="label-eyebrow text-brand-terracotta">The one to book</p>
+        <p className="label-eyebrow text-brand-azure">The one to book</p>
 
         <h3 className="mt-3">
           <Link
             href={`/stays/${property.slug}`}
-            className="font-display text-[1.875rem] text-foreground transition-colors hover:text-brand-green sm:text-[2.25rem] focus-visible:outline-none focus-visible:underline"
+            className="font-display text-[1.875rem] text-foreground transition-colors hover:text-brand-blue sm:text-[2.25rem] focus-visible:outline-none focus-visible:underline"
           >
             {property.name}
           </Link>
@@ -67,14 +67,14 @@ export function FeaturedStay({ property }: { property: PropertyCardData }) {
 
         <div className="mt-6 flex items-end justify-between gap-4 border-t border-border pt-5">
           <div>
-            <p className="font-display text-[1.75rem] text-brand-terracotta">
+            <p className="font-display text-[1.75rem] text-brand-azure">
               {formatINR(property.basePrice)}
             </p>
             <p className="text-sm text-muted-foreground">per night</p>
           </div>
           {property.rating !== null && (
             <p className="flex items-center gap-1.5 text-sm text-foreground">
-              <Star className="size-4 fill-brand-terracotta text-brand-terracotta" />
+              <Star className="size-4 fill-brand-gold text-brand-gold" />
               <span className="font-semibold">{property.rating.toFixed(1)}</span>
               <span className="text-muted-foreground">
                 ({property.reviewCount})

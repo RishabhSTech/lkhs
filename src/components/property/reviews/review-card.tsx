@@ -32,7 +32,7 @@ export function Stars({
           className={cn(
             "size-3",
             i < Math.round(rating)
-              ? "fill-brand-terracotta text-brand-terracotta"
+              ? "fill-brand-gold text-brand-gold"
               : "fill-muted text-muted",
           )}
         />
@@ -111,7 +111,7 @@ export function ReviewCard({
           </>
         )}
         {review.isVerifiedStay && (
-          <span className="inline-flex items-center gap-1 text-brand-sage">
+          <span className="inline-flex items-center gap-1 text-brand-mist">
             <BadgeCheck className="size-3.5" />
             Verified stay
           </span>
@@ -137,7 +137,7 @@ export function ReviewCard({
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="mt-1.5 text-sm font-medium text-foreground underline underline-offset-4 transition-colors hover:text-brand-terracotta"
+          className="mt-1.5 text-sm font-medium text-foreground underline underline-offset-4 transition-colors hover:text-brand-azure"
         >
           {expanded ? "Show less" : "Show more"}
         </button>

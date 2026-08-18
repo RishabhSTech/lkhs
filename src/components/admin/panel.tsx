@@ -43,7 +43,7 @@ export function Panel({
           {action && (
             <Link
               href={action.href}
-              className="shrink-0 text-xs font-medium text-brand-terracotta transition-opacity hover:opacity-70"
+              className="shrink-0 text-xs font-medium text-brand-azure transition-opacity hover:opacity-70"
             >
               {action.label}
             </Link>

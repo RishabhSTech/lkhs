@@ -67,7 +67,7 @@ export function AdminMobileNav({ role }: { role: RoleName }) {
             />
             <SheetContent side="bottom" className="max-h-[80svh] overflow-y-auto">
               <SheetHeader>
-                <SheetTitle className="font-heading text-xl text-brand-green">
+                <SheetTitle className="font-heading text-xl text-brand-blue">
                   All sections
                 </SheetTitle>
               </SheetHeader>
@@ -79,7 +79,7 @@ export function AdminMobileNav({ role }: { role: RoleName }) {
                       onClick={() => setOpen(false)}
                       className="flex items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-3 text-sm font-medium text-foreground"
                     >
-                      <item.icon className="size-4 text-brand-sage" />
+                      <item.icon className="size-4 text-brand-mist" />
                       {item.label}
                     </Link>
                   </li>

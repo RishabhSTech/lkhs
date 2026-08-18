@@ -189,7 +189,7 @@ export default async function DestinationPage({
                   <Link
                     key={sibling.slug}
                     href={`/destinations/${sibling.slug}`}
-                    className="rounded-full border border-border bg-card px-4 py-2 text-sm text-foreground transition-colors hover:border-brand-terracotta hover:text-brand-terracotta"
+                    className="rounded-full border border-border bg-card px-4 py-2 text-sm text-foreground transition-colors hover:border-brand-azure hover:text-brand-azure"
                   >
                     {sibling.name}
                   </Link>
@@ -198,7 +198,7 @@ export default async function DestinationPage({
 
               <Link
                 href={`/stays-in-${citySlug}`}
-                className="group mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-foreground transition-colors hover:text-brand-terracotta"
+                className="group mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-foreground transition-colors hover:text-brand-azure"
               >
                 All stays in {destination.city}
                 <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />

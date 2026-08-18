@@ -89,7 +89,7 @@ export function PropertyCard({
               className={cn(
                 "size-4 transition-all duration-200",
                 saved
-                  ? "scale-110 fill-brand-terracotta text-brand-terracotta"
+                  ? "scale-110 fill-brand-azure text-brand-azure"
                   : "text-foreground/70",
               )}
             />
@@ -103,7 +103,7 @@ export function PropertyCard({
             </h3>
             {property.rating !== null && (
               <span className="mt-0.5 flex shrink-0 items-center gap-1 text-sm text-foreground">
-                <Star className="size-3.5 fill-brand-terracotta text-brand-terracotta" />
+                <Star className="size-3.5 fill-brand-gold text-brand-gold" />
                 <span className="font-medium">{property.rating.toFixed(1)}</span>
                 <span className="text-muted-foreground">
                   ({property.reviewCount})

@@ -58,8 +58,8 @@ export function AskLimePanel() {
       />
       <SheetContent side="right" className="w-full sm:max-w-md">
         <SheetHeader>
-          <SheetTitle className="flex items-center gap-2 font-heading text-xl text-brand-green">
-            <Sparkles className="size-4 text-brand-terracotta" />
+          <SheetTitle className="flex items-center gap-2 font-heading text-xl text-brand-blue">
+            <Sparkles className="size-4 text-brand-azure" />
             Ask Lime
           </SheetTitle>
           <SheetDescription>
@@ -159,7 +159,7 @@ export function AskLimePanel() {
                       setQuestion(s);
                       ask(s);
                     }}
-                    className="w-full rounded-lg border border-border bg-card px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:border-brand-sage hover:text-foreground"
+                    className="w-full rounded-lg border border-border bg-card px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:border-brand-mist hover:text-foreground"
                   >
                     {s}
                   </button>
