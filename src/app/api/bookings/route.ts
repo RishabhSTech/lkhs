@@ -32,7 +32,7 @@ export async function POST(request: Request) {
   const data = parsed.data;
   if (!data.email && !data.phone) {
     return NextResponse.json(
-      { error: "Provide an email address or a mobile number." },
+      { error: "We need an email address or a mobile number to send your confirmation to." },
       { status: 400 },
     );
   }
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     select: { id: true },
   });
   if (!property) {
-    return NextResponse.json({ error: "Property not found." }, { status: 404 });
+    return NextResponse.json({ error: "That home is no longer listed." }, { status: 404 });
   }
 
   const session = await getSession();
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
     }
     console.error("Booking failed", error);
     return NextResponse.json(
-      { error: "We couldn't complete that booking. Please try again." },
+      { error: "We couldn't complete that booking. Nothing has been charged — try again, or message us and we'll hold the dates." },
       { status: 500 },
     );
   }

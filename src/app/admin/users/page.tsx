@@ -22,7 +22,7 @@ export default async function UsersPage() {
     <AdminPage>
       <PageHeader
         title="Users"
-        description="Create, edit and manage backend team access for the business."
+        description="Who can get into the back office, and what each of them can do."
       />
 
       <UserManager initialUsers={users.map((member) => ({

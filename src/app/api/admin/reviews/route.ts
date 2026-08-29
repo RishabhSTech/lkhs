@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     select: { id: true, name: true, slug: true },
   });
   if (!property) {
-    return NextResponse.json({ error: "Property not found." }, { status: 404 });
+    return NextResponse.json({ error: "That property no longer exists." }, { status: 404 });
   }
 
   const review = await db.review.create({
@@ -126,7 +126,7 @@ export async function PATCH(request: Request) {
 
   const parsed = updateSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    return NextResponse.json({ error: "We couldn't update that review — check the values and try again." }, { status: 400 });
   }
   const data = parsed.data;
 
@@ -135,7 +135,7 @@ export async function PATCH(request: Request) {
     select: { id: true, propertyId: true },
   });
   if (!existing) {
-    return NextResponse.json({ error: "Review not found." }, { status: 404 });
+    return NextResponse.json({ error: "That review no longer exists." }, { status: 404 });
   }
 
   const response = data.response?.trim() || null;
@@ -174,7 +174,7 @@ export async function DELETE(request: Request) {
   const { user } = await getCurrentAdminUser();
   const id = new URL(request.url).searchParams.get("id");
   if (!id) {
-    return NextResponse.json({ error: "Missing review id." }, { status: 400 });
+    return NextResponse.json({ error: "We couldn't tell which review that was." }, { status: 400 });
   }
 
   const existing = await db.review.findUnique({
@@ -182,13 +182,13 @@ export async function DELETE(request: Request) {
     select: { id: true, propertyId: true, guestId: true },
   });
   if (!existing) {
-    return NextResponse.json({ error: "Review not found." }, { status: 404 });
+    return NextResponse.json({ error: "That review no longer exists." }, { status: 404 });
   }
   // A guest's own review is hidden, never deleted — deleting it would let a
   // bad review be made to disappear with no trace and no way back.
   if (existing.guestId) {
     return NextResponse.json(
-      { error: "Guest reviews can be hidden, but not deleted." },
+      { error: "Guest reviews can be hidden, but never deleted — hide it instead." },
       { status: 409 },
     );
   }

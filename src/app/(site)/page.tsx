@@ -1,34 +1,46 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, MessageCircle } from "lucide-react";
+import { ArrowRight, MessageCircle } from "lucide-react";
+import { AvailabilityExplorer } from "@/components/site/availability-explorer";
 import { CategoryRail } from "@/components/site/category-rail";
+import { DestinationGrid } from "@/components/site/destination-grid";
 import { DirectSavings } from "@/components/site/direct-savings";
 import { FaqList, type Faq } from "@/components/site/faq-list";
 import { Hero } from "@/components/site/hero";
 import { HowItWorks, type HowItWorksStep } from "@/components/site/how-it-works";
+import { LinkIndex, type IndexLink } from "@/components/site/link-index";
 import { ProofBar } from "@/components/site/proof-bar";
 import { Reveal, RevealGroup } from "@/components/site/reveal";
 import { ReviewRail, type RailReview } from "@/components/site/review-rail";
 import { Container, Section, SectionHeading } from "@/components/site/section";
 import { SiteHeader } from "@/components/site/site-header";
-import { Spotlight } from "@/components/site/spotlight";
 import { FeaturedStay } from "@/components/property/featured-stay";
+import { RoomTour } from "@/components/property/room-tour";
 import { PropertyCard } from "@/components/property/property-card";
 import { Button } from "@/components/ui/button";
-import { getPropertyCards } from "@/lib/queries/properties";
+import {
+  getPropertyCards, getPropertyGallery,
+} from "@/lib/queries/properties";
+import { getPortfolioAvailability } from "@/lib/queries/availability";
 import {
   getAreasByCity, getCities, getCollectionTargets,
 } from "@/lib/queries/locations";
 import { JsonLd } from "@/components/seo/json-ld";
 import { faqJsonLd, organizationJsonLd, webSiteJsonLd } from "@/lib/seo/jsonld";
 import { COLLECTIONS } from "@/lib/seo/collections";
+import { pendingCities } from "@/lib/seo/upcoming";
 import { SITE } from "@/lib/seo/site";
 import { db } from "@/lib/db";
 import { formatINR } from "@/lib/format";
 import { CATEGORIES } from "../../../prisma/seed-data";
 
-export const dynamic = "force-dynamic";
+/**
+ * Prerendered and refreshed in the background. Every figure here — the homes,
+ * the cities, the rating, the cheapest nightly price — is inventory-wide and
+ * identical for every visitor, so this page was running eight queries per
+ * request to produce the same HTML each time.
+ */
+export const revalidate = 300;
 
 /**
  * The homepage inherited the root layout's generic title, which named no city
@@ -138,7 +150,7 @@ const FAQS: Faq[] = [
 export default async function HomePage() {
   const [
     featured, cities, areasByCity, collectionTargets, reviews, ratingAgg,
-    propertyCount, cheapest,
+    propertyCount, cheapest, availability,
   ] =
     await Promise.all([
       getPropertyCards({ limit: 3 }),
@@ -168,9 +180,19 @@ export default async function HomePage() {
         orderBy: { basePrice: "asc" },
         select: { basePrice: true },
       }),
+      // Four months of portfolio-wide availability. Prerendered with the rest
+      // of the page and refreshed on the same 300s revalidate, so the calendar
+      // is never more than five minutes behind the booking system.
+      getPortfolioAvailability(4),
     ]);
 
   const [hero, ...rest] = featured;
+
+  // Serial on purpose: the gallery is keyed by the featured home's slug, which
+  // is only known once the query above has resolved. One extra round trip on a
+  // prerendered page is cheaper than fetching every property's photographs to
+  // avoid it.
+  const gallery = hero ? await getPropertyGallery(hero.slug) : [];
   const fromPrice = cheapest ? Number(cheapest.basePrice) : null;
   const locations = [...areasByCity.values()].map((entry) => ({
     city: entry.city,
@@ -202,14 +224,28 @@ export default async function HomePage() {
   }));
 
   // Ordered by inventory so the strongest pages get the most prominent link.
+  // The count travels with the link now: the index below prints it, which is
+  // what turns a list of keywords into a statement about what exists.
   const cityNameBySlug = new Map(cities.map((c) => [c.slug, c.name]));
-  const collectionLinks = collectionTargets
+  const collectionLinks: IndexLink[] = collectionTargets
     .filter((t) => t.kind !== "stays" && cityNameBySlug.has(t.citySlug))
     .sort((a, b) => b.count - a.count)
     .map((t) => ({
       href: `/${t.kind}-in-${t.citySlug}`,
       label: `${COLLECTIONS[t.kind].plural} in ${cityNameBySlug.get(t.citySlug)}`,
+      count: t.count,
     }));
+
+  const where =
+    cities.length > 1
+      ? `${cities.length} cities`
+      : (cities[0]?.name ?? "India");
+
+  // Cities we have announced but cannot sell yet. Filtered against live
+  // inventory, so the moment the first Goa listing goes ACTIVE this returns
+  // empty and the real, bookable Goa card takes the tile.
+  const upcoming = pendingCities(cities);
+  const opening = upcoming.map((c) => c.name);
 
   return (
     <>
@@ -231,8 +267,7 @@ export default async function HomePage() {
             cityNames={cities.map((c) => c.name)}
           />
         </div>
-
-        {/* ── Proof, before inventory ──────────────────────────────────────
+        {/* ── Masthead figures, before inventory ───────────────────────────
             Deliberately the first thing under the fold. Someone who has never
             heard of us decides whether we are real before they decide whether
             a particular home is nice. */}
@@ -244,16 +279,23 @@ export default async function HomePage() {
           fromPrice={fromPrice}
         />
 
-        {/* ── Featured: the page's first real argument ─────────────────── */}
+        {/* ── 01 · Featured: the page's first real argument ──────────────
+            The heading runs `aside` and the one below it runs `stack`, and so
+            on down the page. Eight identical eyebrow-title-description blocks
+            in the same corner of the same container is what made the old page
+            read as a list of sections rather than as an argument, and no
+            amount of copy fixes a shape problem. */}
         <Section size="feature">
           <Reveal>
             <SectionHeading
+              index="01"
+              layout="aside"
               size="feature"
               eyebrow="Featured stays"
               title="Homes we're especially proud of"
               description={
                 fromPrice
-                  ? `From ${formatINR(fromPrice)} a night, across ${propertyCount} homes we run ourselves.`
+                  ? `From ${formatINR(fromPrice)} a night, across ${propertyCount} homes we run ourselves — every one of them staffed, cleaned and answered for by our own team.`
                   : undefined
               }
               action={{ href: "/stays", label: "View all stays" }}
@@ -261,56 +303,166 @@ export default async function HomePage() {
           </Reveal>
 
           {hero && (
-            <Reveal className="mt-12">
+            <Reveal className="mt-12 lg:mt-16">
               <FeaturedStay property={hero} />
             </Reveal>
           )}
 
           {rest.length > 0 && (
-            <RevealGroup className="mt-14 grid gap-x-6 gap-y-8 sm:grid-cols-2">
-              {rest.map((property) => (
-                <PropertyCard key={property.slug} property={property} />
+            <RevealGroup className="mt-14 grid gap-x-8 gap-y-10 sm:grid-cols-2 sm:items-start lg:mt-20">
+              {rest.map((property, i) => (
+                <div
+                  key={property.slug}
+                  // The second card drops half a step. Two cards pinned to the
+                  // same baseline is the shape of a search result; staggering
+                  // them keeps the pair reading as an editor's pick, and it
+                  // gives the eye somewhere to go after the featured panel.
+                  className={i === 1 ? "lg:mt-16" : undefined}
+                >
+                  <PropertyCard property={property} />
+                </div>
               ))}
             </RevealGroup>
           )}
         </Section>
 
-        {/* ── Categories: a rail, not a six-up grid ────────────────────── */}
-        <Section size="quiet" bleed className="border-t border-border pt-14">
-          <Container>
+        {/* ── 02 · Step inside ─────────────────────────────────────────────
+            The featured section above establishes that a home exists and what
+            it costs. It cannot tell you what being in it is like, which is the
+            thing actually being decided. The arc is built from CSS 3D — real
+            perspective on flat photographic planes, composited on the GPU, no
+            renderer shipped to the page to draw what amounts to five quads. */}
+        {hero && gallery.length > 1 && (
+          <Section size="feature">
             <Reveal>
               <SectionHeading
-                size="quiet"
-                eyebrow="Pick your vibe"
-                title="What kind of stay is this?"
+                index="02"
+                size="feature"
+                eyebrow="Step inside"
+                title={
+                  <>
+                    What it&apos;s like <em className="italic">in there</em>.
+                  </>
+                }
+                description={`Every room of ${hero.name}, in perspective — drag, swipe or use the arrow keys to move through the house.`}
               />
             </Reveal>
+            <Reveal className="mt-12 lg:mt-14">
+              <RoomTour
+                images={gallery}
+                propertyName={hero.name}
+                propertySlug={hero.slug}
+              />
+            </Reveal>
+          </Section>
+        )}
+
+        {/* ── 03 · When can you go ─────────────────────────────────────────
+            The act the page was missing. The hero asks for dates and then the
+            page spends nine sections arguing about price, quality and trust
+            without ever coming back to the question that decides whether a
+            trip happens at all. Every cell is a live count of homes with a
+            free unit that night and the real cheapest rate among exactly
+            those homes — never a headline price borrowed from a home that is
+            already booked. */}
+        {availability.homes.length > 0 && (
+          <Section
+            size="feature"
+            bleed
+            className="border-y border-border bg-brand-ivory"
+          >
+            <Container>
+              <Reveal>
+                <SectionHeading
+                  index="03"
+                  layout="aside"
+                  size="feature"
+                  eyebrow="Dates & availability"
+                  title="When can you go?"
+                  description={
+                    availability.floorPrice !== null
+                      ? `Four months of live availability across all ${availability.homes.length} homes, from ${formatINR(availability.floorPrice)} a night. Weekend and festive rates are already applied — the number on a date is what that night costs.`
+                      : `Four months of live availability across all ${availability.homes.length} homes.`
+                  }
+                />
+              </Reveal>
+              <Reveal className="mt-10 lg:mt-14">
+                <AvailabilityExplorer data={availability} />
+              </Reveal>
+            </Container>
+          </Section>
+        )}
+
+        {/* ── 04 · Destinations: cities, derived from inventory ───────────
+            Plus anywhere we have announced but cannot sell yet. Those come
+            from `lib/seo/upcoming`, are filtered against live inventory, and
+            are drawn as an announcement rather than as a card — no count, no
+            rate, no link to an empty search. Saying "Goa is coming" is worth
+            far more than saying nothing, and it costs nothing in trust so long
+            as the tile never pretends to be bookable. */}
+        <Section size="feature">
+          <Reveal>
+            <SectionHeading
+              index="04"
+              layout="aside"
+              size="feature"
+              eyebrow="Destinations"
+              title={
+                cities.length > 1
+                  ? "Where you'll find us"
+                  : `Where we are in ${cities[0]?.name ?? "India"}`
+              }
+              description={
+                // Three sentences at most, and the last one only exists when
+                // there is genuinely a city on the way.
+                [
+                  cities.length > 1
+                    ? `${propertyCount} homes across ${cities.length} cities, each one run by our own team rather than let out to individual hosts.`
+                    : cities.length === 1
+                      ? `${propertyCount} ${propertyCount === 1 ? "home" : "homes"} in ${cities[0].name}, run by our own team rather than let out to individual hosts.`
+                      : null,
+                  opening.length > 0
+                    ? `${opening.join(" and ")} ${opening.length === 1 ? "is" : "are"} opening next, and the dates go on sale here before they go anywhere else.`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(" ") || undefined
+              }
+              action={{ href: "/destinations", label: "All destinations" }}
+            />
+          </Reveal>
+          <Reveal className="mt-10 lg:mt-14">
+            <DestinationGrid cities={cities} upcoming={upcoming} />
+          </Reveal>
+        </Section>
+
+        {/* ── Sub-beat, deliberately unnumbered ────────────────────────────
+            A rail of six links to filtered search is texture, not a chapter,
+            and giving it its own number in the spine claimed an importance it
+            cannot cash. It reads far better as the second way into the same
+            question the destinations grid above just asked. */}
+        <Section size="quiet" bleed>
+          <Container>
+            <Reveal>
+              <p className="label-eyebrow text-brand-azure">Or pick a vibe</p>
+              {/* An h3: this is subordinate to the destinations heading it
+                  sits under, and the outline should say so. */}
+              <h3 className="headline mt-2.5 font-display text-[1.5rem] text-foreground sm:text-[1.75rem]">
+                What kind of stay is this?
+              </h3>
+            </Reveal>
           </Container>
-          <div className="mt-6">
+          <div className="mt-7">
             <CategoryRail categories={CATEGORIES} />
           </div>
         </Section>
 
-        {/* ── How it works, one step at a time ─────────────────────────── */}
-        <Section size="feature">
-          <Reveal>
-            <SectionHeading
-              size="feature"
-              eyebrow="How it works"
-              title={
-                <>
-                  Booking takes about <em className="italic">two minutes</em>.
-                </>
-              }
-              description="No sign-up wall, no waiting on a confirmation, no phone number to call."
-            />
-          </Reveal>
-          <Reveal className="mt-12">
-            <HowItWorks steps={steps} />
-          </Reveal>
-        </Section>
-
-        {/* ── Book direct: full-bleed, the one saturated moment ────────── */}
+        {/* ── 05 · Book direct ────────────────────────────────────────────
+            The page's one saturated moment, and now genuinely the only one.
+            The closing band used to run the same brand-blue field with the
+            same grain and the same azure bloom, which meant the page's most
+            important argument and its sign-off were competing for the same
+            emphasis and neither one won. The close is set in type instead. */}
         <Section
           size="feature"
           bleed
@@ -327,6 +479,7 @@ export default async function HomePage() {
               <div>
                 <Reveal>
                   <SectionHeading
+                    index="05"
                     size="feature"
                     tone="invert"
                     eyebrow="Direct booking benefits"
@@ -347,7 +500,7 @@ export default async function HomePage() {
                       <h3 className="font-display-sm text-lg text-white">
                         {benefit.title}
                       </h3>
-                      <p className="mt-1.5 text-sm leading-relaxed text-white/60">
+                      <p className="copy mt-1.5 text-sm leading-relaxed text-white/60">
                         {benefit.body}
                       </p>
                     </div>
@@ -372,79 +525,18 @@ export default async function HomePage() {
           </Container>
         </Section>
 
-        {/* ── Destinations: cities, derived from inventory ────────────── */}
-        <Section size="feature">
-          <Reveal>
-            <SectionHeading
-              eyebrow="Destinations"
-              title={
-                cities.length > 1
-                  ? "Where you'll find us"
-                  : `Where we are in ${cities[0]?.name ?? "India"}`
-              }
-              description={
-                cities.length > 1
-                  ? `${propertyCount} homes across ${cities.length} cities, each one run by our own team.`
-                  : undefined
-              }
-              action={{ href: "/destinations", label: "All destinations" }}
-            />
-          </Reveal>
-          <RevealGroup className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {cities.map((city) => (
-              <Spotlight key={city.slug} className="rounded-2xl">
-                <Link
-                  href={`/stays-in-${city.slug}`}
-                  className="group block overflow-hidden rounded-2xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                >
-                  <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-muted sm:aspect-[16/12]">
-                    {city.image && (
-                      <Image
-                        src={city.image}
-                        alt=""
-                        fill
-                        sizes="(max-width: 640px) 100vw, 33vw"
-                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
-                      />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-brand-ink/85 via-brand-ink/15 to-transparent" />
-                    <div className="absolute inset-x-5 bottom-5 flex items-end justify-between gap-3">
-                      <div>
-                        <h3 className="font-display text-2xl text-white">
-                          {city.name}
-                        </h3>
-                        <p className="mt-1.5 text-sm leading-snug text-white/75">
-                          {city.propertyCount}{" "}
-                          {city.propertyCount === 1 ? "home" : "homes"}
-                          {city.minPrice !== null &&
-                            ` · from ${formatINR(city.minPrice)} a night`}
-                        </p>
-                      </div>
-                      <span
-                        aria-hidden
-                        className="grid size-9 shrink-0 translate-y-1 place-items-center rounded-full bg-white/15 text-white opacity-0 backdrop-blur-sm transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100"
-                      >
-                        <ArrowUpRight className="size-4" />
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              </Spotlight>
-            ))}
-          </RevealGroup>
-        </Section>
-
-        {/* ── Reviews ──────────────────────────────────────────────────── */}
+        {/* ── 06 · Reviews ─────────────────────────────────────────────── */}
         {railReviews.length > 0 && (
           <Section
             id="reviews"
             size="feature"
             bleed
-            className="border-y border-border bg-muted/50"
+            className="border-y border-border bg-brand-ivory"
           >
             <Container>
               <Reveal>
                 <SectionHeading
+                  index="06"
                   size="feature"
                   eyebrow="Guest reviews"
                   title="What people say after"
@@ -462,17 +554,59 @@ export default async function HomePage() {
           </Section>
         )}
 
-        {/* ── The questions people ask before they trust a booking page ── */}
+        {/* ── 07 · How it works ───────────────────────────────────────────
+            Demoted from third to seventh. A process explainer is the lowest
+            intent content on the page — nobody arrives wanting to read how
+            booking works — and it was sitting above the inventory, the dates
+            and the reviews that people actually came for. It belongs here,
+            where someone has decided and wants to know what happens next. */}
         <Section size="feature">
-          <div className="grid gap-10 lg:grid-cols-[0.75fr_1.25fr] lg:gap-16">
+          <Reveal>
+            <SectionHeading
+              index="07"
+              size="feature"
+              eyebrow="How it works"
+              title={
+                <>
+                  Booking takes about <em className="italic">two minutes</em>.
+                </>
+              }
+              description="No sign-up wall, no waiting on a confirmation, no phone number to call."
+            />
+          </Reveal>
+          <Reveal className="mt-12 lg:mt-16">
+            <HowItWorks steps={steps} />
+          </Reveal>
+        </Section>
+
+        {/* ── 08 · The questions people ask before they trust a page ───── */}
+        <Section size="feature">
+          <Reveal>
+            <SectionHeading
+              index="08"
+              layout="aside"
+              eyebrow="Before you book"
+              title="Straight answers"
+              description="Everything below is how it actually works, not how we would like it to sound."
+            />
+          </Reveal>
+
+          <div className="mt-10 grid gap-10 lg:grid-cols-[1.35fr_0.65fr] lg:gap-16">
             <Reveal>
-              <SectionHeading
-                eyebrow="Before you book"
-                title="Straight answers"
-              />
-              <div className="mt-7 rounded-2xl border border-border bg-muted/50 p-6">
+              <FaqList faqs={FAQS} />
+            </Reveal>
+
+            {/* Moved to the right and reduced to a note. As a bordered card on
+                the left it was the first thing in the section, which put a
+                prompt to go and ask us ahead of the six answers that would
+                have stopped most people needing to. */}
+            <Reveal delay={0.08} className="lg:pt-2">
+              {/* Not sticky: `Reveal` animates a transform, and a transformed
+                  ancestor is a containing block, so a sticky child inside one
+                  jitters against its own parent while the reveal runs. */}
+              <div>
                 <MessageCircle className="size-5 text-brand-azure" />
-                <p className="mt-3 text-[0.9375rem] leading-relaxed text-muted-foreground">
+                <p className="copy mt-3 text-[0.9375rem] leading-relaxed text-muted-foreground">
                   Not covered here? Ask us directly — a person on our team
                   answers, usually within the hour.
                 </p>
@@ -487,16 +621,15 @@ export default async function HomePage() {
                 </Button>
               </div>
             </Reveal>
-            <Reveal delay={0.08}>
-              <FaqList faqs={FAQS} />
-            </Reveal>
           </div>
         </Section>
 
-        {/* ── Popular searches ─────────────────────────────────────────────
-            Not decoration: this is the homepage's link out to every page in
-            the {type}×{city} matrix, which is how those pages get discovered
-            and how authority reaches them from the strongest page we have. */}
+        {/* ── Back matter ─────────────────────────────────────────────────
+            Unnumbered on purpose: the spine above indexes the argument, and
+            this is the index at the back of it. Not decoration either — this
+            is the homepage's link out to every page in the {type}×{city}
+            matrix, which is how those pages get discovered and how authority
+            reaches them from the strongest page we have. */}
         {collectionLinks.length > 0 && (
           <Section size="quiet" className="border-t border-border">
             <Reveal>
@@ -506,50 +639,37 @@ export default async function HomePage() {
                 title="Jump straight to it"
               />
             </Reveal>
-            <div className="mt-6 flex flex-wrap gap-2.5">
-              {collectionLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="rounded-full border border-border bg-card px-4 py-2 text-sm text-foreground transition-colors hover:border-brand-azure hover:text-brand-azure"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
+            <Reveal className="mt-7">
+              <LinkIndex links={collectionLinks} />
+            </Reveal>
           </Section>
         )}
 
-        {/* ── Closing CTA ──────────────────────────────────────────────── */}
+        {/* ── Closing: set in type, not in a coloured box ────────────────
+            The old close was a rounded brand-blue panel with grain and a bloom
+            — the same three devices as section 04, at three-quarters the size.
+            Repeating a page's loudest treatment is how you make it quiet. This
+            says the same thing at the scale of the hero headline and lets the
+            whitespace do the shouting. */}
         <Section size="feature">
           <Reveal>
-            <div className="grain relative overflow-hidden rounded-3xl bg-brand-blue px-6 py-16 text-center sm:px-12 sm:py-24">
-              <div
-                aria-hidden
-                className="absolute -bottom-40 left-1/2 size-[34rem] -translate-x-1/2 rounded-full bg-brand-azure/30 blur-[110px]"
-              />
-              <div className="relative z-[2]">
-                <h2 className="mx-auto max-w-lg font-display text-[2.25rem] text-white sm:text-[3.25rem]">
-                  Find your <em className="italic">next</em> stay.
-                </h2>
-                <p className="mx-auto mt-5 max-w-sm text-base leading-relaxed text-white/70">
-                  {propertyCount} homes across{" "}
-                  {cities.length > 1
-                    ? `${cities.length} cities`
-                    : cities[0]?.name ?? "India"}
-                  , each set up the way we&apos;d want to arrive somewhere
-                  ourselves.
-                </p>
-                <Button
-                  render={<Link href="/stays" />}
-                  variant="accent"
-                  size="xl"
-                  className="mt-9"
-                >
-                  Explore all stays
-                  <ArrowRight />
-                </Button>
-              </div>
+            <p className="label-eyebrow text-brand-azure">Ready when you are</p>
+            <h2 className="headline mt-5 max-w-[16ch] font-display text-[clamp(2.75rem,7.5vw,5.5rem)] text-brand-blue">
+              Find your <em className="italic">next</em> stay.
+            </h2>
+            <div className="mt-10 flex flex-col gap-8 border-t border-border pt-8 sm:flex-row sm:items-end sm:justify-between lg:mt-14">
+              <p className="copy max-w-sm text-base leading-relaxed text-muted-foreground">
+                {propertyCount} homes across {where}, each set up the way we&apos;d
+                want to arrive somewhere ourselves.
+              </p>
+              <Button
+                render={<Link href="/stays" />}
+                size="xl"
+                className="w-full shrink-0 sm:w-auto"
+              >
+                Explore all stays
+                <ArrowRight />
+              </Button>
             </div>
           </Reveal>
         </Section>

@@ -15,7 +15,24 @@ import { slugify } from "@/lib/seo/slug";
 import { formatINR } from "@/lib/format";
 import { DESTINATIONS } from "../../../../../prisma/seed-data";
 
-export const dynamic = "force-dynamic";
+/** Prerendered from `DESTINATIONS`, refreshed in the background. */
+export const revalidate = 300;
+
+/**
+ * The slug set comes from a code constant, so it is fully known at build time
+ * and cannot grow between deploys. Closing it off is what makes an unknown
+ * neighbourhood a real 404 rather than a soft one: `notFound()` can only ever
+ * return 200, because by the time it is thrown the response has started
+ * streaming and the status is already sent. `dynamicParams = false` is decided
+ * during routing instead, before any rendering, so Next can still set a 404 —
+ * verified against a built server.
+ *
+ * Next never re-runs `generateStaticParams` during revalidation, so this is
+ * only safe on a route whose params are static. That is exactly this one, and
+ * not the routes whose params come from the database: closing those off would
+ * turn every newly-published listing into a 404 until the next deploy.
+ */
+export const dynamicParams = false;
 
 export function generateStaticParams() {
   return DESTINATIONS.map((d) => ({ slug: d.slug }));

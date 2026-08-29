@@ -1,16 +1,30 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { CalendarDays, Check, MapPin, Minus, Plus, Search, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { CalendarSkeleton } from "@/components/ui/calendar-skeleton";
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
 import { formatDateShort } from "@/lib/format";
 import { cn } from "@/lib/utils";
+
+/**
+ * Loaded on demand: the calendar only ever renders inside the popover
+ * below, so its `react-day-picker` + `date-fns` chunk has no business in
+ * the initial payload of every page carrying a search box.
+ */
+const Calendar = dynamic(
+  () => import("@/components/ui/calendar").then((m) => m.Calendar),
+  {
+    ssr: false,
+    loading: () => <CalendarSkeleton months={2} />,
+  },
+);
 
 const ANYWHERE = "Anywhere";
 

@@ -70,7 +70,7 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   const parsed = patchSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    return NextResponse.json({ error: "We couldn't update that issue. Refresh and try again." }, { status: 400 });
   }
   const { user } = await getCurrentAdminUser();
   const { id, ...rest } = parsed.data;

@@ -8,7 +8,12 @@ import { getAreasByCity, getCities } from "@/lib/queries/locations";
 import { EmptyState } from "@/components/site/empty-state";
 import { AreaFilter } from "@/components/property/area-filter";
 
-export const dynamic = "force-dynamic";
+/**
+ * Reads `searchParams`, so this stays a per-request render — the filtered
+ * result is the page. The `force-dynamic` it replaces was redundant, and kept
+ * the route from ever being reconsidered.
+ */
+export const revalidate = 300;
 
 /**
  * `/stays` is the working search surface, not a landing page. Any filtered
@@ -99,8 +104,12 @@ export default async function StaysPage({ searchParams }: PageProps<"/stays">) {
           {properties.length === 0 ? (
             <EmptyState
               className="mt-12"
-              title="No homes match those filters"
-              description="Try widening the area or reducing the number of guests — we only have five homes, so the filters bite quickly."
+              // The count is read off the same query that renders the grid.
+              // This line used to say "we only have five homes" in fixed text,
+              // which stopped being true at the sixth — on the one screen
+              // where a visitor is already wondering whether the site works.
+              title="Nothing matches those filters"
+              description={`We run ${totalHomes} ${totalHomes === 1 ? "home" : "homes"} in total, so a narrow filter empties the page quickly. Widen the area or drop a guest and there will be more to look at.`}
               action={{ href: "/stays", label: "Clear filters" }}
             />
           ) : (

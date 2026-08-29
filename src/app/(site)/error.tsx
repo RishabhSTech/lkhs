@@ -14,8 +14,8 @@ export default function SiteError({ reset }: { reset: () => void }) {
         That didn&apos;t load properly
       </h1>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-        Something went wrong on our end. Try again, or head back and pick up
-        where you left off.
+        This one is on us, not on you. Try again — and if it keeps happening, tell
+        us and we will look at it today.
       </p>
       <div className="mt-6 flex gap-3">
         <Button onClick={reset}>Try again</Button>

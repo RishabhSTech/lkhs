@@ -9,7 +9,7 @@ const schema = z.object({ channelPropertyId: z.string().min(1) });
 export async function POST(request: Request) {
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    return NextResponse.json({ error: "We couldn't start that sync. Refresh and try again." }, { status: 400 });
   }
 
   const [{ user }, link] = await Promise.all([
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   }
   if (!link.externalListingId) {
     return NextResponse.json(
-      { error: "Connect a listing ID before syncing." },
+      { error: "Add the channel's listing ID before syncing — there's nothing to sync against without it." },
       { status: 400 },
     );
   }
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
 
   if (!job) {
     return NextResponse.json(
-      { error: "No background worker is configured (REDIS_URL not set) — nothing was queued." },
+      { error: "No background worker is running, so nothing was queued. Set REDIS_URL and start the worker." },
       { status: 503 },
     );
   }

@@ -59,7 +59,7 @@ export default async function TripsPage() {
             <EmptyState
               className="mt-8"
               title="Sign in to see your trips"
-              description="We'll send a code to your email or mobile — no password needed."
+              description="We'll text or email you a six-digit code. There is no password to remember."
               action={{ href: "/signin", label: "Sign in" }}
             />
           ) : (
@@ -75,15 +75,15 @@ export default async function TripsPage() {
               </TabsList>
 
               {[
-                { value: "upcoming", list: upcoming, empty: "No upcoming stays yet." },
-                { value: "past", list: past, empty: "No past stays yet." },
-                { value: "cancelled", list: cancelled, empty: "Nothing cancelled." },
+                { value: "upcoming", list: upcoming, empty: "Nothing booked yet." },
+                { value: "past", list: past, empty: "No stays behind you yet." },
+                { value: "cancelled", list: cancelled, empty: "Nothing cancelled — long may it last." },
               ].map((tab) => (
                 <TabsContent key={tab.value} value={tab.value} className="mt-5">
                   {tab.list.length === 0 ? (
                     <EmptyState
                       title={tab.empty}
-                      description="When you book a Lime Kraft home, it'll appear here."
+                      description="Every Lime Kraft booking lands here — dates, address and invoice in one place."
                       action={{ href: "/stays", label: "Browse stays" }}
                     />
                   ) : (

@@ -1,6 +1,12 @@
 import "server-only";
+import { cache } from "react";
 import type { PropertyType } from "@prisma/client";
 import { db } from "@/lib/db";
+import {
+  CARD_SELECT,
+  ratingsByProperty,
+  toPropertyCard,
+} from "@/lib/queries/properties";
 import { resolveBySlug, slugify } from "@/lib/seo/slug";
 import {
   COLLECTIONS, COLLECTION_KINDS, type CollectionKind,
@@ -25,12 +31,7 @@ export type CityRecord = {
   image: string | null;
 };
 
-function averageRating(reviews: { rating: number }[]) {
-  if (reviews.length === 0) return null;
-  return reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
-}
-
-export async function getCities(): Promise<CityRecord[]> {
+export const getCities = cache(async function getCities(): Promise<CityRecord[]> {
   const properties = await db.property.findMany({
     where: { status: "ACTIVE" },
     select: {
@@ -67,7 +68,7 @@ export async function getCities(): Promise<CityRecord[]> {
   }
 
   return [...byCity.values()].sort((a, b) => b.propertyCount - a.propertyCount);
-}
+});
 
 export async function getCityBySlug(slug: string) {
   const cities = await getCities();
@@ -78,7 +79,7 @@ export async function getCityBySlug(slug: string) {
  * Which {kind}×{city} pages actually have inventory. Used both for
  * `generateStaticParams` and for the sitemap, so the two can never drift.
  */
-export async function getCollectionTargets() {
+export const getCollectionTargets = cache(async function getCollectionTargets() {
   const grouped = await db.property.groupBy({
     by: ["city", "propertyType"],
     where: { status: "ACTIVE" },
@@ -104,7 +105,7 @@ export async function getCollectionTargets() {
   }
 
   return targets;
-}
+});
 
 export type CollectionData = {
   city: CityRecord;
@@ -126,46 +127,45 @@ export async function getCollection(
 
   const propertyType = COLLECTIONS[kind].propertyType;
 
-  const rows = await db.property.findMany({
-    where: {
-      status: "ACTIVE",
-      city: city.name,
-      ...(propertyType ? { propertyType } : {}),
-    },
-    include: {
-      images: { orderBy: { sortOrder: "asc" }, take: 1 },
-      reviews: { select: { rating: true } },
-      amenities: { include: { amenity: true }, take: 6 },
-    },
-    orderBy: { basePrice: "asc" },
-  });
+  // The card rows and the sibling counts are independent queries against the
+  // same city; only the ratings have to wait, since they key off the ids the
+  // first query returns.
+  const [rows, grouped] = await Promise.all([
+    db.property.findMany({
+      where: {
+        status: "ACTIVE",
+        city: city.name,
+        ...(propertyType ? { propertyType } : {}),
+      },
+      select: CARD_SELECT,
+      orderBy: { basePrice: "asc" },
+    }),
+    db.property.groupBy({
+      by: ["propertyType"],
+      where: { status: "ACTIVE", city: city.name },
+      _count: { _all: true },
+    }),
+  ]);
 
-  const properties: PropertyCardData[] = rows.map((p) => ({
-    slug: p.slug,
-    name: p.name,
-    locationArea: p.locationArea,
-    city: p.city,
-    heroImage: p.images[0]?.url ?? "",
-    basePrice: Number(p.basePrice),
-    maxGuests: p.maxGuests,
-    bedrooms: p.bedrooms,
-    rating: averageRating(p.reviews),
-    reviewCount: p.reviews.length,
-    amenityNames: p.amenities.map((a) => a.amenity.name),
-  }));
+  const ratings = await ratingsByProperty(rows.map((r) => r.id));
+  const properties = rows.map((row) => toPropertyCard(row, ratings));
 
   const prices = properties.map((p) => p.basePrice);
-  const allReviews = rows.flatMap((r) => r.reviews);
+
+  // Collection-wide rating, recombined from the per-property averages. Summing
+  // `average x count` and dividing by the total is exactly the mean over every
+  // individual review, so this matches what the old flatMap produced — minus
+  // the unpublished reviews it used to silently fold in, which the card query
+  // beside it had always excluded.
+  const reviewCount = properties.reduce((n, p) => n + p.reviewCount, 0);
+  const ratingTotal = properties.reduce(
+    (sum, p) => sum + (p.rating === null ? 0 : p.rating * p.reviewCount),
+    0,
+  );
 
   // Sibling links are the internal-linking spine of the matrix: every page in
   // a city points at every other page in that city, so crawl equity does not
   // dead-end on whichever page happens to get discovered first.
-  const grouped = await db.property.groupBy({
-    by: ["propertyType"],
-    where: { status: "ACTIVE", city: city.name },
-    _count: { _all: true },
-  });
-
   const siblings: CollectionData["siblings"] = [];
   for (const k of COLLECTION_KINDS) {
     if (k === kind) continue;
@@ -188,14 +188,14 @@ export async function getCollection(
     properties,
     minPrice: prices.length ? Math.min(...prices) : null,
     maxPrice: prices.length ? Math.max(...prices) : null,
-    rating: averageRating(allReviews),
-    reviewCount: allReviews.length,
+    rating: reviewCount === 0 ? null : ratingTotal / reviewCount,
+    reviewCount,
     siblings,
   };
 }
 
 /** Distinct areas for a city, for internal links and search grouping. */
-export async function getAreasByCity() {
+export const getAreasByCity = cache(async function getAreasByCity() {
   const rows = await db.property.findMany({
     where: { status: "ACTIVE" },
     select: { city: true, locationArea: true },
@@ -210,6 +210,6 @@ export async function getAreasByCity() {
     map.get(key)!.areas.push(r.locationArea);
   }
   return map;
-}
+});
 
 export type { PropertyType };

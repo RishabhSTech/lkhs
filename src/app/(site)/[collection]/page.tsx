@@ -25,13 +25,30 @@ import { DESTINATIONS } from "../../../../prisma/seed-data";
  * `/stays-in-<anywhere-we-open-next>` — is served by this one route, so a new
  * city needs a property rather than a deploy.
  *
- * Deliberately no `generateStaticParams`. Because this segment matches any
- * single path token, prerendering makes Next serve *unmatched* slugs from the
- * static cache too — `/totally-made-up` came back as a cached **200** carrying
- * the not-found body, which is a soft 404 and exactly what Google penalises.
- * Rendering per request keeps `notFound()` a real 404. Nothing is lost: these
- * pages are discovered through the sitemap and internal links, not through
- * being prerendered, and their prices and availability are live data anyway.
+ * Deliberately no `generateStaticParams`, and deliberately not ISR — but not
+ * for the reason this comment used to give.
+ *
+ * The original claim was that rendering per request keeps `notFound()` a real
+ * 404, and that prerendering turns it into a cached 200 carrying the not-found
+ * body. Re-tested on Next 16.3.1 against a built server: the 200 is not caused
+ * by prerendering at all. `notFound()` returns 200 on *every* streamed
+ * response, this route and `/booking-confirmation/[code]` alike, which is
+ * documented behaviour — once the body has started streaming the status is
+ * already sent and cannot be changed. Next compensates by injecting
+ * `<meta name="robots" content="noindex">`, which is present here and is what
+ * actually keeps these URLs out of the index.
+ *
+ * So the 404 status is unchanged either way. What per-request rendering still
+ * buys is that this segment matches every unmatched top-level path on the
+ * site, and caching those renders would put an entry in the ISR cache for each
+ * bogus URL a scanner walks. That is the reason it stays dynamic; the cost is
+ * bounded by the query work below, which no longer pulls every review row to
+ * average a column.
+ *
+ * Getting a true 404 status here would mean checking the slug in `proxy`
+ * before the response streams, per Next's guidance — which needs a list of
+ * every non-collection top-level route to avoid 404-ing `/about`, so it is a
+ * deliberate piece of work rather than a tweak.
  */
 export const dynamic = "force-dynamic";
 

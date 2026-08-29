@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     db.property.findUnique({ where: { id: propertyId }, select: { name: true } }),
   ]);
   if (!property) {
-    return NextResponse.json({ error: "Property not found." }, { status: 404 });
+    return NextResponse.json({ error: "That property no longer exists." }, { status: 404 });
   }
 
   const parsedDate = parseISODate(date);
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   const parsed = deleteSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    return NextResponse.json({ error: "We couldn't clear that rate override. Refresh and try again." }, { status: 400 });
   }
   const { propertyId, date } = parsed.data;
   const { user } = await getCurrentAdminUser();

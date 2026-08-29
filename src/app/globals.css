@@ -56,6 +56,15 @@
   --color-brand-ivory: #f7f9fc;
   --color-brand-ink: #0e1420;
 
+  /* Elevation, tinted toward the brand rather than neutral black. A grey
+     shadow on a blue-tinted page reads as dirt; these carry the same hue the
+     surfaces do, so a lifted card looks lit rather than smudged. Two steps
+     only — anything more and elevation stops meaning anything. */
+  --shadow-lift: 0 1px 2px rgba(11, 47, 107, 0.04),
+    0 10px 30px -18px rgba(11, 47, 107, 0.22);
+  --shadow-lift-lg: 0 2px 6px rgba(11, 47, 107, 0.05),
+    0 30px 70px -32px rgba(11, 47, 107, 0.34);
+
   --radius-sm: calc(var(--radius) * 0.5);
   --radius-md: calc(var(--radius) * 0.75);
   --radius-lg: var(--radius);
@@ -176,17 +185,19 @@
   h1 {
     letter-spacing: -0.038em;
   }
-  /* Display serif. Marketing voice only — never the admin. Serifs need far
+  /* Display serif. Marketing voice only, never the admin. Serifs need far
      less negative tracking than Instrument Sans does, so this deliberately
      resets the tighter heading values above rather than inheriting them.
-     opsz is driven by font-size; SOFT rounds the terminals a little and WONK
-     turns on the alternate italic forms that give the face its character. */
+
+     No `font-variation-settings` here on purpose. Newsreader exposes opsz and
+     wght only, and declaring the axis explicitly would also switch off the
+     automatic optical sizing that makes one face work at both 64px and 20px.
+     Let `font-optical-sizing: auto` drive opsz from font-size instead. */
   .font-display {
     font-family: var(--font-display);
     font-weight: 400;
     font-optical-sizing: auto;
-    font-variation-settings: "SOFT" 24, "WONK" 1;
-    letter-spacing: -0.018em;
+    letter-spacing: -0.021em;
     line-height: 1.04;
   }
   /* Below ~24px the optical-size axis has already thickened the face; extra
@@ -195,8 +206,7 @@
     font-family: var(--font-display);
     font-weight: 400;
     font-optical-sizing: auto;
-    font-variation-settings: "SOFT" 24, "WONK" 1;
-    letter-spacing: -0.005em;
+    letter-spacing: -0.006em;
     line-height: 1.2;
   }
   ::selection {
@@ -349,5 +359,64 @@
     .spotlight::after {
       display: none;
     }
+  }
+}
+
+@layer utilities {
+  /* ── Editorial spine ────────────────────────────────────────────────────
+     The homepage runs as a numbered document rather than a stack of bands.
+     Each major section opens with a hairline that spans the measure and
+     carries its index in the margin; the numeral is the only place on the
+     marketing site where the display serif is set small and wide, which is
+     what stops it reading as a heading in its own right.
+
+     The rule itself is the flex-1 span inside the element, not a border on
+     it: this block sits at the end of the stylesheet, so a border declared
+     here would outrank the utility the inverted section uses to recolour it.
+     The span also opens a real gap in the line for the numeral rather than
+     laying it over an unbroken rule. */
+  .rule-index {
+    @apply flex items-center gap-4;
+  }
+  /* Typography only. Colour stays at the call site: this block sits at the
+     end of the stylesheet, so a colour declared here would outrank the
+     `text-white/45` the inverted section needs and silently win. */
+  .rule-index__num {
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+    @apply text-[0.8125rem] tracking-[0.18em];
+  }
+
+  /* Headline wrapping. `balance` is for the short display lines, where an
+     orphan is the difference between a set headline and a wrapped string;
+     `pretty` handles running copy, where balancing every paragraph is both
+     slower and wrong. */
+  .headline {
+    text-wrap: balance;
+  }
+  .copy {
+    text-wrap: pretty;
+  }
+
+  /* A caption bar that sits on a photograph without a gradient under it.
+     The destination tiles and the category rail were running the same
+     dark-scrim-plus-bottom-left-label treatment, so two unrelated sections
+     read as the same component; this is the other half of telling them
+     apart. */
+  .plate {
+    background: color-mix(in oklch, var(--color-brand-ink) 72%, transparent);
+    backdrop-filter: blur(14px) saturate(140%);
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+  }
+
+  /* Ruled index rows, for the popular-search list. The rule is carried by
+     the row itself rather than by a `divide-y` on the parent, because the
+     list runs in two columns and a divider on the container draws in the
+     wrong place once the rows wrap. */
+  .index-row {
+    @apply border-b border-border transition-colors duration-200;
+  }
+  .index-row:hover {
+    border-color: color-mix(in oklch, var(--color-brand-azure) 55%, transparent);
   }
 }

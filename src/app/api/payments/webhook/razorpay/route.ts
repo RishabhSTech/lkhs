@@ -16,12 +16,12 @@ export async function POST(request: Request) {
 
   const provider = getPaymentProvider();
   if (provider.name !== "RAZORPAY") {
-    return NextResponse.json({ error: "Razorpay is not the active provider." }, { status: 400 });
+    return NextResponse.json({ error: "Razorpay is not the active payment provider." }, { status: 400 });
   }
 
   const verified = await provider.verifyWebhook(rawBody, signature);
   if (!verified) {
-    return NextResponse.json({ error: "Signature verification failed." }, { status: 400 });
+    return NextResponse.json({ error: "Webhook signature verification failed." }, { status: 400 });
   }
 
   const event = JSON.parse(rawBody) as {

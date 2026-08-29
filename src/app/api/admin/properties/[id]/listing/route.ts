@@ -69,7 +69,7 @@ export async function PUT(
     select: { id: true, name: true, slug: true },
   });
   if (!property) {
-    return NextResponse.json({ error: "Property not found." }, { status: 404 });
+    return NextResponse.json({ error: "That property no longer exists." }, { status: 404 });
   }
 
   // Unknown codes are dropped rather than stored: a row whose code no longer

@@ -21,7 +21,7 @@ const schema = z.object({
 export async function POST(request: Request) {
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid confirmation payload." }, { status: 400 });
+    return NextResponse.json({ error: "We couldn't read the payment confirmation. Don't pay again — message us with your booking reference and we'll finish it by hand." }, { status: 400 });
   }
   const { reservationId, razorpay_order_id, razorpay_payment_id, razorpay_signature } = parsed.data;
 
@@ -31,14 +31,14 @@ export async function POST(request: Request) {
     razorpay_signature,
   );
   if (!valid) {
-    return NextResponse.json({ error: "Payment signature did not verify." }, { status: 400 });
+    return NextResponse.json({ error: "We couldn't verify that payment with the gateway. Nothing has been charged twice — send us your booking reference and we'll sort it out today." }, { status: 400 });
   }
 
   const payment = await db.reservationPayment.findFirst({
     where: { reservationId, providerRef: razorpay_order_id },
   });
   if (!payment) {
-    return NextResponse.json({ error: "No matching payment for that order." }, { status: 404 });
+    return NextResponse.json({ error: "We can't find a payment against that booking yet. If your bank has taken the money, send us the reference and we'll match it up." }, { status: 404 });
   }
 
   await db.reservationPayment.update({

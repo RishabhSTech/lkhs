@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
   if (!category || !property) {
     return NextResponse.json(
-      { error: "That property or category no longer exists." },
+      { error: "That property or expense category no longer exists. Refresh and pick again." },
       { status: 404 },
     );
   }

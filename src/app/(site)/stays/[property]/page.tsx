@@ -13,12 +13,18 @@ import { ThingsToKnow } from "@/components/property/things-to-know";
 import { ReviewsSection } from "@/components/property/reviews/reviews-section";
 import { Laurel } from "@/components/property/reviews/laurel";
 import { getPropertyBySlug, getPropertySlugs } from "@/lib/queries/properties";
-import { getReviewableStay } from "@/lib/queries/reviews";
 import { breadcrumbJsonLd, lodgingJsonLd } from "@/lib/seo/jsonld";
 import { COLLECTIONS, kindForType } from "@/lib/seo/collections";
 import { slugify } from "@/lib/seo/slug";
 
-export const dynamic = "force-dynamic";
+/**
+ * Listings are prerendered and refreshed in the background. Nothing on this
+ * page is per-visitor any more — availability and the live quote are fetched
+ * by the booking card, and "Write a review" resolves after hydration — so
+ * serving it per request meant repeating the same large query (every review
+ * body, all images, amenities, pricing rules) for identical HTML.
+ */
+export const revalidate = 300;
 
 export async function generateStaticParams() {
   const slugs = await getPropertySlugs().catch(() => []);
@@ -79,8 +85,6 @@ export default async function PropertyPage({
   const { property: slug } = await params;
   const property = await getPropertyBySlug(slug);
   if (!property) notFound();
-
-  const reviewableStay = await getReviewableStay(property.id);
 
   const facts = [
     { icon: Users, label: `${property.maxGuests} guests` },
@@ -260,7 +264,7 @@ export default async function PropertyPage({
               reviews={property.publicReviews}
               topics={property.reviewTopics}
               isGuestFavourite={property.showGuestFavourite}
-              reviewableStay={reviewableStay}
+              propertyId={property.id}
             />
           </section>
 

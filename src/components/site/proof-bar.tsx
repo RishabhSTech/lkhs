@@ -13,6 +13,12 @@ import { CountUp, type CountUpFormat } from "@/components/site/count-up";
  *
  * Every figure is read off the database. Nothing here is a marketing claim —
  * the moment one of them is, the others stop working.
+ *
+ * Set as a ruled figure line rather than four equal boxes. Four equal columns
+ * is what a statistics widget looks like, and a statistics widget is exactly
+ * the thing a visitor has learned to skip. Hanging the figures off a single
+ * hairline, against a line that says where they come from, makes them read as
+ * a masthead — which is the register this band is actually in.
  */
 export function ProofBar({
   homes,
@@ -74,22 +80,56 @@ export function ProofBar({
   return (
     <section
       aria-label="Lime Kraft in numbers"
-      className="border-b border-border bg-gradient-to-b from-brand-ivory to-background"
+      className="border-b border-border bg-brand-ivory"
     >
-      <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-x-6 gap-y-9 px-5 py-12 sm:px-6 lg:grid-cols-4 lg:gap-x-10 lg:py-14">
-        {stats.map((stat) => (
-          <div key={stat.key}>
-            <p className="flex items-baseline gap-1.5 font-display text-[2.25rem] text-brand-blue tabular-nums sm:text-[2.75rem]">
-              {stat.star && (
-                <Star className="size-4 translate-y-[-0.4rem] fill-brand-gold text-brand-gold sm:size-5" />
-              )}
-              <CountUp value={stat.value} format={stat.format} />
-            </p>
-            <p className="mt-2 max-w-[16ch] text-sm leading-snug text-muted-foreground">
-              {stat.label}
-            </p>
-          </div>
-        ))}
+      <div className="mx-auto w-full max-w-6xl px-5 pt-11 pb-12 sm:px-6 lg:pt-14 lg:pb-16">
+        <div className="grid gap-y-9 lg:grid-cols-[minmax(0,0.62fr)_minmax(0,2fr)] lg:items-start lg:gap-x-14">
+          {/* Provenance, not a fourth reassurance. The three claims in the
+              hero are about what we do; this one is about where the numbers
+              underneath it come from, which is the only thing that makes a
+              figure worth printing. */}
+          <p className="copy max-w-xs text-[0.9375rem] leading-relaxed text-muted-foreground">
+            Every figure here is read straight off our own booking system, the
+            morning you load the page.
+          </p>
+
+          {/* Hairline-divided, hung from a shared rule: two columns on
+              small screens, a flex row on wide ones.
+
+              Deliberately not `repeat(auto-fit, minmax(0, 1fr))` — a zero
+              minimum means an unbounded number of tracks fit, so auto-fit
+              collapses the whole row to one column. `flex-1` divides the row
+              correctly for the two, three or four figures the inventory can
+              honestly support, with no track count to keep in sync. */}
+          <dl className="grid grid-cols-2 gap-x-8 gap-y-8 border-t border-brand-mist/35 pt-7 sm:gap-x-10 lg:flex lg:gap-x-0">
+            {stats.map((stat, i) => (
+              <div
+                key={stat.key}
+                className={
+                  // Vertical rules between figures on wide screens only; at
+                  // two columns they would fall in the middle of the grid and
+                  // read as a table.
+                  i === 0
+                    ? "lg:flex-1 lg:pr-8"
+                    : "lg:flex-1 lg:border-l lg:border-brand-mist/35 lg:pr-8 lg:pl-8"
+                }
+              >
+                <dd className="flex items-start gap-1.5 font-display text-[clamp(2.25rem,4.2vw,3.25rem)] leading-none text-brand-blue tabular-nums">
+                  {stat.star && (
+                    <Star
+                      aria-hidden
+                      className="mt-1 size-4 shrink-0 fill-brand-gold text-brand-gold sm:size-[1.125rem]"
+                    />
+                  )}
+                  <CountUp value={stat.value} format={stat.format} />
+                </dd>
+                <dt className="mt-3 max-w-[15ch] text-[0.8125rem] leading-snug text-muted-foreground">
+                  {stat.label}
+                </dt>
+              </div>
+            ))}
+          </dl>
+        </div>
       </div>
     </section>
   );

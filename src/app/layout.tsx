@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Instrument_Sans, Inter, Geist_Mono } from "next/font/google";
+import { Newsreader, Instrument_Sans, Inter, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SITE } from "@/lib/seo/site";
@@ -8,21 +8,25 @@ import "./globals.css";
 /**
  * Three roles, deliberately separated:
  *
- * - `display` (Fraunces) is the brand voice — hero and section headlines on
+ * - `display` (Newsreader) is the brand voice: hero and section headlines on
  *   the marketing site only. Its optical-size axis is what makes it work at
  *   both 64px and 20px; `font-optical-sizing: auto` drives it from font-size.
  * - `heading` (Instrument Sans) carries product surfaces — admin, tables,
  *   dialogs — where a serif would read as decoration rather than structure.
  * - `body` (Inter) handles UI and long text at small sizes.
  *
- * Italic is loaded for Fraunces because the accent word in a headline is the
- * cheapest editorial signal we have; WONK is what makes that italic distinct
- * rather than a slanted roman.
+ * Italic is loaded because the accent word in a headline is the cheapest
+ * editorial signal we have, and Newsreader's italic is a genuine cut rather
+ * than a slanted roman.
+ *
+ * `opsz` is the only non-weight axis this face exposes. Fraunces, which this
+ * replaced, also carried SOFT and WONK; anything still setting those in CSS is
+ * addressing axes that no longer exist and will silently do nothing.
  */
-const display = Fraunces({
+const display = Newsreader({
   variable: "--font-display-serif",
   subsets: ["latin"],
-  axes: ["SOFT", "WONK", "opsz"],
+  axes: ["opsz"],
   style: ["normal", "italic"],
   display: "swap",
 });

@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Enter your email address or mobile number." },
+      { error: "Enter your email address or mobile number and we'll send a code." },
       { status: 400 },
     );
   }

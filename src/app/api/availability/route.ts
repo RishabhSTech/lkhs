@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;
   const slug = params.get("property");
   if (!slug) {
-    return NextResponse.json({ error: "Property required." }, { status: 400 });
+    return NextResponse.json({ error: "Pick a home before checking its dates." }, { status: 400 });
   }
 
   const property = await db.property.findUnique({
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     select: { id: true },
   });
   if (!property) {
-    return NextResponse.json({ error: "Property not found." }, { status: 404 });
+    return NextResponse.json({ error: "That home is no longer listed." }, { status: 404 });
   }
 
   const fromParam = params.get("from");

@@ -16,14 +16,14 @@ function sanitize(filename: string) {
 export async function POST(request: Request) {
   if (!isStorageConfigured()) {
     return NextResponse.json(
-      { error: "Object storage is not configured (S3_ENDPOINT / S3_ACCESS_KEY)." },
+      { error: "Photo storage isn't set up yet. Add S3_ENDPOINT and S3_ACCESS_KEY to the environment, then restart." },
       { status: 503 },
     );
   }
 
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid upload request." }, { status: 400 });
+    return NextResponse.json({ error: "We couldn't start that upload. Check the file type and try again." }, { status: 400 });
   }
   const { user } = await getCurrentAdminUser();
   const { folder, filename, contentType } = parsed.data;

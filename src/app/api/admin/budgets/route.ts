@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     db.transactionCategory.findUnique({ where: { id: categoryId }, select: { name: true } }),
   ]);
   if (!property || !category) {
-    return NextResponse.json({ error: "Property or category not found." }, { status: 404 });
+    return NextResponse.json({ error: "That property or budget category no longer exists. Refresh and pick again." }, { status: 404 });
   }
 
   const month = startOfMonthUTC(todayUTC());

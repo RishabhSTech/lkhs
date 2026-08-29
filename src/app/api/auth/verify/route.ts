@@ -18,7 +18,7 @@ const REASONS: Record<string, string> = {
 export async function POST(request: Request) {
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Enter the 6-digit code." }, { status: 400 });
+    return NextResponse.json({ error: "Enter the six-digit code we sent you." }, { status: 400 });
   }
 
   const result = await verifyOtp(parsed.data.identifier, parsed.data.code);

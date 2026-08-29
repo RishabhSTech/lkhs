@@ -23,7 +23,7 @@ const patchSchema = z.object({
 export async function POST(request: Request) {
   const parsed = createSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Check the task details." }, { status: 400 });
+    return NextResponse.json({ error: "Check the task details — something there isn't right." }, { status: 400 });
   }
   const { user } = await getCurrentAdminUser();
   const data = parsed.data;
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   const parsed = patchSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    return NextResponse.json({ error: "We couldn't update that task. Refresh and try again." }, { status: 400 });
   }
   const { user } = await getCurrentAdminUser();
   const { id, ...rest } = parsed.data;

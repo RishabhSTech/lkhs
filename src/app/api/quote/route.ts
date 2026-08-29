@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Provide a property and valid check-in / check-out dates." },
+      { error: "Pick a home and both of your dates to see a price." },
       { status: 400 },
     );
   }
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   const checkOut = parseISODate(parsed.data.checkOut);
   if (checkOut <= checkIn) {
     return NextResponse.json(
-      { error: "Check-out must be after check-in." },
+      { error: "Check-out needs to be after check-in." },
       { status: 400 },
     );
   }
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     include: { pricingRules: { where: { isActive: true } } },
   });
   if (!property) {
-    return NextResponse.json({ error: "Property not found." }, { status: 404 });
+    return NextResponse.json({ error: "That home is no longer listed." }, { status: 404 });
   }
 
   const overrides = await db.dailyRate.findMany({

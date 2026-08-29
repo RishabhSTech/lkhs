@@ -12,14 +12,14 @@ export async function POST(request: Request) {
   const session = await getSession();
   if (!session) {
     return NextResponse.json(
-      { error: "Sign in to save stays." },
+      { error: "Sign in to keep this home for later." },
       { status: 401 },
     );
   }
 
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    return NextResponse.json({ error: "We couldn't save that. Refresh the page and try again." }, { status: 400 });
   }
 
   const [guest, property] = await Promise.all([
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   ]);
 
   if (!property) {
-    return NextResponse.json({ error: "Property not found." }, { status: 404 });
+    return NextResponse.json({ error: "That home is no longer listed." }, { status: 404 });
   }
 
   // A guest profile is created on first save for users who haven't booked yet.

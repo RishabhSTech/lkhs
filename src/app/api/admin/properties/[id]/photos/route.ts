@@ -20,7 +20,7 @@ export async function POST(request: Request, { params }: RouteParams) {
   const { id: propertyId } = await params;
   const parsed = createSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid photo." }, { status: 400 });
+    return NextResponse.json({ error: "We couldn't add that photo — check the file and try again." }, { status: 400 });
   }
 
   const [{ user }, count] = await Promise.all([
@@ -58,7 +58,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
   const { id: propertyId } = await params;
   const parsed = reorderSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid order." }, { status: 400 });
+    return NextResponse.json({ error: "We couldn't save that photo order. Refresh and try again." }, { status: 400 });
   }
 
   await db.$transaction(
@@ -77,7 +77,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
   const { id: propertyId } = await params;
   const parsed = deleteSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    return NextResponse.json({ error: "We couldn't remove that photo. Refresh and try again." }, { status: 400 });
   }
 
   const { user } = await getCurrentAdminUser();

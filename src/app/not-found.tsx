@@ -13,7 +13,7 @@ export default function NotFound() {
             We couldn&apos;t find that page
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            It may have moved, or the link might be out of date.
+            The link may be out of date, or a home that was here has since been taken off sale.
           </p>
           <div className="mt-7 flex justify-center gap-3">
             <Button render={<Link href="/" />}>Back to home</Button>

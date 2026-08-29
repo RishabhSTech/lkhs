@@ -129,9 +129,16 @@ export function Hero({
             <h1 className="mt-4 max-w-[14ch] font-display text-[clamp(2.5rem,7.2vw,5.5rem)] text-white">
               Stay somewhere worth <em className="italic">remembering</em>.
             </h1>
+            {/* The old line read "Beautiful homes, thoughtful spaces and stays
+                made for feeling at home" — three near-synonyms, the word
+                "home" twice, and not one fact a competitor could not print
+                under their own logo. A subheadline's job under a headline that
+                has already made the promise is to say what is actually behind
+                it, which is that we own the operation end to end. */}
             <p className="mt-5 max-w-md text-base leading-relaxed text-white/80 sm:text-lg">
-              Beautiful homes, thoughtful spaces and stays made for feeling at
-              home.
+              Villas, apartments and whole houses we run ourselves — furnished,
+              cleaned and answered for by our own team, never handed to a
+              letting agent.
             </p>
           </motion.div>
 

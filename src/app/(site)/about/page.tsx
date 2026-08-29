@@ -6,8 +6,10 @@ import { Section, SectionHeading } from "@/components/site/section";
 import { Reveal, RevealGroup } from "@/components/site/reveal";
 import { Button } from "@/components/ui/button";
 import { getCities } from "@/lib/queries/locations";
+import { pendingCities } from "@/lib/seo/upcoming";
 
-export const dynamic = "force-dynamic";
+/** Near-static copy over a couple of inventory counts. */
+export const revalidate = 3600;
 
 /** "Indore"; "Indore and Goa"; "Indore, Goa and Jaipur". */
 function joinCities(names: string[]) {
@@ -64,6 +66,25 @@ export default async function AboutPage() {
     "we open a new city when we can staff it properly, not when the " +
     "spreadsheet says to.";
 
+  // The line above earns its keep only if we are willing to name what is
+  // actually next. Pulled from the same announcement list the destinations
+  // pages read, so this page cannot promise a city those have stopped
+  // mentioning — or keep promising one that has already opened.
+  const opening = pendingCities(cities);
+  const openingLine =
+    opening.length === 0
+      ? null
+      : // One city names its own neighbourhoods; several have to be qualified,
+        // or the list reads as areas of whichever city was mentioned last.
+        (opening.length === 1
+          ? `${opening[0].name} is next — ${joinCities(opening[0].areas)}, `
+          : `${joinCities(opening.map((c) => c.name))} are next — ` +
+            `${opening
+              .map((c) => `${joinCities(c.areas.slice(0, 2))} in ${c.name}`)
+              .join("; ")}, `) +
+        "readied by the same team that set up every home before them. " +
+        "The dates go on sale here before they go anywhere else.";
+
   return (
     <>
       <SiteHeader />
@@ -86,6 +107,11 @@ export default async function AboutPage() {
             {cities.length > 1 && (
               <p className="mt-4 max-w-xl text-[0.9375rem] leading-relaxed text-muted-foreground">
                 {expansionLine}
+              </p>
+            )}
+            {openingLine && (
+              <p className="mt-4 max-w-xl text-[0.9375rem] leading-relaxed text-muted-foreground">
+                {openingLine}
               </p>
             )}
           </div>

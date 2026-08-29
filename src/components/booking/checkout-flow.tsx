@@ -126,7 +126,12 @@ export function CheckoutFlow({
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Booking failed.");
+      if (!res.ok) {
+        throw new Error(
+          data.error ??
+            "We couldn't complete that booking. Nothing has been charged — try again, or message us and we'll hold the dates.",
+        );
+      }
 
       if (data.status === "CONFIRMED" || !data.clientCheckout) {
         router.push(`/booking-confirmation/${data.code}`);
@@ -135,7 +140,11 @@ export function CheckoutFlow({
 
       await openRazorpayCheckout(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Booking failed.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "We couldn't complete that booking. Nothing has been charged — try again, or message us and we'll hold the dates.",
+      );
       setSubmitting(false);
     }
   }
@@ -147,7 +156,9 @@ export function CheckoutFlow({
   }) {
     const loaded = await loadRazorpayScript();
     if (!loaded || !window.Razorpay) {
-      setError("Couldn't load the payment gateway. Check your connection and try again.");
+      setError(
+        "The payment window wouldn't load. Check your connection and try again — nothing has been charged.",
+      );
       setSubmitting(false);
       return;
     }
@@ -173,10 +184,19 @@ export function CheckoutFlow({
             body: JSON.stringify({ reservationId: booking.id, ...response }),
           });
           const confirmData = await confirmRes.json();
-          if (!confirmRes.ok) throw new Error(confirmData.error ?? "Payment verification failed.");
+          if (!confirmRes.ok) {
+            throw new Error(
+              confirmData.error ??
+                `We couldn't confirm that payment. Don't pay again — message us with booking ${booking.code} and we'll finish it by hand.`,
+            );
+          }
           router.push(`/booking-confirmation/${booking.code}`);
         } catch (err) {
-          setError(err instanceof Error ? err.message : "Payment verification failed.");
+          setError(
+            err instanceof Error
+              ? err.message
+              : `We couldn't confirm that payment. Don't pay again — message us with booking ${booking.code} and we'll finish it by hand.`,
+          );
           setSubmitting(false);
         }
       },

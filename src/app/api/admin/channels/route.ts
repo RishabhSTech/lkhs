@@ -17,7 +17,7 @@ const unlinkSchema = z.object({
 export async function POST(request: Request) {
   const parsed = linkSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Check the connection details." }, { status: 400 });
+    return NextResponse.json({ error: "Check the connection details — something there isn't right." }, { status: 400 });
   }
   const { channelCode, propertyId, externalListingId } = parsed.data;
 
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     db.property.findUnique({ where: { id: propertyId }, select: { name: true } }),
   ]);
   if (!channel || !property) {
-    return NextResponse.json({ error: "Channel or property not found." }, { status: 404 });
+    return NextResponse.json({ error: "That channel or property no longer exists. Refresh and try again." }, { status: 404 });
   }
 
   const unit = await db.unit.findFirst({ where: { propertyId }, select: { id: true } });
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   const parsed = unlinkSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    return NextResponse.json({ error: "We couldn't unlink that property. Refresh and try again." }, { status: 400 });
   }
   const { channelCode, propertyId } = parsed.data;
 
@@ -86,7 +86,7 @@ export async function DELETE(request: Request) {
     db.property.findUnique({ where: { id: propertyId }, select: { name: true } }),
   ]);
   if (!channel || !property) {
-    return NextResponse.json({ error: "Not found." }, { status: 404 });
+    return NextResponse.json({ error: "That link no longer exists." }, { status: 404 });
   }
 
   await db.channelProperty.updateMany({

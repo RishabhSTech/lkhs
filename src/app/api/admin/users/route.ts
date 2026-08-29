@@ -89,7 +89,7 @@ export async function POST(request: Request) {
     return NextResponse.json(member, { status: 201 });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      return NextResponse.json({ error: "A user with that email or phone already exists." }, { status: 409 });
+      return NextResponse.json({ error: "Someone already has that email or number." }, { status: 409 });
     }
 
     return NextResponse.json({ error: error instanceof Error ? error.message : "Could not create the user." }, { status: 400 });
@@ -133,11 +133,11 @@ export async function PATCH(request: Request) {
     return NextResponse.json(member);
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      return NextResponse.json({ error: "A user with that email or phone already exists." }, { status: 409 });
+      return NextResponse.json({ error: "Someone already has that email or number." }, { status: 409 });
     }
 
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
-      return NextResponse.json({ error: "User not found." }, { status: 404 });
+      return NextResponse.json({ error: "That user no longer exists." }, { status: 404 });
     }
 
     return NextResponse.json({ error: error instanceof Error ? error.message : "Could not update the user." }, { status: 400 });
