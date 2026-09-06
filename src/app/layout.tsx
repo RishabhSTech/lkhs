@@ -56,6 +56,7 @@ export const metadata: Metadata = {
   },
   description: SITE.description,
   applicationName: SITE.name,
+  manifest: "/manifest.json",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",

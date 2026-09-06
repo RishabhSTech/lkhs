@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AdminPage, PageHeader } from "@/components/admin/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,10 +8,17 @@ import {
   COMMUNICATION_JOURNEY, TEMPLATE_LABELS,
 } from "@/lib/notifications/templates";
 import { formatDateLong } from "@/lib/format";
+import { LogOtaMessageDialog } from "@/components/admin/log-ota-message-dialog";
 
 export const dynamic = "force-dynamic";
 
-const CHANNELS = ["WHATSAPP", "EMAIL", "SMS", "OTA"] as const;
+const CHANNELS = ["WHATSAPP", "EMAIL", "SMS", "OTA", "CHAT"] as const;
+
+const OTA_SOURCE_LABELS: Record<string, string> = {
+  AIRBNB: "Airbnb",
+  BOOKING_COM: "Booking.com",
+  AGODA: "Agoda",
+};
 
 export default async function MessagesPage() {
   const messages = await db.message.findMany({
@@ -31,13 +39,18 @@ export default async function MessagesPage() {
       <PageHeader
         title="Messages"
         description="Every guest conversation, across every channel."
+        actions={<LogOtaMessageDialog />}
       />
 
       <p className="mt-5 rounded-lg bg-muted/60 p-4 text-sm leading-relaxed text-muted-foreground">
         No email, SMS or WhatsApp provider is connected here, so outbound
-        messages are logged rather than delivered. The templates, timeline and
-        delivery states below are the real system — connect a provider and they
-        start sending.
+        messages are logged rather than delivered. Inbound messages are
+        different — every one (website, chat, or an OTA message you log
+        below) fires an instant push + email alert. Turn that on from the
+        bell icon in the top bar, and use &ldquo;Log OTA message&rdquo; to
+        bring in an Airbnb/Booking.com/Agoda message the moment you see it —
+        there&apos;s no messaging API for those yet (see{" "}
+        <Link href="/admin/channels" className="underline">Channels</Link>).
       </p>
 
       <Tabs defaultValue="inbox" className="mt-6">
@@ -89,7 +102,11 @@ export default async function MessagesPage() {
                             </div>
                             <div className="flex items-center gap-2">
                               <Badge className="border-border bg-muted text-muted-foreground">
-                                {m.channel.toLowerCase()}
+                                {m.channel === "OTA" && m.source
+                                  ? OTA_SOURCE_LABELS[m.source]
+                                  : m.channel === "CHAT"
+                                    ? "Chatbot"
+                                    : m.channel.toLowerCase()}
                               </Badge>
                               <Badge
                                 className={

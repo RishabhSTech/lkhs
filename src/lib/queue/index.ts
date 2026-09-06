@@ -33,6 +33,7 @@ export const QUEUE_NAMES = {
   notifications: "notifications",
   recurringExpenses: "recurring-expenses",
   reservationExpiry: "reservation-expiry",
+  mailboxPoll: "mailbox-poll",
 } as const;
 
 export type ChannelSyncJob = {
@@ -122,4 +123,15 @@ export async function enqueueReservationExpiry(job: ReservationExpiryJob) {
     `reservation-expiry(${job.reservationId})`,
     queue.add("expire", job, { delay: RESERVATION_HOLD_MINUTES * 60_000 }),
   );
+}
+
+/** Manual "Sync now" trigger — the scheduled poll (see scripts/worker.ts) runs
+ * on its own timer regardless. */
+export async function enqueueMailboxPoll() {
+  const queue = getQueue(QUEUE_NAMES.mailboxPoll);
+  if (!queue) {
+    console.warn("[queue] REDIS_URL not set — mailbox sync-now skipped.");
+    return null;
+  }
+  return withEnqueueTimeout("mailbox-poll(manual)", queue.add("poll", {}));
 }

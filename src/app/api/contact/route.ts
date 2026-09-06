@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { alertTeam } from "@/lib/notifications/alert";
 
 const schema = z.object({
   name: z.string().min(2, "Enter your name."),
@@ -32,14 +33,12 @@ export async function POST(request: Request) {
     },
   });
 
-  await db.notification.create({
-    data: {
-      type: "CONTACT_MESSAGE",
-      title: "New contact form message",
-      body: `${name} — ${message.slice(0, 120)}${message.length > 120 ? "…" : ""}`,
-      severity: "INFO",
-      link: "/admin/messages",
-    },
+  await alertTeam({
+    type: "CONTACT_MESSAGE",
+    title: "New contact form message",
+    body: `${name} — ${message.slice(0, 120)}${message.length > 120 ? "…" : ""}`,
+    severity: "WARNING",
+    link: "/admin/messages",
   });
 
   return NextResponse.json({ ok: true });

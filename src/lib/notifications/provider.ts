@@ -1,8 +1,10 @@
 import type { MessageChannel } from "@prisma/client";
+import nodemailer, { type Transporter } from "nodemailer";
 
 /**
- * Transport-agnostic outbound messaging. Email (Resend/SES), WhatsApp Business
- * API and SMS adapters implement this; callers only ever see NotificationProvider.
+ * Transport-agnostic outbound messaging. Email (SMTP/Resend/SES), WhatsApp
+ * Business API and SMS adapters implement this; callers only ever see
+ * NotificationProvider.
  */
 
 export type OutboundMessage = {
@@ -80,14 +82,60 @@ class ResendEmailProvider implements NotificationProvider {
   }
 }
 
-export const EMAIL_IS_LIVE = Boolean(
-  process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL,
+/**
+ * Real email delivery via SMTP — the no-reply@limekraftstays.com mailbox on
+ * Hostinger. This is the account every system email (OTP, booking
+ * confirmations, team alerts) actually sends from once configured. One
+ * transporter is reused across sends rather than reconnecting per message.
+ */
+class SmtpEmailProvider implements NotificationProvider {
+  private transporter: Transporter | null = null;
+
+  private getTransporter(): Transporter {
+    this.transporter ??= nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT ?? 465),
+      secure: process.env.SMTP_SECURE !== "false", // true unless explicitly disabled
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD },
+    });
+    return this.transporter;
+  }
+
+  async send(message: OutboundMessage): Promise<SendResult> {
+    try {
+      const info = await this.getTransporter().sendMail({
+        from: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER,
+        to: message.to,
+        subject: message.subject ?? "Lime Kraft Home Stays",
+        text: message.body,
+      });
+      return { status: "SENT", providerRef: info.messageId };
+    } catch (error) {
+      return {
+        status: "FAILED",
+        error: error instanceof Error ? error.message : "SMTP send failed",
+      };
+    }
+  }
+}
+
+export const SMTP_IS_LIVE = Boolean(
+  process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD,
 );
 
-/** Routes EMAIL to Resend once configured; everything else (WhatsApp, SMS)
- * still has no live adapter and falls back to logging. */
+export const EMAIL_IS_LIVE = Boolean(
+  SMTP_IS_LIVE || (process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL),
+);
+
+/** Routes EMAIL to SMTP (Hostinger) when configured, else Resend, else logs.
+ * Everything else (WhatsApp, SMS) still has no live adapter and falls back
+ * to logging. */
 class CompositeNotificationProvider implements NotificationProvider {
-  private readonly email = EMAIL_IS_LIVE ? new ResendEmailProvider() : null;
+  private readonly email = SMTP_IS_LIVE
+    ? new SmtpEmailProvider()
+    : EMAIL_IS_LIVE
+      ? new ResendEmailProvider()
+      : null;
   private readonly fallback = new LoggingNotificationProvider();
 
   async send(message: OutboundMessage): Promise<SendResult> {

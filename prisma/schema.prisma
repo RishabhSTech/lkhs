@@ -43,13 +43,30 @@ model User {
   stakeholder Stakeholder?
 
   propertyAssignments PropertyAssignment[]
-  cleaningTasks       CleaningTask[]        @relation("CleaningAssignee")
-  maintenanceTasks    MaintenanceTask[]     @relation("MaintenanceAssignee")
+  cleaningTasks       CleaningTask[]       @relation("CleaningAssignee")
+  maintenanceTasks    MaintenanceTask[]    @relation("MaintenanceAssignee")
   notifications       Notification[]
   auditLogs           AuditLog[]
   createdTransactions Transaction[]
+  pushSubscriptions   PushSubscription[]
 
   @@index([role])
+}
+
+// One row per browser/device a team member has enabled instant alerts on.
+// Endpoint is unique per browser install, so re-subscribing just upserts.
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 // One row per contact per login attempt window; identifier is email or phone.
@@ -93,7 +110,7 @@ model Guest {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user         User?               @relation(fields: [userId], references: [id])
+  user         User?         @relation(fields: [userId], references: [id])
   reservations Reservation[]
   wishlist     Wishlist[]
   reviews      Review[]
@@ -140,12 +157,12 @@ enum TripType {
 }
 
 model Review {
-  id            String   @id @default(cuid())
+  id            String  @id @default(cuid())
   propertyId    String
   // Null for reviews an admin imports from an OTA, where there is no guest
   // record on our side.
   guestId       String?
-  reservationId String?  @unique
+  reservationId String? @unique
 
   rating        Int
   // Category sub-scores. Optional so an imported review with only an overall
@@ -157,23 +174,23 @@ model Review {
   location      Int?
   value         Int?
 
-  title         String?
-  body          String
+  title        String?
+  body         String
   // Codes from src/lib/property/review-topics.ts, driving the emoji chips
   // above the reviews. Left empty, the topics are inferred from the body.
-  topics        String[] @default([])
+  topics       String[]  @default([])
   // Trust signals shown next to the reviewer. `nightsStayed` is derived from
   // the reservation when one is linked, and only typed in for imports.
-  nightsStayed  Int?
-  stayedOn      DateTime? @db.Date
-  tripType      TripType?
+  nightsStayed Int?
+  stayedOn     DateTime? @db.Date
+  tripType     TripType?
 
-  response      String?
-  respondedAt   DateTime?
+  response    String?
+  respondedAt DateTime?
 
-  status        ReviewStatus @default(PUBLISHED)
-  source        ReviewSource @default(DIRECT)
-  isFeatured    Boolean      @default(false)
+  status     ReviewStatus @default(PUBLISHED)
+  source     ReviewSource @default(DIRECT)
+  isFeatured Boolean      @default(false)
 
   // Display identity for imported / admin-entered reviews. When `guestId` is
   // set the guest record wins and these stay null.
@@ -182,8 +199,8 @@ model Review {
   authorAvatarUrl String?
   authorSince     Int?
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   property    Property     @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   guest       Guest?       @relation(fields: [guestId], references: [id], onDelete: SetNull)
@@ -211,26 +228,26 @@ enum PropertyStatus {
 }
 
 model Property {
-  id           String         @id @default(cuid())
-  slug         String         @unique
-  name         String
-  tagline      String?
-  description  String
-  locationArea String
-  city         String         @default("Indore")
-  state        String         @default("Madhya Pradesh")
-  addressLine  String
-  latitude     Float?
-  longitude    Float?
-  propertyType PropertyType   @default(HOME)
-  status       PropertyStatus @default(ACTIVE)
-  maxGuests    Int
-  bedrooms     Int
-  bathrooms    Int
-  beds         Int
-  basePrice    Decimal        @db.Decimal(12, 2)
-  cleaningFee  Decimal        @default(0) @db.Decimal(12, 2)
-  houseRules   String?
+  id                 String         @id @default(cuid())
+  slug               String         @unique
+  name               String
+  tagline            String?
+  description        String
+  locationArea       String
+  city               String         @default("Indore")
+  state              String         @default("Madhya Pradesh")
+  addressLine        String
+  latitude           Float?
+  longitude          Float?
+  propertyType       PropertyType   @default(HOME)
+  status             PropertyStatus @default(ACTIVE)
+  maxGuests          Int
+  bedrooms           Int
+  bathrooms          Int
+  beds               Int
+  basePrice          Decimal        @db.Decimal(12, 2)
+  cleaningFee        Decimal        @default(0) @db.Decimal(12, 2)
+  houseRules         String?
   cancellationPolicy String?
 
   // Listing presentation. `isGuestFavourite` drives the laurel badge above the
@@ -240,8 +257,8 @@ model Property {
   checkInTo        String? @default("9:00 pm")
   checkOutBy       String? @default("11:00 am")
 
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   images              PropertyImage[]
   amenities           PropertyAmenity[]
@@ -253,7 +270,7 @@ model Property {
   reservations        Reservation[]
   channelProperties   ChannelProperty[]
   transactions        Transaction[]
-  recurringExpenses    RecurringExpense[]
+  recurringExpenses   RecurringExpense[]
   budgets             Budget[]
   reviews             Review[]
   wishlist            Wishlist[]
@@ -310,8 +327,8 @@ model Amenity {
 }
 
 model PropertyAmenity {
-  propertyId String
-  amenityId  String
+  propertyId    String
+  amenityId     String
   // Airbnb's struck-through "Not included" block at the foot of the amenity
   // list: the property is explicitly declaring the amenity absent.
   isUnavailable Boolean @default(false)
@@ -370,10 +387,10 @@ model Unit {
   beds       Int
   createdAt  DateTime @default(now())
 
-  property        Property         @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  nights          InventoryNight[]
-  reservations    Reservation[]
-  channelRooms    ChannelRoom[]
+  property     Property         @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  nights       InventoryNight[]
+  reservations Reservation[]
+  channelRooms ChannelRoom[]
 
   @@index([propertyId])
 }
@@ -382,12 +399,12 @@ model Unit {
 // night is unavailable (booked or blocked). Unique constraint prevents
 // double-booking at the database level.
 model InventoryNight {
-  id            String    @id @default(cuid())
+  id            String   @id @default(cuid())
   unitId        String
-  date          DateTime  @db.Date
+  date          DateTime @db.Date
   reservationId String?
   blockReason   String?
-  createdAt     DateTime  @default(now())
+  createdAt     DateTime @default(now())
 
   unit        Unit         @relation(fields: [unitId], references: [id], onDelete: Cascade)
   reservation Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
@@ -468,18 +485,25 @@ enum BookingSource {
 }
 
 model Reservation {
-  id        String            @id @default(cuid())
-  code      String            @unique
+  id         String            @id @default(cuid())
+  code       String            @unique
   propertyId String
-  unitId    String
-  guestId   String
-  checkIn   DateTime          @db.Date
-  checkOut  DateTime          @db.Date
-  adults    Int               @default(1)
-  children  Int               @default(0)
-  status    ReservationStatus @default(PENDING)
-  source    BookingSource     @default(DIRECT)
-  currency  String            @default("INR")
+  unitId     String
+  guestId    String
+  checkIn    DateTime          @db.Date
+  checkOut   DateTime          @db.Date
+  adults     Int               @default(1)
+  children   Int               @default(0)
+  status     ReservationStatus @default(PENDING)
+  source     BookingSource     @default(DIRECT)
+  currency   String            @default("INR")
+
+  // Set when this reservation was created/updated from a parsed OTA
+  // notification email rather than a direct booking. `rawData` keeps the
+  // extraction + email metadata for audit. Nullable pairs coexist fine under
+  // the unique constraint — direct bookings never set either.
+  externalReservationId String?
+  rawData               Json?
 
   // Guest-facing price snapshot at time of booking (operational, not the
   // accounting source of truth — Transaction rows are).
@@ -499,15 +523,17 @@ model Reservation {
   unit     Unit     @relation(fields: [unitId], references: [id])
   guest    Guest    @relation(fields: [guestId], references: [id])
 
-  reservationGuests ReservationGuest[]
-  payments          ReservationPayment[]
-  nightsBlocked     InventoryNight[]
-  transactions      Transaction[]
-  messages          Message[]
-  cleaningTasks     CleaningTask[]
-  review            Review?
-  auditLogs         AuditLog[]
+  reservationGuests      ReservationGuest[]
+  payments               ReservationPayment[]
+  nightsBlocked          InventoryNight[]
+  transactions           Transaction[]
+  messages               Message[]
+  cleaningTasks          CleaningTask[]
+  review                 Review?
+  auditLogs              AuditLog[]
+  processedEmailMessages ProcessedEmailMessage[]
 
+  @@unique([source, externalReservationId])
   @@index([propertyId])
   @@index([guestId])
   @@index([status])
@@ -587,16 +613,16 @@ model Channel {
 }
 
 model ChannelProperty {
-  id                 String                   @id @default(cuid())
-  channelId          String
-  propertyId         String
-  externalListingId  String?
-  status             ChannelConnectionStatus  @default(NOT_CONFIGURED)
-  lastSyncAt         DateTime?
-  createdAt          DateTime                 @default(now())
+  id                String                  @id @default(cuid())
+  channelId         String
+  propertyId        String
+  externalListingId String?
+  status            ChannelConnectionStatus @default(NOT_CONFIGURED)
+  lastSyncAt        DateTime?
+  createdAt         DateTime                @default(now())
 
-  channel  Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  channel  Channel          @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  property Property         @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   rooms    ChannelRoom[]
   syncLogs ChannelSyncLog[]
 
@@ -604,7 +630,7 @@ model ChannelProperty {
 }
 
 model ChannelRoom {
-  id                String @id @default(cuid())
+  id                String  @id @default(cuid())
   channelPropertyId String
   unitId            String
   externalRoomId    String?
@@ -639,6 +665,72 @@ model ChannelSyncLog {
 }
 
 // ──────────────────────────────────────────────────────────────────────────
+// MAILBOX OTA INGESTION — Airbnb/Booking.com/Agoda have no self-serve API for
+// this account, so instead of a channel-manager connection, the homestay@
+// inbox (hosted on Hostinger/Titan — plain IMAP, no OAuth provider) is
+// polled and its notification emails are parsed here. See src/lib/mailbox/.
+// ──────────────────────────────────────────────────────────────────────────
+
+// Single shared mailbox connection (one active row in practice, enforced in
+// app logic — not worth a DB constraint for one inbox). IMAP has no OAuth
+// equivalent for a Hostinger-hosted mailbox, so the password itself is
+// stored, encrypted at rest — never in plaintext.
+model MailboxIntegration {
+  id                String                  @id @default(cuid())
+  email             String
+  imapHost          String
+  imapPort          Int
+  imapSecure        Boolean                 @default(true)
+  passwordEncrypted String
+  status            ChannelConnectionStatus @default(NOT_CONFIGURED)
+  connectedAt       DateTime?
+  disconnectedAt    DateTime?
+  lastSyncAt        DateTime?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+}
+
+enum EmailClassification {
+  INQUIRY
+  BOOKING_CONFIRMED
+  BOOKING_CANCELLED
+  BOOKING_MODIFIED
+  OTHER
+}
+
+enum ProcessedEmailStatus {
+  PROCESSED
+  NEEDS_REVIEW
+  FAILED
+}
+
+// One row per inbox message the poller has looked at. `emailMessageId` is
+// the email's own Message-ID header (globally unique per RFC 822) — used as
+// the idempotency key rather than the IMAP UID, since a UID can be
+// reassigned if the mailbox is ever reindexed (UIDVALIDITY change).
+model ProcessedEmailMessage {
+  id             String               @id @default(cuid())
+  emailMessageId String               @unique
+  receivedAt     DateTime
+  fromAddress    String
+  subject        String
+  source         BookingSource?
+  classification EmailClassification
+  confidence     Float?
+  messageId      String?
+  reservationId  String?
+  status         ProcessedEmailStatus
+  error          String?
+  createdAt      DateTime             @default(now())
+
+  message     Message?     @relation(fields: [messageId], references: [id])
+  reservation Reservation? @relation(fields: [reservationId], references: [id])
+
+  @@index([status])
+  @@index([source])
+}
+
+// ──────────────────────────────────────────────────────────────────────────
 // FINANCE — Transaction is the single source of truth for all money movement.
 // ──────────────────────────────────────────────────────────────────────────
 
@@ -653,14 +745,14 @@ enum TransactionCategoryGroup {
 }
 
 model TransactionCategory {
-  id                   String                   @id @default(cuid())
-  name                 String
-  group                TransactionCategoryGroup
-  isRefundableDeposit  Boolean                  @default(false)
+  id                  String                   @id @default(cuid())
+  name                String
+  group               TransactionCategoryGroup
+  isRefundableDeposit Boolean                  @default(false)
 
-  transactions       Transaction[]
-  recurringExpenses  RecurringExpense[]
-  budgets            Budget[]
+  transactions      Transaction[]
+  recurringExpenses RecurringExpense[]
+  budgets           Budget[]
 
   @@unique([name, group])
 }
@@ -698,29 +790,29 @@ enum PaymentMethod {
 }
 
 model Transaction {
-  id                  String             @id @default(cuid())
-  propertyId          String
-  categoryId          String
-  type                TransactionType
-  amount              Decimal            @db.Decimal(12, 2)
-  currency            String             @default("INR")
-  date                DateTime           @db.Date
-  description         String?
-  paymentMethod       PaymentMethod      @default(BANK_TRANSFER)
-  status              TransactionStatus  @default(PAID)
-  frequency           ExpenseFrequency?
-  receiptUrl          String?
-  reservationId       String?
-  recurringExpenseId  String?
-  createdById         String?
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
+  id                 String            @id @default(cuid())
+  propertyId         String
+  categoryId         String
+  type               TransactionType
+  amount             Decimal           @db.Decimal(12, 2)
+  currency           String            @default("INR")
+  date               DateTime          @db.Date
+  description        String?
+  paymentMethod      PaymentMethod     @default(BANK_TRANSFER)
+  status             TransactionStatus @default(PAID)
+  frequency          ExpenseFrequency?
+  receiptUrl         String?
+  reservationId      String?
+  recurringExpenseId String?
+  createdById        String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
 
-  property         Property             @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  category         TransactionCategory  @relation(fields: [categoryId], references: [id])
-  reservation      Reservation?         @relation(fields: [reservationId], references: [id])
-  recurringExpense RecurringExpense?    @relation(fields: [recurringExpenseId], references: [id])
-  createdBy        User?                @relation(fields: [createdById], references: [id])
+  property         Property            @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  category         TransactionCategory @relation(fields: [categoryId], references: [id])
+  reservation      Reservation?        @relation(fields: [reservationId], references: [id])
+  recurringExpense RecurringExpense?   @relation(fields: [recurringExpenseId], references: [id])
+  createdBy        User?               @relation(fields: [createdById], references: [id])
 
   @@index([propertyId, date])
   @@index([type])
@@ -734,20 +826,20 @@ enum RecurringExpenseStatus {
 }
 
 model RecurringExpense {
-  id           String                  @id @default(cuid())
-  propertyId   String
-  categoryId   String
-  amount       Decimal                 @db.Decimal(12, 2)
-  frequency    ExpenseFrequency
-  dayOfMonth   Int                     @default(1)
-  description  String?
-  status       RecurringExpenseStatus  @default(ACTIVE)
-  startDate    DateTime                @db.Date
-  endDate      DateTime?               @db.Date
-  nextRunDate  DateTime                @db.Date
-  createdAt    DateTime                @default(now())
+  id          String                 @id @default(cuid())
+  propertyId  String
+  categoryId  String
+  amount      Decimal                @db.Decimal(12, 2)
+  frequency   ExpenseFrequency
+  dayOfMonth  Int                    @default(1)
+  description String?
+  status      RecurringExpenseStatus @default(ACTIVE)
+  startDate   DateTime               @db.Date
+  endDate     DateTime?              @db.Date
+  nextRunDate DateTime               @db.Date
+  createdAt   DateTime               @default(now())
 
-  property     Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  property     Property            @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   category     TransactionCategory @relation(fields: [categoryId], references: [id])
   transactions Transaction[]
 
@@ -762,8 +854,8 @@ model Budget {
   amount     Decimal  @db.Decimal(12, 2)
   createdAt  DateTime @default(now())
 
-  property Property             @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  category TransactionCategory  @relation(fields: [categoryId], references: [id])
+  property Property            @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  category TransactionCategory @relation(fields: [categoryId], references: [id])
 
   @@unique([propertyId, categoryId, month])
 }
@@ -777,6 +869,7 @@ enum MessageChannel {
   WHATSAPP
   SMS
   OTA
+  CHAT
 }
 
 enum MessageDirection {
@@ -797,6 +890,9 @@ model Message {
   guestId       String?
   channel       MessageChannel
   direction     MessageDirection @default(OUTBOUND)
+  // Only set when channel = OTA — which platform the message came from.
+  // Reuses BookingSource rather than a parallel enum.
+  source        BookingSource?
   templateKey   String?
   subject       String?
   body          String
@@ -804,8 +900,9 @@ model Message {
   sentAt        DateTime?
   createdAt     DateTime         @default(now())
 
-  reservation Reservation? @relation(fields: [reservationId], references: [id], onDelete: Cascade)
-  guest       Guest?       @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  reservation            Reservation?            @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  guest                  Guest?                  @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  processedEmailMessages ProcessedEmailMessage[]
 
   @@index([reservationId])
 }
@@ -823,6 +920,8 @@ enum NotificationType {
   LOW_OCCUPANCY
   PRICING_RECOMMENDATION
   CONTACT_MESSAGE
+  OTA_MESSAGE
+  CHAT_INQUIRY
 }
 
 enum NotificationSeverity {
@@ -943,12 +1042,12 @@ model Stakeholder {
 }
 
 model StakeholderProperty {
-  id                String   @id @default(cuid())
-  stakeholderId     String
-  propertyId        String
-  investmentAmount  Decimal  @db.Decimal(12, 2)
-  ownershipPercent  Decimal? @db.Decimal(5, 2)
-  createdAt         DateTime @default(now())
+  id               String   @id @default(cuid())
+  stakeholderId    String
+  propertyId       String
+  investmentAmount Decimal  @db.Decimal(12, 2)
+  ownershipPercent Decimal? @db.Decimal(5, 2)
+  createdAt        DateTime @default(now())
 
   stakeholder Stakeholder @relation(fields: [stakeholderId], references: [id], onDelete: Cascade)
   property    Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
@@ -961,15 +1060,15 @@ model StakeholderProperty {
 // ──────────────────────────────────────────────────────────────────────────
 
 model Promotion {
-  id            String   @id @default(cuid())
-  code          String   @unique
+  id            String         @id @default(cuid())
+  code          String         @unique
   description   String?
   discountType  AdjustmentType @default(PERCENT)
-  discountValue Decimal  @db.Decimal(6, 2)
-  startDate     DateTime @db.Date
-  endDate       DateTime @db.Date
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
+  discountValue Decimal        @db.Decimal(6, 2)
+  startDate     DateTime       @db.Date
+  endDate       DateTime       @db.Date
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
 }
 
 // ──────────────────────────────────────────────────────────────────────────

@@ -5,6 +5,7 @@ import { QUEUE_NAMES, type ChannelSyncJob, type ReservationExpiryJob } from "@/l
 import { processChannelSync } from "@/lib/queue/processors/channel-sync";
 import { processReservationExpiry } from "@/lib/queue/processors/reservation-expiry";
 import { processRecurringExpenseRollover } from "@/lib/queue/processors/recurring-expenses";
+import { processMailboxPoll } from "@/lib/queue/processors/mailbox-poll";
 
 /**
  * Consumer process for the queues defined in src/lib/queue/index.ts. The
@@ -38,7 +39,13 @@ const recurringExpensesWorker = new Worker(
   { connection },
 );
 
-for (const worker of [channelSyncWorker, reservationExpiryWorker, recurringExpensesWorker]) {
+const mailboxPollWorker = new Worker(
+  QUEUE_NAMES.mailboxPoll,
+  async () => processMailboxPoll(),
+  { connection },
+);
+
+for (const worker of [channelSyncWorker, reservationExpiryWorker, recurringExpensesWorker, mailboxPollWorker]) {
   worker.on("completed", (job) => {
     console.log(`[worker] ${job.queueName}#${job.id} completed`);
   });
@@ -59,6 +66,16 @@ recurringExpensesQueue
     console.error("[worker] failed to schedule recurring-expense rollover:", err);
   });
 
+/** Airbnb/Booking.com/Agoda have no messaging/reservation API for this
+ * account — homestay@ inbox notification emails are polled instead. See
+ * src/lib/mailbox/. */
+const mailboxPollQueue = new Queue(QUEUE_NAMES.mailboxPoll, { connection });
+mailboxPollQueue
+  .upsertJobScheduler("mailbox-poll", { pattern: "*/5 * * * *" }, { name: "poll" })
+  .catch((err) => {
+    console.error("[worker] failed to schedule mailbox poll:", err);
+  });
+
 console.log("[worker] listening on:", Object.values(QUEUE_NAMES).join(", "));
 
 process.on("SIGTERM", async () => {
@@ -66,6 +83,7 @@ process.on("SIGTERM", async () => {
     channelSyncWorker.close(),
     reservationExpiryWorker.close(),
     recurringExpensesWorker.close(),
+    mailboxPollWorker.close(),
   ]);
   process.exit(0);
 });

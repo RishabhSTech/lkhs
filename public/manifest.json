@@ -1,0 +1,11 @@
+{
+  "name": "Lime Kraft Home Stays",
+  "short_name": "Lime Kraft",
+  "start_url": "/admin",
+  "display": "standalone",
+  "background_color": "#f7f9fc",
+  "theme_color": "#0b2f6b",
+  "icons": [
+    { "src": "/favicon.ico", "sizes": "48x48", "type": "image/x-icon" }
+  ]
+}

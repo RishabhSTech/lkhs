@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/popover";
 import { CommandPalette } from "@/components/admin/command-palette";
 import { AskLimePanel } from "@/components/admin/ask-lime-panel";
+import { PushAlertButton } from "@/components/admin/push-alert-button";
 import { formatDateLong } from "@/lib/format";
 
 type NotificationItem = {
@@ -50,6 +51,7 @@ export function AdminTopBar({
         </button>
 
         <div className="ml-auto flex items-center gap-2">
+          <PushAlertButton />
           <AskLimePanel />
 
           <Popover>

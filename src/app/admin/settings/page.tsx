@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { AdminPage, PageHeader } from "@/components/admin/page-header";
 import { UserManager } from "@/components/admin/user-manager";
 import { Badge } from "@/components/ui/badge";
@@ -23,12 +25,21 @@ const ROLE_DESCRIPTIONS: Record<string, string> = {
   GUEST: "Their own bookings only.",
 };
 
-function buildIntegrations() {
+function buildIntegrations(mailboxStatus: string | null) {
   const airbnbConfigured = Boolean(process.env.AIRBNB_API_KEY && process.env.AIRBNB_API_BASE_URL);
   const redisConfigured = Boolean(process.env.REDIS_URL);
   const s3Configured = Boolean(process.env.S3_ENDPOINT && process.env.S3_ACCESS_KEY);
 
   return [
+    {
+      name: "OTA email parsing",
+      detail: "Mailbox (Hostinger IMAP) — Airbnb / Booking.com / Agoda",
+      status: mailboxStatus === "CONNECTED" ? "Connected" : "Not connected",
+      note:
+        mailboxStatus === "CONNECTED"
+          ? "Reading homestay@ inbox notifications every 5 minutes."
+          : "Connect the mailbox to pull in OTA inquiries and bookings automatically.",
+    },
     {
       name: "Payments",
       detail: "Razorpay",
@@ -78,16 +89,17 @@ function buildIntegrations() {
 }
 
 export default async function SettingsPage() {
-  const integrations = buildIntegrations();
   const { user } = await getCurrentAdminUser();
   const isSuperAdmin = user.role === "SUPER_ADMIN";
-  const [users, auditLogs] = await Promise.all([
+  const [users, auditLogs, mailboxIntegration] = await Promise.all([
     db.user.findMany({
       include: { propertyAssignments: { include: { property: { select: { name: true } } } } },
       orderBy: { name: "asc" },
     }),
     db.auditLog.findMany({ orderBy: { createdAt: "desc" }, take: 25 }),
+    db.mailboxIntegration.findFirst({ orderBy: { createdAt: "desc" } }),
   ]);
+  const integrations = buildIntegrations(mailboxIntegration?.status ?? null);
 
   return (
     <AdminPage>
@@ -164,7 +176,20 @@ export default async function SettingsPage() {
           </section>
         </TabsContent>
 
-        <TabsContent value="integrations" className="mt-5">
+        <TabsContent value="integrations" className="mt-5 space-y-5">
+          <Link
+            href="/admin/settings/integrations"
+            className="group flex items-center justify-between rounded-xl border border-border bg-card p-5 transition-colors hover:border-ring"
+          >
+            <div>
+              <h2 className="text-sm font-semibold text-foreground">Mailbox OTA email parsing</h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Connect the mailbox and see what&apos;s been parsed.
+              </p>
+            </div>
+            <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+          </Link>
+
           <section className="rounded-xl border border-border bg-card p-5">
             <h2 className="text-sm font-semibold text-foreground">
               Integration status

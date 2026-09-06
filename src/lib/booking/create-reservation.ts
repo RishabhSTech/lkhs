@@ -5,6 +5,7 @@ import { buildQuote } from "@/lib/pricing/engine";
 import { getPaymentProvider, type PaymentIntentResult } from "@/lib/payments/provider";
 import { getNotificationProvider } from "@/lib/notifications/provider";
 import { renderTemplate } from "@/lib/notifications/templates";
+import { alertTeam } from "@/lib/notifications/alert";
 import { enqueueChannelSync, enqueueReservationExpiry } from "@/lib/queue";
 
 export class InventoryConflictError extends Error {
@@ -441,13 +442,11 @@ async function notifyGuestBookingConfirmed(args: {
     });
   }
 
-  await db.notification.create({
-    data: {
-      type: "NEW_BOOKING",
-      title: "New booking confirmed",
-      body: `${args.guest.name} booked ${args.propertyName} · ${args.code}`,
-      severity: "INFO",
-      link: `/admin/reservations?code=${args.code}`,
-    },
+  await alertTeam({
+    type: "NEW_BOOKING",
+    title: "New booking confirmed",
+    body: `${args.guest.name} booked ${args.propertyName} · ${args.code}`,
+    severity: "INFO",
+    link: `/admin/reservations?code=${args.code}`,
   });
 }
