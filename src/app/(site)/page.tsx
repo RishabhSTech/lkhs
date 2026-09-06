@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, MessageCircle } from "lucide-react";
-import { AvailabilityExplorer } from "@/components/site/availability-explorer";
 import { CategoryRail } from "@/components/site/category-rail";
 import { DestinationGrid } from "@/components/site/destination-grid";
 import { DirectSavings } from "@/components/site/direct-savings";
@@ -21,7 +20,6 @@ import { Button } from "@/components/ui/button";
 import {
   getPropertyCards, getPropertyGallery,
 } from "@/lib/queries/properties";
-import { getPortfolioAvailability } from "@/lib/queries/availability";
 import {
   getAreasByCity, getCities, getCollectionTargets,
 } from "@/lib/queries/locations";
@@ -37,7 +35,7 @@ import { CATEGORIES } from "../../../prisma/seed-data";
 /**
  * Prerendered and refreshed in the background. Every figure here — the homes,
  * the cities, the rating, the cheapest nightly price — is inventory-wide and
- * identical for every visitor, so this page was running eight queries per
+ * identical for every visitor, so this page was running seven queries per
  * request to produce the same HTML each time.
  */
 export const revalidate = 300;
@@ -150,7 +148,7 @@ const FAQS: Faq[] = [
 export default async function HomePage() {
   const [
     featured, cities, areasByCity, collectionTargets, reviews, ratingAgg,
-    propertyCount, cheapest, availability,
+    propertyCount, cheapest,
   ] =
     await Promise.all([
       getPropertyCards({ limit: 3 }),
@@ -180,10 +178,6 @@ export default async function HomePage() {
         orderBy: { basePrice: "asc" },
         select: { basePrice: true },
       }),
-      // Four months of portfolio-wide availability. Prerendered with the rest
-      // of the page and refreshed on the same 300s revalidate, so the calendar
-      // is never more than five minutes behind the booking system.
-      getPortfolioAvailability(4),
     ]);
 
   const [hero, ...rest] = featured;
@@ -357,43 +351,7 @@ export default async function HomePage() {
           </Section>
         )}
 
-        {/* ── 03 · When can you go ─────────────────────────────────────────
-            The act the page was missing. The hero asks for dates and then the
-            page spends nine sections arguing about price, quality and trust
-            without ever coming back to the question that decides whether a
-            trip happens at all. Every cell is a live count of homes with a
-            free unit that night and the real cheapest rate among exactly
-            those homes — never a headline price borrowed from a home that is
-            already booked. */}
-        {availability.homes.length > 0 && (
-          <Section
-            size="feature"
-            bleed
-            className="border-y border-border bg-brand-ivory"
-          >
-            <Container>
-              <Reveal>
-                <SectionHeading
-                  index="03"
-                  layout="aside"
-                  size="feature"
-                  eyebrow="Dates & availability"
-                  title="When can you go?"
-                  description={
-                    availability.floorPrice !== null
-                      ? `Four months of live availability across all ${availability.homes.length} homes, from ${formatINR(availability.floorPrice)} a night. Weekend and festive rates are already applied — the number on a date is what that night costs.`
-                      : `Four months of live availability across all ${availability.homes.length} homes.`
-                  }
-                />
-              </Reveal>
-              <Reveal className="mt-10 lg:mt-14">
-                <AvailabilityExplorer data={availability} />
-              </Reveal>
-            </Container>
-          </Section>
-        )}
-
-        {/* ── 04 · Destinations: cities, derived from inventory ───────────
+        {/* ── 03 · Destinations: cities, derived from inventory ───────────
             Plus anywhere we have announced but cannot sell yet. Those come
             from `lib/seo/upcoming`, are filtered against live inventory, and
             are drawn as an announcement rather than as a card — no count, no
@@ -403,7 +361,7 @@ export default async function HomePage() {
         <Section size="feature">
           <Reveal>
             <SectionHeading
-              index="04"
+              index="03"
               layout="aside"
               size="feature"
               eyebrow="Destinations"
@@ -457,7 +415,7 @@ export default async function HomePage() {
           </div>
         </Section>
 
-        {/* ── 05 · Book direct ────────────────────────────────────────────
+        {/* ── 04 · Book direct ────────────────────────────────────────────
             The page's one saturated moment, and now genuinely the only one.
             The closing band used to run the same brand-blue field with the
             same grain and the same azure bloom, which meant the page's most
@@ -479,7 +437,7 @@ export default async function HomePage() {
               <div>
                 <Reveal>
                   <SectionHeading
-                    index="05"
+                    index="04"
                     size="feature"
                     tone="invert"
                     eyebrow="Direct booking benefits"
@@ -525,7 +483,7 @@ export default async function HomePage() {
           </Container>
         </Section>
 
-        {/* ── 06 · Reviews ─────────────────────────────────────────────── */}
+        {/* ── 05 · Reviews ─────────────────────────────────────────────── */}
         {railReviews.length > 0 && (
           <Section
             id="reviews"
@@ -536,7 +494,7 @@ export default async function HomePage() {
             <Container>
               <Reveal>
                 <SectionHeading
-                  index="06"
+                  index="05"
                   size="feature"
                   eyebrow="Guest reviews"
                   title="What people say after"
@@ -554,7 +512,7 @@ export default async function HomePage() {
           </Section>
         )}
 
-        {/* ── 07 · How it works ───────────────────────────────────────────
+        {/* ── 06 · How it works ───────────────────────────────────────────
             Demoted from third to seventh. A process explainer is the lowest
             intent content on the page — nobody arrives wanting to read how
             booking works — and it was sitting above the inventory, the dates
@@ -563,7 +521,7 @@ export default async function HomePage() {
         <Section size="feature">
           <Reveal>
             <SectionHeading
-              index="07"
+              index="06"
               size="feature"
               eyebrow="How it works"
               title={
@@ -579,11 +537,11 @@ export default async function HomePage() {
           </Reveal>
         </Section>
 
-        {/* ── 08 · The questions people ask before they trust a page ───── */}
+        {/* ── 07 · The questions people ask before they trust a page ───── */}
         <Section size="feature">
           <Reveal>
             <SectionHeading
-              index="08"
+              index="07"
               layout="aside"
               eyebrow="Before you book"
               title="Straight answers"
