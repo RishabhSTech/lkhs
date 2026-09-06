@@ -54,6 +54,12 @@ export async function generateMetadata({
   params,
 }: PageProps<"/destinations/[slug]">): Promise<Metadata> {
   const { slug } = await params;
+  if (!slug) {
+    return {
+      title: "Destination not found",
+      robots: { index: false, follow: false },
+    };
+  }
   const destination = await resolve(slug);
   if (!destination) {
     return {
@@ -100,6 +106,7 @@ export default async function DestinationPage({
   params,
 }: PageProps<"/destinations/[slug]">) {
   const { slug } = await params;
+  if (!slug) notFound();
   const destination = await resolve(slug);
   if (!destination) notFound();
 

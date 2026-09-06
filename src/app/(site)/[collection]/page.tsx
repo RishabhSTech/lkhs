@@ -64,6 +64,7 @@ export async function generateMetadata({
   params,
 }: PageProps<"/[collection]">): Promise<Metadata> {
   const { collection } = await params;
+  if (!collection) return { title: "Not found", robots: { index: false, follow: false } };
   const loaded = await load(collection);
   if (!loaded) return { title: "Not found", robots: { index: false, follow: false } };
 
@@ -171,6 +172,7 @@ export default async function CollectionPage({
   params,
 }: PageProps<"/[collection]">) {
   const { collection } = await params;
+  if (!collection) notFound();
   const loaded = await load(collection);
   if (!loaded) notFound();
 

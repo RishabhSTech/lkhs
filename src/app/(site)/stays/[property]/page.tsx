@@ -35,6 +35,9 @@ export async function generateMetadata({
   params,
 }: PageProps<"/stays/[property]">): Promise<Metadata> {
   const { property: slug } = await params;
+  if (!slug) {
+    return { title: "Stay not found", robots: { index: false, follow: false } };
+  }
   const property = await getPropertyBySlug(slug).catch(() => null);
   if (!property) {
     return { title: "Stay not found", robots: { index: false, follow: false } };
@@ -83,6 +86,7 @@ export default async function PropertyPage({
   params,
 }: PageProps<"/stays/[property]">) {
   const { property: slug } = await params;
+  if (!slug) notFound();
   const property = await getPropertyBySlug(slug);
   if (!property) notFound();
 

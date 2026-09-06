@@ -17,6 +17,7 @@ export default async function CheckoutPage({
   searchParams,
 }: PageProps<"/checkout/[property]">) {
   const { property: slug } = await params;
+  if (!slug) notFound();
   const query = await searchParams;
   const property = await getPropertyBySlug(slug);
   if (!property) notFound();

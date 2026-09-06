@@ -13,6 +13,7 @@ export default async function ChannelGuidePage({
   params,
 }: PageProps<"/admin/channels/[code]">) {
   const { code } = await params;
+  if (!code) notFound();
   const channelCode = code.toUpperCase() as ChannelCode;
   const guide = CHANNEL_GUIDES[channelCode];
   if (!guide) notFound();

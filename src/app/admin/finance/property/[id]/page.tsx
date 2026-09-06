@@ -19,6 +19,7 @@ export default async function PropertyFinancePage({
   params,
 }: PageProps<"/admin/finance/property/[id]">) {
   const { id } = await params;
+  if (!id) notFound();
 
   const [finance, budgetCategories] = await Promise.all([
     getPropertyFinance(id).catch(() => null),

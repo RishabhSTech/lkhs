@@ -17,6 +17,7 @@ export default async function StakeholderPropertyPage({
   params,
 }: PageProps<"/stakeholder/[id]">) {
   const { id } = await params;
+  if (!id) notFound();
   const { stakeholder } = await getCurrentStakeholder();
 
   // Returns null when this property isn't assigned to the stakeholder.

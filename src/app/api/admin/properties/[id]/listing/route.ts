@@ -53,6 +53,9 @@ export async function PUT(
   { params }: RouteContext<"/api/admin/properties/[id]/listing">,
 ) {
   const { id } = await params;
+  if (!id) {
+    return NextResponse.json({ error: "Property id is required." }, { status: 400 });
+  }
   const { user } = await getCurrentAdminUser();
 
   const parsed = schema.safeParse(await request.json().catch(() => null));
