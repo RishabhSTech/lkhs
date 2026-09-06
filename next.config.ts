@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
   },
 
   // Tailwind's output is atomic and small (~22 kB gzip), so inlining it into
-  // the document removes a render-blocking round trip on first visit — the
+  // the document removes a render-blocking round trip on first visit - the
   // case that decides FCP/LCP for someone arriving from search. Returning
   // visitors lose the separately-cached stylesheet; at this size that trade is
   // clearly worth it.

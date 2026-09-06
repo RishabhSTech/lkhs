@@ -57,7 +57,7 @@ export async function POST(request: Request) {
       type,
       amount: new Prisma.Decimal(data.amount),
       date: parseISODate(data.date),
-      description: data.description || `${category.name} — ${property.name}`,
+      description: data.description || `${category.name} - ${property.name}`,
       paymentMethod: data.paymentMethod,
       status: data.status,
       frequency: data.frequency,

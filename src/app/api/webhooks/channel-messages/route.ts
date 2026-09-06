@@ -23,7 +23,7 @@ const schema = z.object({
 
 /**
  * Generic inbound webhook for a future channel-manager subscription (Beds24,
- * Hostaway, etc.) — none of Airbnb/Booking.com/Agoda offer a self-serve
+ * Hostaway, etc.) - none of Airbnb/Booking.com/Agoda offer a self-serve
  * messaging API to individual hosts, so nothing calls this yet. It exists so
  * that once you do subscribe to an aggregator, wiring their outbound webhook
  * here is the only integration work left: same unified inbox, same instant
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
   await alertTeam({
     type: "OTA_MESSAGE",
     title: `New ${label} message`,
-    body: `${guestName} — ${message.slice(0, 120)}${message.length > 120 ? "…" : ""}`,
+    body: `${guestName} - ${message.slice(0, 120)}${message.length > 120 ? "…" : ""}`,
     severity: "WARNING",
     link: "/admin/messages",
   });

@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
 import { ADMIN_ROLES, STAKEHOLDER_ROLES } from "@/lib/auth/session-shared";
 
-// Demo fallback is off by default. Real deployments should never set this —
+// Demo fallback is off by default. Real deployments should never set this -
 // it exists only so the app is explorable without running the OTP flow first.
 // src/proxy.ts enforces the same flag before these ever run, but this is the
 // authoritative check: it re-verifies the session against the database and
@@ -28,7 +28,7 @@ export const getCurrentAdminUser = cache(async () => {
     where: { role: "SUPER_ADMIN" },
     orderBy: { createdAt: "asc" },
   });
-  if (!fallback) throw new Error("No admin user exists — run the database seed.");
+  if (!fallback) throw new Error("No admin user exists - run the database seed.");
 
   return { user: fallback, isDemoFallback: true };
 });
@@ -52,7 +52,7 @@ export const getCurrentStakeholder = cache(async () => {
     include: { properties: { include: { property: true } } },
     orderBy: { createdAt: "asc" },
   });
-  if (!fallback) throw new Error("No stakeholder exists — run the database seed.");
+  if (!fallback) throw new Error("No stakeholder exists - run the database seed.");
 
   return { stakeholder: fallback, isDemoFallback: true };
 });

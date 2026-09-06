@@ -5,7 +5,7 @@ import type { PoolConfig } from "pg";
  * store. Point PGSSLROOTCERT at Supabase's CA bundle for full verification;
  * without it we still use TLS but skip chain validation.
  *
- * Note: DATABASE_URL must not carry an `sslmode` param — pg lets it win over
+ * Note: DATABASE_URL must not carry an `sslmode` param - pg lets it win over
  * this config, which reintroduces the verification failure.
  */
 /**
@@ -30,7 +30,7 @@ export function pgPoolConfig(): PoolConfig {
 
   // Escape hatch for a plain local/CI Postgres (docker-compose service
   // containers, GitHub Actions' postgres: service) that doesn't speak TLS at
-  // all — forcing the ssl option against one fails the handshake outright.
+  // all - forcing the ssl option against one fails the handshake outright.
   // Never set this against Supabase or any other TLS-only host.
   if (process.env.PGSSL_DISABLE === "true") {
     return { connectionString, max };

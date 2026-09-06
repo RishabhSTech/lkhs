@@ -6,8 +6,8 @@ import type { ExtractedBookingInfo } from "./extract-booking-info";
 
 /**
  * Runs against the real database, same rationale as
- * create-reservation.test.ts: the interesting behavior — never silently
- * overwriting a real double-booking — is enforced by the InventoryNight
+ * create-reservation.test.ts: the interesting behavior - never silently
+ * overwriting a real double-booking - is enforced by the InventoryNight
  * unique constraint, which only exists in the database.
  */
 describe("upsertBookingFromEmail", () => {

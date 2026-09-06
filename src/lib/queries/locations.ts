@@ -154,7 +154,7 @@ export async function getCollection(
 
   // Collection-wide rating, recombined from the per-property averages. Summing
   // `average x count` and dividing by the total is exactly the mean over every
-  // individual review, so this matches what the old flatMap produced — minus
+  // individual review, so this matches what the old flatMap produced - minus
   // the unpublished reviews it used to silently fold in, which the card query
   // beside it had always excluded.
   const reviewCount = properties.reduce((n, p) => n + p.reviewCount, 0);

@@ -15,7 +15,7 @@ function isConfigured() {
 
 /**
  * Presigned URLs are always for a browser to PUT to directly, so they must be
- * signed against a host the browser can actually reach — S3_PUBLIC_ENDPOINT,
+ * signed against a host the browser can actually reach - S3_PUBLIC_ENDPOINT,
  * not S3_ENDPOINT (which, behind docker-compose, is the container-network
  * hostname `minio:9000` and resolves nowhere outside it). Falls back to
  * S3_ENDPOINT only when no public endpoint is configured (e.g. a real S3

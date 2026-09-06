@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   }
   if (!link.externalListingId) {
     return NextResponse.json(
-      { error: "Add the channel's listing ID before syncing — there's nothing to sync against without it." },
+      { error: "Add the channel's listing ID before syncing - there's nothing to sync against without it." },
       { status: 400 },
     );
   }

@@ -25,7 +25,7 @@ export function ReviewsSection({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
           <CalendarX2 className="size-4" />
-          No reviews yet — this home is new to the collection.
+          No reviews yet - this home is new to the collection.
         </p>
         <ReviewPrompt propertyId={propertyId} />
       </div>

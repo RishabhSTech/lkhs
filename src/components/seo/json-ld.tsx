@@ -8,7 +8,7 @@ export function JsonLd({ data }: { data: object | object[] }) {
   return (
     <script
       type="application/ld+json"
-      // Built entirely from our own database — no user-supplied strings.
+      // Built entirely from our own database - no user-supplied strings.
       dangerouslySetInnerHTML={{ __html: JSON.stringify(payload) }}
     />
   );

@@ -31,7 +31,7 @@ const selectClass =
   "h-10 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 /**
- * Adding a review by hand — almost always one carried over from an OTA. These
+ * Adding a review by hand - almost always one carried over from an OTA. These
  * never claim to be a verified stay, so the stay length is typed in rather
  * than derived, and the author's name has to be supplied.
  */

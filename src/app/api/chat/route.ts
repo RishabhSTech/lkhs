@@ -18,7 +18,7 @@ const schema = z.object({
 });
 
 const SYSTEM_PROMPT = `You are the guest-facing chat assistant for Lime Kraft Home Stays, an
-Indian home-stay and villa booking company. Be warm, concise, and honest —
+Indian home-stay and villa booking company. Be warm, concise, and honest -
 never invent availability, prices, or property details; always check with a
 tool first.
 
@@ -27,13 +27,13 @@ Guidelines:
 - If you don't have enough info (city, dates, guest count), ask a short follow-up question rather than guessing.
 - If the guest wants to book, has a question you can't answer from the tools, or explicitly asks for a human, collect their name and an email or phone number, then call create_inquiry with a clear summary. Tell them the team will follow up shortly.
 - Keep replies under ~80 words unless listing multiple properties.
-- Never claim a human will respond "immediately" — say "shortly" or "soon".`;
+- Never claim a human will respond "immediately" - say "shortly" or "soon".`;
 
 export async function POST(request: Request) {
   if (!CHAT_IS_CONFIGURED) {
     return NextResponse.json({
       reply:
-        "Chat isn't available right now — please use the contact form and our team will get back to you.",
+        "Chat isn't available right now - please use the contact form and our team will get back to you.",
     });
   }
 
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
 
       if (response.stop_reason === "refusal") {
         return NextResponse.json({
-          reply: "I'm not able to help with that — please use the contact form instead.",
+          reply: "I'm not able to help with that - please use the contact form instead.",
         });
       }
 
@@ -89,12 +89,12 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({
-      reply: "Let's take this to email — please use the contact form and our team will follow up.",
+      reply: "Let's take this to email - please use the contact form and our team will follow up.",
     });
   } catch (error) {
     console.error("[chat] request failed", error);
     return NextResponse.json({
-      reply: "Something went wrong on our end — please use the contact form instead.",
+      reply: "Something went wrong on our end - please use the contact form instead.",
     });
   }
 }

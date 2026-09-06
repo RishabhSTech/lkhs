@@ -7,7 +7,7 @@ import { getPaymentProvider } from "@/lib/payments/provider";
  * Authoritative payment confirmation. Configure this URL
  * (APP_URL + /api/payments/webhook/razorpay) in the Razorpay dashboard once
  * RAZORPAY_WEBHOOK_SECRET is set. The client-side confirm route
- * (src/app/api/bookings/confirm/route.ts) is a same-request convenience —
+ * (src/app/api/bookings/confirm/route.ts) is a same-request convenience -
  * this is the path that's trustworthy even if the guest closes their tab.
  */
 export async function POST(request: Request) {

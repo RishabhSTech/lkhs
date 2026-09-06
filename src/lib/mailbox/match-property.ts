@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
  * OTA emails reference a listing by its Airbnb/Booking.com/Agoda title, not
  * our internal property ID, so matching is necessarily best-effort. This is
  * deliberately conservative: it only returns a match when one property
- * stands out clearly, otherwise `null` — which routes the caller to the safe
+ * stands out clearly, otherwise `null` - which routes the caller to the safe
  * log-and-alert fallback instead of guessing which property a booking is for.
  */
 

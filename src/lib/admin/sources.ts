@@ -9,7 +9,7 @@ export const SOURCE_LABELS: Record<BookingSource, string> = {
 };
 
 /**
- * Booking source is identity, so it keeps a fixed colour per channel — the
+ * Booking source is identity, so it keeps a fixed colour per channel - the
  * chart series slots, so calendar blocks and charts agree. Every use pairs the
  * colour with the channel name, never colour alone.
  */

@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   await alertTeam({
     type: "CONTACT_MESSAGE",
     title: "New contact form message",
-    body: `${name} — ${message.slice(0, 120)}${message.length > 120 ? "…" : ""}`,
+    body: `${name} - ${message.slice(0, 120)}${message.length > 120 ? "…" : ""}`,
     severity: "WARNING",
     link: "/admin/messages",
   });

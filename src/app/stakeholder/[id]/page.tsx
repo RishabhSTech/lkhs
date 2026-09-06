@@ -103,7 +103,7 @@ export default async function StakeholderPropertyPage({
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
         <PLStatement
-          title="Profit & loss — lifetime"
+          title="Profit & loss - lifetime"
           pl={pl}
           channels={channels}
         />

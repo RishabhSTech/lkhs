@@ -9,7 +9,7 @@ import { formatINR } from "@/lib/format";
 /**
  * The mark-up we are modelling. The channels take fourteen to sixteen percent
  * between host commission and the guest-side service fee, so the midpoint is
- * what this uses — and the panel says so on screen. A savings widget that
+ * what this uses - and the panel says so on screen. A savings widget that
  * cannot show its working is worth less than no widget at all.
  */
 const CHANNEL_MARKUP = 0.15;
@@ -19,7 +19,7 @@ const MAX_NIGHTS = 14;
 
 /**
  * "Book direct and you keep the difference" is the single most important claim
- * on this page, and as a sentence it is completely inert — every operator says
+ * on this page, and as a sentence it is completely inert - every operator says
  * it. Letting someone drag a slider and watch the number move turns the claim
  * into something they worked out themselves, against a real home at its real
  * nightly rate.

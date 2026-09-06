@@ -1,2 +1,2 @@
-// Stand-in for the "server-only" package in tests — see vitest.config.ts.
+// Stand-in for the "server-only" package in tests - see vitest.config.ts.
 export {};

@@ -1,5 +1,5 @@
 // Instant-alert push receiver. Registered from the admin panel only
-// (see push-alert-button.tsx) — this never touches the guest-facing site.
+// (see push-alert-button.tsx) - this never touches the guest-facing site.
 
 self.addEventListener("install", () => {
   self.skipWaiting();
@@ -14,7 +14,7 @@ self.addEventListener("push", (event) => {
   try {
     if (event.data) payload = { ...payload, ...event.data.json() };
   } catch {
-    // Non-JSON push payload — fall back to the default text above.
+    // Non-JSON push payload - fall back to the default text above.
   }
 
   event.waitUntil(

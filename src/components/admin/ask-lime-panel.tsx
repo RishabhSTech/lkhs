@@ -125,7 +125,7 @@ export function AskLimePanel() {
                   {confirmed ? (
                     <p className="mt-3 text-xs text-muted-foreground">
                       Confirmed. Applying pricing changes is not wired up in this
-                      demo — the proposal is shown but never executed silently.
+                      demo - the proposal is shown but never executed silently.
                     </p>
                   ) : (
                     <div className="mt-3 flex gap-2">
@@ -169,7 +169,7 @@ export function AskLimePanel() {
           </div>
 
           <p className="rounded-lg bg-muted/60 p-3 text-xs leading-relaxed text-muted-foreground">
-            Ask Lime computes answers directly from your database — it is not a
+            Ask Lime computes answers directly from your database - it is not a
             language model and never invents figures. Anything that would change
             data is proposed for your confirmation first.
           </p>

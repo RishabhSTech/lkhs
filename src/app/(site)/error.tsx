@@ -14,7 +14,7 @@ export default function SiteError({ reset }: { reset: () => void }) {
         That didn&apos;t load properly
       </h1>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-        This one is on us, not on you. Try again — and if it keeps happening, tell
+        This one is on us, not on you. Try again - and if it keeps happening, tell
         us and we will look at it today.
       </p>
       <div className="mt-6 flex gap-3">

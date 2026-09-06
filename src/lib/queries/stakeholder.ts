@@ -9,7 +9,7 @@ import {
 } from "@/lib/finance/calculations";
 
 /**
- * Stakeholder views are scoped strictly by the StakeholderProperty join — a
+ * Stakeholder views are scoped strictly by the StakeholderProperty join - a
  * stakeholder can never see a property that isn't assigned to them.
  */
 export async function getStakeholderPortfolio(stakeholderId: string) {

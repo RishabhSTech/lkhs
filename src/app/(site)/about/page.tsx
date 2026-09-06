@@ -24,7 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     title: "About",
-    description: `Lime Kraft Home Stays runs a small collection of boutique villas, apartments and homes across ${where} — set up, styled and maintained by our own team.`,
+    description: `Lime Kraft Home Stays runs a small collection of boutique villas, apartments and homes across ${where} - set up, styled and maintained by our own team.`,
     alternates: { canonical: "/about" },
   };
 }
@@ -46,7 +46,7 @@ function principles(homes: number, cities: number) {
     {
       title: "We keep it small",
       // Counted off the database. This line used to read "Five homes today",
-      // which was quietly wrong the moment a sixth home went live — and this
+      // which was quietly wrong the moment a sixth home went live - and this
       // is the page where a stale number costs the most trust.
       body: `${homes} ${homes === 1 ? "home" : "homes"}${
         cities > 1 ? ` across ${cities} cities` : ""
@@ -62,14 +62,14 @@ export default async function AboutPage() {
 
   const expansionLine =
     `That collection now runs across ${joinCities(cities.map((c) => c.name))}. ` +
-    "Every home is still set up, styled and looked after by the same team — " +
+    "Every home is still set up, styled and looked after by the same team - " +
     "we open a new city when we can staff it properly, not when the " +
     "spreadsheet says to.";
 
   // The line above earns its keep only if we are willing to name what is
   // actually next. Pulled from the same announcement list the destinations
   // pages read, so this page cannot promise a city those have stopped
-  // mentioning — or keep promising one that has already opened.
+  // mentioning - or keep promising one that has already opened.
   const opening = pendingCities(cities);
   const openingLine =
     opening.length === 0
@@ -77,8 +77,8 @@ export default async function AboutPage() {
       : // One city names its own neighbourhoods; several have to be qualified,
         // or the list reads as areas of whichever city was mentioned last.
         (opening.length === 1
-          ? `${opening[0].name} is next — ${joinCities(opening[0].areas)}, `
-          : `${joinCities(opening.map((c) => c.name))} are next — ` +
+          ? `${opening[0].name} is next - ${joinCities(opening[0].areas)}, `
+          : `${joinCities(opening.map((c) => c.name))} are next - ` +
             `${opening
               .map((c) => `${joinCities(c.areas.slice(0, 2))} in ${c.name}`)
               .join("; ")}, `) +

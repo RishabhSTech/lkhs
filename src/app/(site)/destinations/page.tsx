@@ -29,7 +29,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "Destinations",
     description:
-      `Every city where Lime Kraft runs homes — ${list}. Villas, serviced apartments and whole houses, booked direct.` +
+      `Every city where Lime Kraft runs homes - ${list}. Villas, serviced apartments and whole houses, booked direct.` +
       (opening.length > 0 ? ` ${opening.join(" and ")} opening soon.` : ""),
     alternates: { canonical: "/destinations" },
   };
@@ -76,7 +76,7 @@ export default async function DestinationsPage() {
                 ? `Every Lime Kraft home is in ${cities[0].name} today, set up and run by our own team.`
                 : `Homes across ${cities.length} cities, each one set up and run by our own team.`}
               {upcoming.length > 0 &&
-                ` ${upcoming.map((c) => c.name).join(" and ")} ${upcoming.length === 1 ? "is" : "are"} opening next — the dates go on sale here before they go anywhere else.`}
+                ` ${upcoming.map((c) => c.name).join(" and ")} ${upcoming.length === 1 ? "is" : "are"} opening next - the dates go on sale here before they go anywhere else.`}
             </p>
           </div>
         </div>

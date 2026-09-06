@@ -8,7 +8,7 @@ import { alertTeam } from "@/lib/notifications/alert";
 /**
  * The two things that make this "connected to our backend" rather than a
  * canned FAQ bot: it reads real property/pricing/availability data, and it
- * can actually create an inquiry that alerts the team — the same instant
+ * can actually create an inquiry that alerts the team - the same instant
  * push+email pipeline as the contact form and a logged OTA message.
  */
 
@@ -168,12 +168,12 @@ async function createInquiry(input: {
   await alertTeam({
     type: "CHAT_INQUIRY",
     title: "New chatbot inquiry",
-    body: `${input.guestName} — ${input.summary.slice(0, 120)}${input.summary.length > 120 ? "…" : ""}`,
+    body: `${input.guestName} - ${input.summary.slice(0, 120)}${input.summary.length > 120 ? "…" : ""}`,
     severity: "WARNING",
     link: "/admin/messages",
   });
 
-  return { ok: true, message: "Logged — the team will reach out shortly." };
+  return { ok: true, message: "Logged - the team will reach out shortly." };
 }
 
 export async function runChatTool(name: string, input: unknown): Promise<unknown> {

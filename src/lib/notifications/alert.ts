@@ -12,10 +12,10 @@ export type TeamAlert = {
 };
 
 /**
- * The one place a new inquiry (any channel — website, chat, or a manually
+ * The one place a new inquiry (any channel - website, chat, or a manually
  * logged OTA message) becomes something a human actually notices: it writes
  * the in-app notification, pushes to every subscribed browser, and emails a
- * backup address — all three fire immediately, none of them depend on
+ * backup address - all three fire immediately, none of them depend on
  * someone having the admin panel open.
  */
 export async function alertTeam(alert: TeamAlert) {

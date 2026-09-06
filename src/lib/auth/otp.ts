@@ -31,7 +31,7 @@ export async function requestOtp(identifier: string) {
   });
 
   // Once a channel actually delivers (email via Resend today), the code
-  // should never also come back in the API response — that would defeat the
+  // should never also come back in the API response - that would defeat the
   // point of a one-time code. It's only surfaced here as a fallback for
   // channels (SMS/WhatsApp) that still have no live adapter.
   const delivered = isEmail(identifier) && EMAIL_IS_LIVE && result.status === "SENT";
@@ -72,7 +72,7 @@ export async function verifyOtp(
   return { ok: true };
 }
 
-/** Finds or creates the user behind an identifier — no passwords involved. */
+/** Finds or creates the user behind an identifier - no passwords involved. */
 export async function findOrCreateUser(identifier: string, name?: string) {
   const where = isEmail(identifier)
     ? { email: identifier }

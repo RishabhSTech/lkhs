@@ -2,7 +2,7 @@
  * Slug helpers shared by server queries and client components, so this file
  * must stay free of server-only imports.
  *
- * Slugs are never reversed back into names by string surgery — "new-delhi"
+ * Slugs are never reversed back into names by string surgery - "new-delhi"
  * could be "New Delhi" or "New-Delhi", and guessing wrong produces a page that
  * quietly queries nothing. Resolution always compares `slugify(value)` against
  * the real values held in the database.

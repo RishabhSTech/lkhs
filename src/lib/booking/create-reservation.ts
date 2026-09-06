@@ -50,7 +50,7 @@ const PAYMENT_FEE_RATE = 0.02;
 
 /**
  * The one path that creates a booking. Availability check, inventory lock
- * and reservation creation happen inside a single transaction — the unique
+ * and reservation creation happen inside a single transaction - the unique
  * constraint on (unitId, date) is what actually guarantees no double-booking
  * under concurrency.
  *
@@ -192,7 +192,7 @@ export async function createReservation(input: CreateReservationInput) {
   if (intent.status === "SUCCEEDED") {
     await confirmReservation(reservation.id);
   } else {
-    // Payment settles asynchronously (real gateway) — release the hold if the
+    // Payment settles asynchronously (real gateway) - release the hold if the
     // guest never completes checkout.
     await enqueueReservationExpiry({ reservationId: reservation.id });
   }
@@ -328,7 +328,7 @@ async function notifyChannelsOfAvailabilityChange(propertyId: string) {
 }
 
 /**
- * Called once payment has actually settled — synchronously for the mock
+ * Called once payment has actually settled - synchronously for the mock
  * provider, or from the Razorpay checkout-confirm route / webhook once a
  * real charge is captured. Idempotent: a reservation that isn't still
  * PENDING has already been confirmed (or cancelled) and is left alone, so
@@ -375,7 +375,7 @@ export async function confirmReservation(reservationId: string) {
   });
 }
 
-/** Releases a PENDING reservation's hold on inventory — used both when an
+/** Releases a PENDING reservation's hold on inventory - used both when an
  * intent fails to even start, and by the reservation-expiry worker job.
  * Returns false if there was nothing to release (already confirmed or
  * already cancelled), so callers can tell a real release from a no-op. */

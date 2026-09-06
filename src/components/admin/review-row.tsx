@@ -171,7 +171,7 @@ export function ReviewRow({ review }: { review: AdminReview }) {
             <li
               key={topic.code}
               className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground"
-              // Inferred chips are the fallback, so they are marked as such —
+              // Inferred chips are the fallback, so they are marked as such -
               // otherwise there is no way to tell what an admin actually set.
               title={topic.inferred ? "Inferred from the review text" : "Tagged"}
             >
@@ -201,7 +201,7 @@ export function ReviewRow({ review }: { review: AdminReview }) {
             onChange={(e) => setResponse(e.target.value)}
             rows={3}
             maxLength={1000}
-            placeholder="Reply publicly — it appears under the review on the listing."
+            placeholder="Reply publicly - it appears under the review on the listing."
           />
           <div className="mt-2 flex gap-2">
             <Button

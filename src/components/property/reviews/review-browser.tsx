@@ -25,7 +25,7 @@ const PREVIEW_COUNT = 6;
  *
  * The rating breakdown is rendered on the server and handed in as `summary`,
  * so the only things that ship to the browser are the filter state and the
- * review bodies — not the whole icon set the breakdown needs.
+ * review bodies - not the whole icon set the breakdown needs.
  */
 export function ReviewBrowser({
   reviews,

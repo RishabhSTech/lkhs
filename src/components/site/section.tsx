@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Three weights, not one. The old page ran every band at the same padding and
- * the same 28px heading, which is why nothing on it read as important — a page
+ * the same 28px heading, which is why nothing on it read as important - a page
  * where everything is emphasised has no emphasis. `feature` is for the two or
  * three moments that carry the page, `quiet` is for supporting texture, and
  * `default` is everything else.
@@ -167,7 +167,7 @@ export function SectionHeading({
     </Link>
   );
 
-  // The rule spans the full measure and the numeral hangs in it — the numeral
+  // The rule spans the full measure and the numeral hangs in it - the numeral
   // is a locator, not a label, so it never sits above the rule competing with
   // the eyebrow underneath.
   const rule = index && (

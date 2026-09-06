@@ -9,13 +9,13 @@ import { processMailboxPoll } from "@/lib/queue/processors/mailbox-poll";
 
 /**
  * Consumer process for the queues defined in src/lib/queue/index.ts. The
- * Next.js app only ever enqueues — this is the process that actually does
+ * Next.js app only ever enqueues - this is the process that actually does
  * the work. Run alongside the app (see docker-compose.yml's `worker`
  * service) with `npm run worker`.
  */
 
 if (!process.env.REDIS_URL) {
-  console.error("[worker] REDIS_URL is not set — nothing to consume, exiting.");
+  console.error("[worker] REDIS_URL is not set - nothing to consume, exiting.");
   process.exit(1);
 }
 
@@ -54,7 +54,7 @@ for (const worker of [channelSyncWorker, reservationExpiryWorker, recurringExpen
   });
 }
 
-/** Recurring expenses have no per-event trigger — they run on a schedule. */
+/** Recurring expenses have no per-event trigger - they run on a schedule. */
 const recurringExpensesQueue = new Queue(QUEUE_NAMES.recurringExpenses, { connection });
 recurringExpensesQueue
   .upsertJobScheduler(
@@ -67,7 +67,7 @@ recurringExpensesQueue
   });
 
 /** Airbnb/Booking.com/Agoda have no messaging/reservation API for this
- * account — homestay@ inbox notification emails are polled instead. See
+ * account - homestay@ inbox notification emails are polled instead. See
  * src/lib/mailbox/. */
 const mailboxPollQueue = new Queue(QUEUE_NAMES.mailboxPoll, { connection });
 mailboxPollQueue

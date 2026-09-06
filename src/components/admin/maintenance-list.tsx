@@ -176,7 +176,7 @@ export function MaintenanceList({
               <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Title
               </Label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="AC not cooling — Master bedroom" />
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="AC not cooling - Master bedroom" />
             </div>
             <div>
               <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">

@@ -3,7 +3,7 @@ import type { PropertyCardData } from "@/components/property/property-card";
 
 /**
  * Structured data builders. Everything here must describe what is actually on
- * the page — marking up a rating or a price the visitor cannot see is the
+ * the page - marking up a rating or a price the visitor cannot see is the
  * fastest route to a manual action, not a rich result.
  */
 
@@ -141,7 +141,7 @@ export function collectionJsonLd({
 
 /**
  * A single listing. Reviews and the aggregate rating are only emitted when the
- * page actually renders them — marking up a rating a visitor cannot see is
+ * page actually renders them - marking up a rating a visitor cannot see is
  * exactly what earns a structured-data manual action.
  */
 export function lodgingJsonLd({

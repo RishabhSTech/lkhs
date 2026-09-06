@@ -8,7 +8,7 @@ export const SITE = {
   /** Falls back to localhost so previews and tests still produce absolute URLs. */
   url: process.env.APP_URL || "http://localhost:3000",
   description:
-    "Boutique serviced homes, villas and apartments across India — booked direct, with no channel mark-up and a real person on WhatsApp throughout.",
+    "Boutique serviced homes, villas and apartments across India - booked direct, with no channel mark-up and a real person on WhatsApp throughout.",
   locale: "en_IN",
   currency: "INR",
   country: "IN",

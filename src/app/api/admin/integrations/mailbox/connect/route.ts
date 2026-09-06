@@ -14,7 +14,7 @@ const schema = z.object({
 });
 
 /**
- * Hostinger/Titan mail has no OAuth alternative for a plain IMAP mailbox —
+ * Hostinger/Titan mail has no OAuth alternative for a plain IMAP mailbox -
  * this tests the login before ever saving anything, so a typo'd password
  * never gets stored (encrypted or not).
  */

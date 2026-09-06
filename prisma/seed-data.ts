@@ -13,8 +13,8 @@ import type { HighlightCode } from "../src/lib/property/highlights";
  */
 
 /**
- * The amenity catalogue is application data, not seed data — the admin picker
- * and the listing page both read it — so it lives in src/lib/property and is
+ * The amenity catalogue is application data, not seed data - the admin picker
+ * and the listing page both read it - so it lives in src/lib/property and is
  * re-exported here for the seed rather than duplicated.
  */
 export { AMENITIES } from "../src/lib/property/amenities";
@@ -72,7 +72,7 @@ export const PROPERTIES: SeedProperty[] = [
     name: "The Vijay Nagar Residence",
     tagline: "A calm two-bedroom above the city's best coffee",
     description:
-      "A quiet, light-filled apartment a few minutes from Vijay Nagar's restaurants and offices. Designed for people who want the ease of a hotel without the anonymity of one — deep sofas, a proper kitchen, blackout curtains in both bedrooms, and a desk that's genuinely comfortable to work at for eight hours.",
+      "A quiet, light-filled apartment a few minutes from Vijay Nagar's restaurants and offices. Designed for people who want the ease of a hotel without the anonymity of one - deep sofas, a proper kitchen, blackout curtains in both bedrooms, and a desk that's genuinely comfortable to work at for eight hours.",
     locationArea: "Vijay Nagar",
     addressLine: "Scheme 54 PU4, Vijay Nagar, Indore",
     latitude: 22.7533,
@@ -246,7 +246,7 @@ export const PROPERTIES: SeedProperty[] = [
     name: "The Rau Garden House",
     tagline: "Three bedrooms, a long table and a garden that gets used",
     description:
-      "An independent house on the quieter edge of Rau with a walled garden, a dining table that seats ten and enough bedrooms for a family or two. Slower than the city addresses — you hear birds in the morning — but only twenty minutes from the airport.",
+      "An independent house on the quieter edge of Rau with a walled garden, a dining table that seats ten and enough bedrooms for a family or two. Slower than the city addresses - you hear birds in the morning - but only twenty minutes from the airport.",
     locationArea: "Rau",
     addressLine: "Rau-Pithampur Link Road, Rau, Indore",
     latitude: 22.6154,
@@ -524,8 +524,8 @@ export const PROPERTIES: SeedProperty[] = [
   // ── Goa ──────────────────────────────────────────────────────────────────
   // The second city. Every entry below sets `city`/`state` explicitly: the
   // schema defaults are Indore/Madhya Pradesh, so an omitted field here would
-  // silently file a Goa villa under Indore and the whole location hierarchy —
-  // `/villas-in-goa`, the destinations grid, the sitemap — would never see it.
+  // silently file a Goa villa under Indore and the whole location hierarchy -
+  // `/villas-in-goa`, the destinations grid, the sitemap - would never see it.
   {
     slug: "assagao-garden-villa",
     name: "Assagao Garden Villa",
@@ -636,7 +636,7 @@ export const PROPERTIES: SeedProperty[] = [
     name: "Siolim Riverside House",
     tagline: "A restored Portuguese house on the Chapora river",
     description:
-      "A 90-year-old Goan-Portuguese house in Siolim, restored rather than gutted — oyster-shell windows, red oxide floors and a balcão that catches the evening breeze off the Chapora. Two bedrooms, a wide central sala and a garden that runs down towards the water. Best for couples and small families who want the old Goa rather than the beach-club one.",
+      "A 90-year-old Goan-Portuguese house in Siolim, restored rather than gutted - oyster-shell windows, red oxide floors and a balcão that catches the evening breeze off the Chapora. Two bedrooms, a wide central sala and a garden that runs down towards the water. Best for couples and small families who want the old Goa rather than the beach-club one.",
     locationArea: "Siolim",
     city: "Goa",
     state: "Goa",
@@ -733,7 +733,7 @@ export const PROPERTIES: SeedProperty[] = [
     name: "Fontainhas Apartment",
     tagline: "A one-bedroom in the Latin Quarter, above the bakery",
     description:
-      "A first-floor apartment on a narrow ochre street in Fontainhas, Panjim's Latin Quarter. High ceilings, shuttered windows onto the street, and a bakery downstairs that opens at seven. One bedroom, a real kitchen and a desk in the window — set up for long stays as much as for weekends. Everything in Panjim is walkable from the door.",
+      "A first-floor apartment on a narrow ochre street in Fontainhas, Panjim's Latin Quarter. High ceilings, shuttered windows onto the street, and a bakery downstairs that opens at seven. One bedroom, a real kitchen and a desk in the window - set up for long stays as much as for weekends. Everything in Panjim is walkable from the door.",
     locationArea: "Panjim",
     city: "Goa",
     state: "Goa",
@@ -837,7 +837,7 @@ export const GUEST_NAMES = [
  * Sub-scores are seeded alongside the overall rating so the category strip and
  * the dynamic highlight copy ("100% of recent guests gave the location a
  * 5-star rating") have something real to compute from. A couple deliberately
- * leave categories blank — imported reviews often do, and the maths has to
+ * leave categories blank - imported reviews often do, and the maths has to
  * survive it.
  */
 export const REVIEW_SNIPPETS: {
@@ -856,7 +856,7 @@ export const REVIEW_SNIPPETS: {
   {
     rating: 5,
     title: "Better than the photos",
-    body: "We booked for two nights and extended to four. The bed, the light in the morning, the fact that the kitchen actually had sharp knives — small things done properly.",
+    body: "We booked for two nights and extended to four. The bed, the light in the morning, the fact that the kitchen actually had sharp knives - small things done properly.",
     tripType: "COUPLE",
     topics: ["CONDITION", "BEDS", "KITCHEN"],
     cleanliness: 5, accuracy: 5, checkIn: 5, communication: 5, location: 5, value: 5,
@@ -872,7 +872,7 @@ export const REVIEW_SNIPPETS: {
   {
     rating: 4,
     title: "Great stay, minor niggle",
-    body: "Lovely space and very well kept. Water pressure in the second bathroom was a bit weak — mentioned it and it was fixed the same day, which counts for a lot.",
+    body: "Lovely space and very well kept. Water pressure in the second bathroom was a bit weak - mentioned it and it was fixed the same day, which counts for a lot.",
     tripType: "FRIENDS",
     topics: ["CONDITION", "BATHROOM", "HOSPITALITY"],
     cleanliness: 5, accuracy: 4, checkIn: 5, communication: 5, location: 4, value: 4,
@@ -927,7 +927,7 @@ export const REVIEW_SNIPPETS: {
   {
     rating: 5,
     title: "Would book the whole house again",
-    body: "We took it for an offsite — twelve of us in and out all weekend and the team handled the extra cleaning without being asked twice. The long table earned its keep.",
+    body: "We took it for an offsite - twelve of us in and out all weekend and the team handled the extra cleaning without being asked twice. The long table earned its keep.",
     tripType: "GROUP",
     topics: ["GROUPS", "HOSPITALITY", "CLEANLINESS"],
     cleanliness: 5, accuracy: 5, checkIn: 5, communication: 5, location: 4, value: 5,
@@ -939,7 +939,7 @@ export const JOURNAL_POSTS = [
     slug: "how-we-choose-a-home",
     title: "How we choose a home",
     excerpt: "Before we sign anything, we sleep there. Here's the rest of the checklist.",
-    body: "Every Lime Kraft home starts with a night on site. Not a viewing — a night. You learn more about a building between 11pm and 7am than you ever will on a Tuesday afternoon walkthrough: which way the traffic noise carries, whether the water runs hot at six in the morning, how much light actually reaches the bedroom.\n\nAfter that come the unglamorous checks. Power backup that covers the whole flat, not just one socket. A lift that works. Neighbours who are happy to have short-stay guests next door — we ask, every time. Mobile signal in every room.\n\nOnly then do we talk about how it looks.",
+    body: "Every Lime Kraft home starts with a night on site. Not a viewing - a night. You learn more about a building between 11pm and 7am than you ever will on a Tuesday afternoon walkthrough: which way the traffic noise carries, whether the water runs hot at six in the morning, how much light actually reaches the bedroom.\n\nAfter that come the unglamorous checks. Power backup that covers the whole flat, not just one socket. A lift that works. Neighbours who are happy to have short-stay guests next door - we ask, every time. Mobile signal in every room.\n\nOnly then do we talk about how it looks.",
     readMinutes: 4,
     image: U("1522708323590-d24dbb6b0267"),
   },
@@ -947,15 +947,15 @@ export const JOURNAL_POSTS = [
     slug: "indore-for-a-weekend",
     title: "Indore for a weekend",
     excerpt: "Sarafa after dark, Rajwada at opening time, and where to actually eat.",
-    body: "Start at Sarafa, but go late — the jewellery shops shut around ten and the food stalls take over the same street until two in the morning. Order the garadu in winter, the bhutte ka kees whenever.\n\nSaturday morning belongs to Rajwada, ideally before the crowds. The palace is worth an hour, the streets around it worth two. Walk to the Kanch Mandir afterwards; the mirror work is genuinely disorienting in the best way.\n\nSunday, go slow. Coffee in Vijay Nagar, then out towards Patalpani if the monsoon has been kind.",
+    body: "Start at Sarafa, but go late - the jewellery shops shut around ten and the food stalls take over the same street until two in the morning. Order the garadu in winter, the bhutte ka kees whenever.\n\nSaturday morning belongs to Rajwada, ideally before the crowds. The palace is worth an hour, the streets around it worth two. Walk to the Kanch Mandir afterwards; the mirror work is genuinely disorienting in the best way.\n\nSunday, go slow. Coffee in Vijay Nagar, then out towards Patalpani if the monsoon has been kind.",
     readMinutes: 6,
     image: U("1679556369532-bacc9cbdb8da"),
   },
   {
     slug: "north-goa-without-the-crowds",
     title: "North Goa without the crowds",
-    excerpt: "Assagao, Siolim and the Fontainhas end of Panjim — where to stay when the beach isn't the point.",
-    body: "Most people book North Goa by beach and end up on a main road. The villages one ridge back are quieter, greener and ten minutes from the same coast.\n\nAssagao is the obvious one — old Portuguese houses behind frangipani walls, a good bakery, and Anjuna and Vagator close enough to reach before breakfast finishes. Siolim is slower again: the Chapora river, the Saturday night market at Arpora nearby, and almost no through traffic.\n\nIf you would rather be in a town than a village, stay in Fontainhas. Panjim's Latin Quarter is walkable end to end, the buildings are repainted every monsoon, and you can eat properly without driving anywhere.\n\nGo between November and February for the weather, or in September for the prices — the rain is mostly finished and the crowds have not arrived.",
+    excerpt: "Assagao, Siolim and the Fontainhas end of Panjim - where to stay when the beach isn't the point.",
+    body: "Most people book North Goa by beach and end up on a main road. The villages one ridge back are quieter, greener and ten minutes from the same coast.\n\nAssagao is the obvious one - old Portuguese houses behind frangipani walls, a good bakery, and Anjuna and Vagator close enough to reach before breakfast finishes. Siolim is slower again: the Chapora river, the Saturday night market at Arpora nearby, and almost no through traffic.\n\nIf you would rather be in a town than a village, stay in Fontainhas. Panjim's Latin Quarter is walkable end to end, the buildings are repainted every monsoon, and you can eat properly without driving anywhere.\n\nGo between November and February for the weather, or in September for the prices - the rain is mostly finished and the crowds have not arrived.",
     readMinutes: 5,
     image: U("1600566753086-00f18fb6b3ea"),
   },
@@ -963,7 +963,7 @@ export const JOURNAL_POSTS = [
     slug: "why-we-price-the-way-we-do",
     title: "Why we price the way we do",
     excerpt: "Transparent nightly rates, no drip pricing, and what the cleaning fee actually pays for.",
-    body: "Our rates move with demand — weekends cost more, long stays cost less per night, and a Tuesday in low season is genuinely cheap. What doesn't happen is a price that changes between the search page and the checkout page.\n\nThe cleaning fee is a real number, not a margin lever. It covers a professional turnover: full linen change, bathroom deep clean, restocked consumables, and an inspection before the next guest arrives.\n\nBooking direct is always at least as cheap as any channel you'll find us on. The OTAs take between fourteen and sixteen percent; when you book with us, some of that comes back to you.",
+    body: "Our rates move with demand - weekends cost more, long stays cost less per night, and a Tuesday in low season is genuinely cheap. What doesn't happen is a price that changes between the search page and the checkout page.\n\nThe cleaning fee is a real number, not a margin lever. It covers a professional turnover: full linen change, bathroom deep clean, restocked consumables, and an inspection before the next guest arrives.\n\nBooking direct is always at least as cheap as any channel you'll find us on. The OTAs take between fourteen and sixteen percent; when you book with us, some of that comes back to you.",
     readMinutes: 3,
     image: U("1560448204-e02f11c3d0e2"),
   },
@@ -972,12 +972,12 @@ export const JOURNAL_POSTS = [
 // Neighbourhood imagery. Every photograph below was opened and looked at
 // before being used: the previous set was captioned for Indore but actually
 // showed Mumbai's Marine Drive, the Taj Mahal in Agra, Tower Bridge in London,
-// an ocean wave and a Nordic cabin — in a landlocked Madhya Pradesh city.
+// an ocean wave and a Nordic cabin - in a landlocked Madhya Pradesh city.
 // If you swap one, view the image first. An Unsplash search for "Indore"
 // returns plenty of photographs taken nowhere near Indore.
 //
 // `city` is not decoration. Neighbourhood slugs are only unique *within* a
-// city — "Panjim" and "Palasia" are fine today, but the first time two cities
+// city - "Panjim" and "Palasia" are fine today, but the first time two cities
 // share an area name, a city-less list resolves the wrong page and two
 // neighbourhoods start competing for one URL. Every consumer matches on
 // city + slug for that reason.
@@ -992,7 +992,7 @@ export const DESTINATIONS: {
     slug: "vijay-nagar",
     name: "Vijay Nagar",
     city: "Indore",
-    blurb: "Indore's business and dining district — offices by day, restaurants by night.",
+    blurb: "Indore's business and dining district - offices by day, restaurants by night.",
     image: U("1580041319554-bd27187ca097"),
   },
   {
@@ -1025,7 +1025,7 @@ export const DESTINATIONS: {
   },
 
   // Goa. These three carry photographs from the homes themselves rather than
-  // landmark shots — the Indore set above exists because stock "Goa" results
+  // landmark shots - the Indore set above exists because stock "Goa" results
   // are just as unreliable, and an un-viewed beach photograph is exactly the
   // mistake that comment describes. Swap them for real location photography
   // when we have it.
@@ -1047,7 +1047,7 @@ export const DESTINATIONS: {
     slug: "panjim",
     name: "Panjim",
     city: "Goa",
-    blurb: "The Latin Quarter — ochre streets, bakeries and everything within walking distance.",
+    blurb: "The Latin Quarter - ochre streets, bakeries and everything within walking distance.",
     image: U("1560185007-cde436f6a4d0"),
   },
 ];
@@ -1055,7 +1055,7 @@ export const DESTINATIONS: {
 // Interiors rather than landmarks: this is a homes business, and the stock
 // travel shots (a tropical lagoon, the Taj Mahal) had nothing to do with Indore.
 // Every one of these is reference data the application depends on existing
-// by (group, name) — postBookingFinancials, the budget routes and the
+// by (group, name) - postBookingFinancials, the budget routes and the
 // recurring-expense rollover all look categories up this way. Shared between
 // the full demo seed (prisma/seed.ts, which wipes and recreates everything)
 // and prisma/seed-reference-data.ts, an idempotent subset for CI and any

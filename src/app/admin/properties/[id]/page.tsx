@@ -284,7 +284,7 @@ export default async function AdminPropertyPage({
           <Card title="Cleaning queue">
             {property.cleaningTasks.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Nothing pending — the home is turned over.
+                Nothing pending - the home is turned over.
               </p>
             ) : (
               <ul className="divide-y divide-border">

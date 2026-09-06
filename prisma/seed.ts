@@ -225,7 +225,7 @@ async function main() {
         images: {
           create: p.images.map((url, i) => ({
             url,
-            alt: `${p.name} — photo ${i + 1}`,
+            alt: `${p.name} - photo ${i + 1}`,
             sortOrder: i,
             isHero: i === 0,
           })),
@@ -235,7 +235,7 @@ async function main() {
             ...p.amenities
               .filter((name) => amenityMap.has(name))
               .map((name) => ({ amenityId: amenityMap.get(name)! })),
-            // "Not included" — the struck-through block at the foot of the
+            // "Not included" - the struck-through block at the foot of the
             // amenity dialog.
             ...(p.unavailableAmenities ?? [])
               .filter((name) => amenityMap.has(name))
@@ -313,7 +313,7 @@ async function main() {
       ],
     });
 
-    // Channel connections — deliberately mixed states, including an error.
+    // Channel connections - deliberately mixed states, including an error.
     for (const channel of channels) {
       const isWebsite = channel.code === "WEBSITE";
       const isAgoda = channel.code === "AGODA";
@@ -353,7 +353,7 @@ async function main() {
             channelPropertyId: cp.id,
             direction: "PUSH",
             status: "ERROR",
-            message: "Authentication failed — listing credentials need to be reconnected.",
+            message: "Authentication failed - listing credentials need to be reconnected.",
             finishedAt: addDays(today, -2),
           },
         });
@@ -373,7 +373,7 @@ async function main() {
           email: `${slug}@example.com`,
           phone: `+9198${String(20000000 + i * 137).slice(0, 8)}`,
           // Staggered so the reviews carry a believable "3 years on Lime
-          // Kraft" line — every guest created today reads as brand new.
+          // Kraft" line - every guest created today reads as brand new.
           createdAt: addDays(today, -randInt(40, 1500)),
         },
       }),
@@ -604,7 +604,7 @@ async function main() {
           amount: D(amount),
           frequency: "MONTHLY",
           dayOfMonth: 1,
-          description: `${name} — monthly`,
+          description: `${name} - monthly`,
           status: "ACTIVE",
           startDate: openedAt,
           nextRunDate: startOfMonth(addMonths(today, 1)),
@@ -635,7 +635,7 @@ async function main() {
             status: isCurrentMonth && rand() > 0.6 ? "PENDING" : "PAID",
             paymentMethod: name === "Rent" ? "BANK_TRANSFER" : "UPI",
             frequency: "MONTHLY",
-            description: `${name} — ${monthDate.toLocaleDateString("en-IN", { month: "long", year: "numeric" })}`,
+            description: `${name} - ${monthDate.toLocaleDateString("en-IN", { month: "long", year: "numeric" })}`,
             createdById: financeUser.id,
           },
         });
@@ -659,7 +659,7 @@ async function main() {
           status: "PAID",
           paymentMethod: "UPI",
           frequency: "ONE_TIME",
-          description: `${o.name} — one-off`,
+          description: `${o.name} - one-off`,
           createdById: opsUser.id,
         },
       });
@@ -767,12 +767,12 @@ async function main() {
       authorSince: 2021,
       rating: 4,
       title: "Lovely house, a little far out",
-      body: "The garden and the kitchen were the stars. Do factor in the drive back into town at dinner time — it is further than it looks on the map.",
+      body: "The garden and the kitchen were the stars. Do factor in the drive back into town at dinner time - it is further than it looks on the map.",
       nightsStayed: 3,
       tripType: "FAMILY" as const,
       cleanliness: 5, accuracy: 4, checkIn: 5, communication: 5, location: 3, value: 4,
       response:
-        "Thank you Sunita — you're right that Rau trades a little distance for the garden. We now send a shortlist of places to eat within ten minutes of the house before every stay.",
+        "Thank you Sunita - you're right that Rau trades a little distance for the garden. We now send a shortlist of places to eat within ten minutes of the house before every stay.",
     },
     {
       slug: "bicholi-courtyard-villa",
@@ -812,7 +812,7 @@ async function main() {
   const maintenanceSeeds = [
     { title: "Geyser in second bathroom heats slowly", priority: "MEDIUM" as const, status: "IN_PROGRESS" as const },
     { title: "Balcony door lock sticking", priority: "LOW" as const, status: "OPEN" as const },
-    { title: "AC servicing due — living room unit", priority: "MEDIUM" as const, status: "OPEN" as const },
+    { title: "AC servicing due - living room unit", priority: "MEDIUM" as const, status: "OPEN" as const },
     { title: "Kitchen tap dripping", priority: "HIGH" as const, status: "RESOLVED" as const },
   ];
   for (const [i, m] of maintenanceSeeds.entries()) {
@@ -905,7 +905,7 @@ async function main() {
         type: "OTA_SYNC_FAILED",
         title: "Agoda sync failed",
         body: errorChannel
-          ? `${errorChannel.property.name} — authentication failed. Reconnect the listing to resume syncing.`
+          ? `${errorChannel.property.name} - authentication failed. Reconnect the listing to resume syncing.`
           : "A channel connection needs attention.",
         severity: "CRITICAL",
         link: "/admin/channels",

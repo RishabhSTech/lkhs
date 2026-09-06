@@ -51,7 +51,7 @@ async function revalidateListing(propertyId: string) {
 }
 
 /**
- * An admin entering a review by hand — typically one imported from an OTA,
+ * An admin entering a review by hand - typically one imported from an OTA,
  * where there is no guest or reservation of ours behind it. Those carry their
  * own author fields and a typed-in stay length, and never claim to be a
  * verified stay on the listing.
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
       action: "REVIEW_IMPORTED",
       entityType: "Review",
       entityId: review.id,
-      summary: `${property.name} — ${data.rating}★ from ${data.authorName}`,
+      summary: `${property.name} - ${data.rating}★ from ${data.authorName}`,
       metadata: { source: data.source, rating: data.rating },
     },
   });
@@ -126,7 +126,7 @@ export async function PATCH(request: Request) {
 
   const parsed = updateSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "We couldn't update that review — check the values and try again." }, { status: 400 });
+    return NextResponse.json({ error: "We couldn't update that review - check the values and try again." }, { status: 400 });
   }
   const data = parsed.data;
 
@@ -184,11 +184,11 @@ export async function DELETE(request: Request) {
   if (!existing) {
     return NextResponse.json({ error: "That review no longer exists." }, { status: 404 });
   }
-  // A guest's own review is hidden, never deleted — deleting it would let a
+  // A guest's own review is hidden, never deleted - deleting it would let a
   // bad review be made to disappear with no trace and no way back.
   if (existing.guestId) {
     return NextResponse.json(
-      { error: "Guest reviews can be hidden, but never deleted — hide it instead." },
+      { error: "Guest reviews can be hidden, but never deleted - hide it instead." },
       { status: 409 },
     );
   }

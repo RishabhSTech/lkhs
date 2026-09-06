@@ -10,7 +10,7 @@ import { topicsForReview } from "@/lib/property/review-topics";
  *    record's name; an imported one falls back to the author fields the admin
  *    typed in.
  *  - **Stay length.** When the review is attached to one of our bookings, the
- *    nights come from that booking — a guest can't inflate how long they
+ *    nights come from that booking - a guest can't inflate how long they
  *    stayed, which is the whole point of showing the figure. `nightsStayed` is
  *    only trusted for reviews with no reservation behind them (OTA imports).
  */
@@ -43,7 +43,7 @@ export type PublicReview = {
   avatarUrl: string | null;
   source: ReviewSource;
   rating: number;
-  /** ISO string — the month is what gets rendered. */
+  /** ISO string - the month is what gets rendered. */
   stayedOn: string;
   nights: number | null;
   tripType: TripType | null;

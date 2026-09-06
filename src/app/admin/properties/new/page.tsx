@@ -17,7 +17,7 @@ export default function NewPropertyPage() {
       <div className="mt-4">
         <PageHeader
           title="Add a property"
-          description="Core details first — photos, amenities and pricing rules come after, from the listing editor."
+          description="Core details first - photos, amenities and pricing rules come after, from the listing editor."
         />
       </div>
 

@@ -59,7 +59,7 @@
   /* Elevation, tinted toward the brand rather than neutral black. A grey
      shadow on a blue-tinted page reads as dirt; these carry the same hue the
      surfaces do, so a lifted card looks lit rather than smudged. Two steps
-     only — anything more and elevation stops meaning anything. */
+     only - anything more and elevation stops meaning anything. */
   --shadow-lift: 0 1px 2px rgba(11, 47, 107, 0.04),
     0 10px 30px -18px rgba(11, 47, 107, 0.22);
   --shadow-lift-lg: 0 2px 6px rgba(11, 47, 107, 0.05),
@@ -86,7 +86,7 @@
   --muted: #f4f7fc;
   --muted-foreground: #5b6b82;
   /* `accent` is the menu/list hover surface that shadcn's primitives paint
-     with, not a brand colour — it was carrying the full-strength brand accent,
+     with, not a brand colour - it was carrying the full-strength brand accent,
      which is why every dropdown row lit up like a call to action on hover. */
   --accent: #e9f0fd;
   --accent-foreground: #0b2f6b;
@@ -96,7 +96,7 @@
   --ring: #2563eb;
 
   /* Chart series: brand-sympathetic but stepped up in chroma so they survive
-     colour-vision deficiency. Validated on white — worst adjacent CVD ΔE 10.2,
+     colour-vision deficiency. Validated on white - worst adjacent CVD ΔE 10.2,
      normal-vision 23.3. The literal brand hues measure as near-gray. */
   --chart-1: #00826d;
   --chart-2: #c85a15;
@@ -233,7 +233,7 @@
   /* Grid stagger without one motion component per child. `RevealGroup` runs a
      single IntersectionObserver and flips `data-in-view`; the delay ladder
      below does the rest, so a nine-card grid costs one observer instead of
-     nine React trees. Caps at six — past that the last card arrives so late it
+     nine React trees. Caps at six - past that the last card arrives so late it
      reads as a stall rather than a stagger. */
   .reveal-stagger > * {
     opacity: 0;
@@ -291,7 +291,7 @@
 
   /* Pointer-reactive highlight. The wrapper component writes `--mx`/`--my` on
      pointermove and nothing else re-renders, so a grid of these costs no React
-     work at all — the whole effect lives in the compositor. Deliberately
+     work at all - the whole effect lives in the compositor. Deliberately
      azure-tinted and very weak: it should register as the surface catching the
      light, not as a glow. */
   .spotlight::after {

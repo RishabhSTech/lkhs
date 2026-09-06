@@ -89,10 +89,10 @@ export default async function GuestsPage() {
                       {formatINR(g.totalRevenue)}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {g.lastStay ? formatDateLong(g.lastStay) : "—"}
+                      {g.lastStay ? formatDateLong(g.lastStay) : "-"}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {g.preferred ?? "—"}
+                      {g.preferred ?? "-"}
                     </td>
                   </tr>
                 ))}

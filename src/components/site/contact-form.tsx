@@ -41,7 +41,7 @@ export function ContactForm() {
       <div className="flex flex-col items-start rounded-xl border border-border bg-card p-8">
         <CheckCircle2 className="size-8 text-foreground" />
         <h2 className="mt-4 font-heading text-2xl text-foreground">
-          Thanks — we&apos;ve got it.
+          Thanks - we&apos;ve got it.
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           Someone from the team will get back to you shortly. If it&apos;s urgent,

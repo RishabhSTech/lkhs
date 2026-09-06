@@ -2,7 +2,7 @@ import type { BookingSource } from "@prisma/client";
 import type { SearchObject } from "imapflow";
 
 /** Known sender domains per OTA. Extend here as you spot new sending
- * addresses — deliberately conservative so we never misattribute a source. */
+ * addresses - deliberately conservative so we never misattribute a source. */
 const SOURCE_DOMAINS: { source: BookingSource; domains: string[] }[] = [
   { source: "AIRBNB", domains: ["airbnb.com", "mail.airbnb.com"] },
   { source: "BOOKING_COM", domains: ["booking.com", "message.booking.com"] },

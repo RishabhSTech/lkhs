@@ -44,7 +44,7 @@ const schema = z.object({
  * Replaces a listing's selectable content in one shot: the amenities ticked,
  * the highlights chosen, and the "Things to know" items.
  *
- * A wholesale replace inside one transaction is deliberate — the editor sends
+ * A wholesale replace inside one transaction is deliberate - the editor sends
  * the complete state of each list, so a partial diff would only add a way for
  * the page and the form to disagree.
  */
@@ -137,7 +137,7 @@ export async function PUT(
         action: "LISTING_UPDATED",
         entityType: "Property",
         entityId: id,
-        summary: `${property.name} — ${amenities.length} amenities, ${highlights.length} highlights`,
+        summary: `${property.name} - ${amenities.length} amenities, ${highlights.length} highlights`,
         metadata: {
           amenities: amenities.length,
           highlights: highlights.length,

@@ -24,7 +24,7 @@ export const revalidate = 300;
  * neighbourhood a real 404 rather than a soft one: `notFound()` can only ever
  * return 200, because by the time it is thrown the response has started
  * streaming and the status is already sent. `dynamicParams = false` is decided
- * during routing instead, before any rendering, so Next can still set a 404 —
+ * during routing instead, before any rendering, so Next can still set a 404 -
  * verified against a built server.
  *
  * Next never re-runs `generateStaticParams` during revalidation, so this is
@@ -41,7 +41,7 @@ export function generateStaticParams() {
 /**
  * These are neighbourhood pages. A slug that names a *city* is a different
  * thing entirely and already has a canonical home at `/stays-in-<city>`, so it
- * is redirected rather than served here — two URLs describing the same city
+ * is redirected rather than served here - two URLs describing the same city
  * would split their own ranking signals.
  */
 async function resolve(slug: string) {
@@ -85,7 +85,7 @@ export async function generateMetadata({
     title,
     description:
       minPrice !== null
-        ? `${properties.length} ${properties.length === 1 ? "home" : "homes"} in ${destination.name}, ${destination.city} from ${formatINR(minPrice)} a night. ${destination.blurb} Book direct — no channel mark-up.`
+        ? `${properties.length} ${properties.length === 1 ? "home" : "homes"} in ${destination.name}, ${destination.city} from ${formatINR(minPrice)} a night. ${destination.blurb} Book direct - no channel mark-up.`
         : destination.blurb,
     alternates: { canonical: `/destinations/${destination.slug}` },
     // An empty neighbourhood page is a thin page. Keep it crawlable for its

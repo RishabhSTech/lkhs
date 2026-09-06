@@ -2,7 +2,7 @@
  * Cities we have announced but not yet opened.
  *
  * Every location on the public site is otherwise derived from ACTIVE
- * inventory — see `lib/queries/locations` — which is the right default and the
+ * inventory - see `lib/queries/locations` - which is the right default and the
  * reason a new city needs no code to appear. The gap it leaves is the weeks
  * between signing homes in a new city and putting them on sale, when the
  * honest thing to say is "we are opening here" and the site has no way to say
@@ -10,7 +10,7 @@
  *
  * This is that, and deliberately nothing more: a name, where the first homes
  * are, and a sentence. No price, no count of bookable homes, no link to a
- * search that would return nothing — an announcement, not fake inventory.
+ * search that would return nothing - an announcement, not fake inventory.
  *
  * It removes itself. `pendingCities()` drops any city that has live homes, so
  * the day the first Goa listing goes ACTIVE the announcement tile disappears
@@ -33,7 +33,7 @@ export type UpcomingCity = {
  * EDIT THIS LIST, not the pages that read it.
  *
  * `blurb` and `opening` are the only claims on the site about a city that is
- * not yet on sale, and they are printed verbatim — check both are still true
+ * not yet on sale, and they are printed verbatim - check both are still true
  * before a deploy. Everything the pages generate around them ("Goa is opening
  * next") is deliberately vague enough to survive a slipped date; these two
  * fields are not, which is the point of keeping them in one file.
@@ -45,7 +45,7 @@ export const UPCOMING_CITIES: UpcomingCity[] = [
     state: "Goa",
     areas: ["Assagao", "Siolim", "Panjim"],
     blurb:
-      "Two houses in North Goa are being fitted out now — a garden villa in Assagao and a restored Portuguese home on the Chapora at Siolim.",
+      "Two houses in North Goa are being fitted out now - a garden villa in Assagao and a restored Portuguese home on the Chapora at Siolim.",
     opening: "Taking bookings this season",
     // Assagao. Checked by looking at the photograph, like every other image on
     // this site.

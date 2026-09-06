@@ -36,7 +36,7 @@ export async function findAvailableUnitId(
   return units.find((u) => !blockedUnitIds.has(u.id))?.id ?? null;
 }
 
-/** Dates that are fully unavailable across all units — used to grey out calendars. */
+/** Dates that are fully unavailable across all units - used to grey out calendars. */
 export async function getBlockedDates(
   propertyId: string,
   from: Date,

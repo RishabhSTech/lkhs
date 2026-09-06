@@ -11,10 +11,9 @@ export const metadata: Metadata = {
 };
 
 const CHANNELS = [
-  { icon: MessageCircle, label: "WhatsApp", value: "+91 98200 11001", hint: "Fastest for anything urgent" },
+  { icon: MessageCircle, label: "WhatsApp", value: "+91 97133 30602", hint: "Fastest for anything urgent" },
   { icon: Mail, label: "Email", value: "stay@limekraft.in", hint: "We reply within a few hours" },
-  { icon: Phone, label: "Phone", value: "+91 98200 11001", hint: "9am – 9pm, every day" },
-  { icon: MapPin, label: "Office", value: "Vijay Nagar, Indore", hint: "By appointment" },
+  { icon: Phone, label: "Phone", value: "+91 97133 30602", hint: "9am – 9pm, every day" },
 ];
 
 export default function ContactPage() {
@@ -28,7 +27,7 @@ export default function ContactPage() {
           </h1>
           <p className="mt-3 max-w-lg text-[0.9375rem] leading-relaxed text-muted-foreground">
             Questions about a stay, a booking you&apos;ve already made, or working
-            with us — all of it comes to the same small team.
+            with us - all of it comes to the same small team.
           </p>
 
           <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_20rem]">

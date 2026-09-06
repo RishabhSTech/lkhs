@@ -78,7 +78,7 @@ export async function POST(request: Request) {
     }
     console.error("Booking failed", error);
     return NextResponse.json(
-      { error: "We couldn't complete that booking. Nothing has been charged — try again, or message us and we'll hold the dates." },
+      { error: "We couldn't complete that booking. Nothing has been charged - try again, or message us and we'll hold the dates." },
       { status: 500 },
     );
   }

@@ -33,8 +33,8 @@ import { formatINR } from "@/lib/format";
 import { CATEGORIES } from "../../../prisma/seed-data";
 
 /**
- * Prerendered and refreshed in the background. Every figure here — the homes,
- * the cities, the rating, the cheapest nightly price — is inventory-wide and
+ * Prerendered and refreshed in the background. Every figure here - the homes,
+ * the cities, the rating, the cheapest nightly price - is inventory-wide and
  * identical for every visitor, so this page was running seven queries per
  * request to produce the same HTML each time.
  */
@@ -44,7 +44,7 @@ export const revalidate = 300;
  * The homepage inherited the root layout's generic title, which named no city
  * at all. The brand query is already ours; what this recovers is the
  * "<type> in <city>" phrasing people actually search, on the strongest page we
- * have — built from live inventory, so a new city appears here on its own.
+ * have - built from live inventory, so a new city appears here on its own.
  */
 export async function generateMetadata(): Promise<Metadata> {
   const cities = await getCities().catch(() => []);
@@ -66,7 +66,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const description =
     homes > 0 && minPrice !== null
-      ? `${homes} boutique serviced homes in ${where}, from ${formatINR(minPrice)} a night. Book direct with Lime Kraft — no channel mark-up, no booking fee, and a real person on WhatsApp throughout.`
+      ? `${homes} boutique serviced homes in ${where}, from ${formatINR(minPrice)} a night. Book direct with Lime Kraft - no channel mark-up, no booking fee, and a real person on WhatsApp throughout.`
       : SITE.description;
 
   return {
@@ -78,7 +78,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-// Gandhi Hall, Indore — the Indo-Gothic clock-tower building on MG Road.
+// Gandhi Hall, Indore - the Indo-Gothic clock-tower building on MG Road.
 // Every image on this site is checked by actually looking at the photograph
 // before it ships; the placeholders this replaced were captioned as Indore
 // but showed Mumbai, Agra and London.
@@ -92,7 +92,7 @@ const DIRECT_BENEFITS = [
   { title: "Member perks", body: "Returning guests get priority on dates and occasional upgrades." },
 ];
 
-// Copy only — the photographs are attached below from live inventory, so these
+// Copy only - the photographs are attached below from live inventory, so these
 // steps illustrate homes we actually run rather than stock interiors.
 const STEPS: Omit<HowItWorksStep, "image">[] = [
   {
@@ -102,7 +102,7 @@ const STEPS: Omit<HowItWorksStep, "image">[] = [
   },
   {
     title: "Book in three steps",
-    body: "Dates, your details, payment. No account needed — we create one for you afterwards so your booking is waiting when you come back.",
+    body: "Dates, your details, payment. No account needed - we create one for you afterwards so your booking is waiting when you come back.",
     caption: "About two minutes, no sign-up wall.",
   },
   {
@@ -116,7 +116,7 @@ const FAQS: Faq[] = [
   {
     question: "Is it cheaper to book here than on a travel site?",
     answer:
-      "It is never more expensive. We hold the same rate everywhere, and the travel sites add a service fee on top of it — so the direct price is the one without the mark-up. There is no booking fee here either.",
+      "It is never more expensive. We hold the same rate everywhere, and the travel sites add a service fee on top of it - so the direct price is the one without the mark-up. There is no booking fee here either.",
   },
   {
     question: "Do I need an account to book?",
@@ -126,7 +126,7 @@ const FAQS: Faq[] = [
   {
     question: "When do I get the address and access details?",
     answer:
-      "Three days before check-in, by message and email. If you need them sooner — an early flight, a driver to brief — just ask and we will send them across.",
+      "Three days before check-in, by message and email. If you need them sooner - an early flight, a driver to brief - just ask and we will send them across.",
   },
   {
     question: "Are the photographs of the actual home?",
@@ -136,7 +136,7 @@ const FAQS: Faq[] = [
   {
     question: "What if I need to cancel?",
     answer:
-      "Each home sets its own policy and it is shown in full on the listing, before you pay — including the cancellation window and what is refunded. Nothing about it is buried in a terms page.",
+      "Each home sets its own policy and it is shown in full on the listing, before you pay - including the cancellation window and what is refunded. Nothing about it is buried in a terms page.",
   },
   {
     question: "Who do I talk to if something goes wrong during the stay?",
@@ -156,7 +156,7 @@ export default async function HomePage() {
       getAreasByCity(),
       getCollectionTargets(),
       db.review.findMany({
-        // Only published reviews belong on a public page — the model now has
+        // Only published reviews belong on a public page - the model now has
         // pending and hidden states that this query predated. The rail can
         // carry far more than the old three-up grid could.
         where: { rating: { gte: 4 }, status: "PUBLISHED" },
@@ -247,7 +247,7 @@ export default async function HomePage() {
         data={[organizationJsonLd(cities), webSiteJsonLd(), faqJsonLd(FAQS)]}
       />
 
-      {/* Rendered in flow, not in an absolutely positioned wrapper — the header
+      {/* Rendered in flow, not in an absolutely positioned wrapper - the header
           is `sticky top-0`, and an absolute parent meant it scrolled away with
           the hero instead of sticking. The hero is pulled up by exactly the
           header's height so the photograph still runs under it. */}
@@ -289,7 +289,7 @@ export default async function HomePage() {
               title="Homes we're especially proud of"
               description={
                 fromPrice
-                  ? `From ${formatINR(fromPrice)} a night, across ${propertyCount} homes we run ourselves — every one of them staffed, cleaned and answered for by our own team.`
+                  ? `From ${formatINR(fromPrice)} a night, across ${propertyCount} homes we run ourselves - every one of them staffed, cleaned and answered for by our own team.`
                   : undefined
               }
               action={{ href: "/stays", label: "View all stays" }}
@@ -323,7 +323,7 @@ export default async function HomePage() {
         {/* ── 02 · Step inside ─────────────────────────────────────────────
             The featured section above establishes that a home exists and what
             it costs. It cannot tell you what being in it is like, which is the
-            thing actually being decided. The arc is built from CSS 3D — real
+            thing actually being decided. The arc is built from CSS 3D - real
             perspective on flat photographic planes, composited on the GPU, no
             renderer shipped to the page to draw what amounts to five quads. */}
         {hero && gallery.length > 1 && (
@@ -338,7 +338,7 @@ export default async function HomePage() {
                     What it&apos;s like <em className="italic">in there</em>.
                   </>
                 }
-                description={`Every room of ${hero.name}, in perspective — drag, swipe or use the arrow keys to move through the house.`}
+                description={`Every room of ${hero.name}, in perspective - drag, swipe or use the arrow keys to move through the house.`}
               />
             </Reveal>
             <Reveal className="mt-12 lg:mt-14">
@@ -354,7 +354,7 @@ export default async function HomePage() {
         {/* ── 03 · Destinations: cities, derived from inventory ───────────
             Plus anywhere we have announced but cannot sell yet. Those come
             from `lib/seo/upcoming`, are filtered against live inventory, and
-            are drawn as an announcement rather than as a card — no count, no
+            are drawn as an announcement rather than as a card - no count, no
             rate, no link to an empty search. Saying "Goa is coming" is worth
             far more than saying nothing, and it costs nothing in trust so long
             as the tile never pretends to be bookable. */}
@@ -514,8 +514,8 @@ export default async function HomePage() {
 
         {/* ── 06 · How it works ───────────────────────────────────────────
             Demoted from third to seventh. A process explainer is the lowest
-            intent content on the page — nobody arrives wanting to read how
-            booking works — and it was sitting above the inventory, the dates
+            intent content on the page - nobody arrives wanting to read how
+            booking works - and it was sitting above the inventory, the dates
             and the reviews that people actually came for. It belongs here,
             where someone has decided and wants to know what happens next. */}
         <Section size="feature">
@@ -565,7 +565,7 @@ export default async function HomePage() {
               <div>
                 <MessageCircle className="size-5 text-brand-azure" />
                 <p className="copy mt-3 text-[0.9375rem] leading-relaxed text-muted-foreground">
-                  Not covered here? Ask us directly — a person on our team
+                  Not covered here? Ask us directly - a person on our team
                   answers, usually within the hour.
                 </p>
                 <Button
@@ -584,7 +584,7 @@ export default async function HomePage() {
 
         {/* ── Back matter ─────────────────────────────────────────────────
             Unnumbered on purpose: the spine above indexes the argument, and
-            this is the index at the back of it. Not decoration either — this
+            this is the index at the back of it. Not decoration either - this
             is the homepage's link out to every page in the {type}×{city}
             matrix, which is how those pages get discovered and how authority
             reaches them from the strongest page we have. */}
@@ -605,7 +605,7 @@ export default async function HomePage() {
 
         {/* ── Closing: set in type, not in a coloured box ────────────────
             The old close was a rounded brand-blue panel with grain and a bloom
-            — the same three devices as section 04, at three-quarters the size.
+            - the same three devices as section 04, at three-quarters the size.
             Repeating a page's loudest treatment is how you make it quiet. This
             says the same thing at the scale of the hero headline and lets the
             whitespace do the shouting. */}

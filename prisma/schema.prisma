@@ -1,4 +1,4 @@
-// Lime Kraft Home Stays — core data model.
+// Lime Kraft Home Stays - core data model.
 // Central inventory (InventoryNight) is the single source of truth for availability.
 // Financial dashboards aggregate from Transaction records, never from stored totals.
 
@@ -501,12 +501,12 @@ model Reservation {
   // Set when this reservation was created/updated from a parsed OTA
   // notification email rather than a direct booking. `rawData` keeps the
   // extraction + email metadata for audit. Nullable pairs coexist fine under
-  // the unique constraint — direct bookings never set either.
+  // the unique constraint - direct bookings never set either.
   externalReservationId String?
   rawData               Json?
 
   // Guest-facing price snapshot at time of booking (operational, not the
-  // accounting source of truth — Transaction rows are).
+  // accounting source of truth - Transaction rows are).
   nightlyRate Decimal @db.Decimal(12, 2)
   nights      Int
   subtotal    Decimal @db.Decimal(12, 2)
@@ -586,7 +586,7 @@ model ReservationPayment {
 }
 
 // ──────────────────────────────────────────────────────────────────────────
-// CHANNEL MANAGEMENT (placeholders — never the source of truth)
+// CHANNEL MANAGEMENT (placeholders - never the source of truth)
 // ──────────────────────────────────────────────────────────────────────────
 
 enum ChannelCode {
@@ -665,16 +665,16 @@ model ChannelSyncLog {
 }
 
 // ──────────────────────────────────────────────────────────────────────────
-// MAILBOX OTA INGESTION — Airbnb/Booking.com/Agoda have no self-serve API for
+// MAILBOX OTA INGESTION - Airbnb/Booking.com/Agoda have no self-serve API for
 // this account, so instead of a channel-manager connection, the homestay@
-// inbox (hosted on Hostinger/Titan — plain IMAP, no OAuth provider) is
+// inbox (hosted on Hostinger/Titan - plain IMAP, no OAuth provider) is
 // polled and its notification emails are parsed here. See src/lib/mailbox/.
 // ──────────────────────────────────────────────────────────────────────────
 
 // Single shared mailbox connection (one active row in practice, enforced in
-// app logic — not worth a DB constraint for one inbox). IMAP has no OAuth
+// app logic - not worth a DB constraint for one inbox). IMAP has no OAuth
 // equivalent for a Hostinger-hosted mailbox, so the password itself is
-// stored, encrypted at rest — never in plaintext.
+// stored, encrypted at rest - never in plaintext.
 model MailboxIntegration {
   id                String                  @id @default(cuid())
   email             String
@@ -705,7 +705,7 @@ enum ProcessedEmailStatus {
 }
 
 // One row per inbox message the poller has looked at. `emailMessageId` is
-// the email's own Message-ID header (globally unique per RFC 822) — used as
+// the email's own Message-ID header (globally unique per RFC 822) - used as
 // the idempotency key rather than the IMAP UID, since a UID can be
 // reassigned if the mailbox is ever reindexed (UIDVALIDITY change).
 model ProcessedEmailMessage {
@@ -731,7 +731,7 @@ model ProcessedEmailMessage {
 }
 
 // ──────────────────────────────────────────────────────────────────────────
-// FINANCE — Transaction is the single source of truth for all money movement.
+// FINANCE - Transaction is the single source of truth for all money movement.
 // ──────────────────────────────────────────────────────────────────────────
 
 enum TransactionCategoryGroup {
@@ -890,7 +890,7 @@ model Message {
   guestId       String?
   channel       MessageChannel
   direction     MessageDirection @default(OUTBOUND)
-  // Only set when channel = OTA — which platform the message came from.
+  // Only set when channel = OTA - which platform the message came from.
   // Reuses BookingSource rather than a parallel enum.
   source        BookingSource?
   templateKey   String?

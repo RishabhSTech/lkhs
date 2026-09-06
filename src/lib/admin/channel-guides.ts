@@ -1,7 +1,7 @@
 import type { ChannelCode } from "@prisma/client";
 
 /**
- * Setup instructions per channel. These describe the real integration path —
+ * Setup instructions per channel. These describe the real integration path -
  * none of them are wired up here, and the UI says so rather than implying a
  * connection exists.
  */
@@ -24,7 +24,7 @@ export const CHANNEL_GUIDES: Record<ChannelCode, ChannelGuide> = {
     name: "Lime Kraft Direct",
     blurb:
       "Your own booking site. Always connected, no commission, and the source of truth for every other channel.",
-    commission: "0% — you keep the full rate less payment processing",
+    commission: "0% - you keep the full rate less payment processing",
     fields: [],
     steps: [
       {
@@ -54,7 +54,7 @@ export const CHANNEL_GUIDES: Record<ChannelCode, ChannelGuide> = {
         key: "apiKey",
         label: "Partner API key",
         placeholder: "Provided by Airbnb or your channel manager",
-        help: "Issued after partner approval — not available from your host account.",
+        help: "Issued after partner approval - not available from your host account.",
       },
     ],
     steps: [
@@ -76,7 +76,7 @@ export const CHANNEL_GUIDES: Record<ChannelCode, ChannelGuide> = {
       {
         title: "Note the guest data limits",
         detail:
-          "Airbnb only releases the guest's full contact details after a booking is confirmed, and sometimes not at all. Guest profiles will be partial until then — that's expected, not a sync failure.",
+          "Airbnb only releases the guest's full contact details after a booking is confirmed, and sometimes not at all. Guest profiles will be partial until then - that's expected, not a sync failure.",
       },
     ],
     docsUrl: "https://www.airbnb.com/partner",

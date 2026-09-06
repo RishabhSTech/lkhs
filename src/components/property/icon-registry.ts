@@ -139,8 +139,8 @@ import {
  * Amenities, highlights and "things to know" store an icon as a string, which
  * previously meant `DynamicIcon` did `import * as Icons from "lucide-react"`
  * and indexed the namespace. That is not something a bundler can narrow: it
- * pulled all ~1,700 icons into the client bundle — about 160 kB gzipped, on
- * every page that renders a listing — to display a few dozen of them.
+ * pulled all ~1,700 icons into the client bundle - about 160 kB gzipped, on
+ * every page that renders a listing - to display a few dozen of them.
  *
  * Naming them explicitly lets the import be tree-shaken down to the ones
  * actually reachable. The set is closed on purpose: admins pick from a fixed

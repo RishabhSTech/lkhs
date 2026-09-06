@@ -4,8 +4,8 @@ import type { ReviewSource, TripType } from "@prisma/client";
  * Review scoring, shaped the way Airbnb presents it: one headline average, a
  * 5→1 distribution, and six category sub-scores.
  *
- * Sub-scores are optional on a review — an older or imported review may only
- * carry an overall rating — so every average here is computed over the reviews
+ * Sub-scores are optional on a review - an older or imported review may only
+ * carry an overall rating - so every average here is computed over the reviews
  * that actually answered that category, never over the whole set.
  */
 
@@ -96,7 +96,7 @@ export function summariseReviews(reviews: ScorableReview[]): ReviewSummary {
 
 /**
  * A "Guest favourite" on Airbnb is a listing in the most-loved band. We can't
- * copy their model, so the badge is an explicit admin toggle — but this guard
+ * copy their model, so the badge is an explicit admin toggle - but this guard
  * stops it showing on a listing whose numbers plainly don't support it.
  */
 export function qualifiesAsGuestFavourite(summary: ReviewSummary) {
@@ -119,7 +119,7 @@ export function formatStayLength(nights: number | null) {
   return nights === 1 ? "Stayed 1 night" : `Stayed ${nights} nights`;
 }
 
-/** "August 2026" — Airbnb dates reviews by month, not to the day. */
+/** "August 2026" - Airbnb dates reviews by month, not to the day. */
 export function formatReviewMonth(date: Date | string) {
   return new Date(date).toLocaleDateString("en-IN", {
     month: "long",

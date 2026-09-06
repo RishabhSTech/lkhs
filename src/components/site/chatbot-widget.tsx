@@ -9,7 +9,7 @@ type ChatMessage = { role: "user" | "assistant"; content: string };
 const STORAGE_KEY = "lkhs-chat-history";
 const GREETING: ChatMessage = {
   role: "assistant",
-  content: "Hi! I'm the Lime Kraft assistant. Ask me about a property, dates, or pricing — or I can get our team to reach out.",
+  content: "Hi! I'm the Lime Kraft assistant. Ask me about a property, dates, or pricing - or I can get our team to reach out.",
 };
 
 export function ChatbotWidget() {
@@ -27,7 +27,7 @@ export function ChatbotWidget() {
         if (Array.isArray(parsed) && parsed.length > 0) setMessages(parsed);
       }
     } catch {
-      // Corrupt or inaccessible sessionStorage — just start fresh.
+      // Corrupt or inaccessible sessionStorage - just start fresh.
     }
   }, []);
 
@@ -35,7 +35,7 @@ export function ChatbotWidget() {
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
     } catch {
-      // Storage full/blocked — conversation just won't survive a reload.
+      // Storage full/blocked - conversation just won't survive a reload.
     }
   }, [messages]);
 
@@ -61,7 +61,7 @@ export function ChatbotWidget() {
       const data = await res.json();
       setMessages([...next, { role: "assistant", content: data.reply ?? "Sorry, something went wrong." }]);
     } catch {
-      setMessages([...next, { role: "assistant", content: "Sorry, something went wrong — please try again or use the contact form." }]);
+      setMessages([...next, { role: "assistant", content: "Sorry, something went wrong - please try again or use the contact form." }]);
     } finally {
       setSending(false);
     }

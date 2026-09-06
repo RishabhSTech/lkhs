@@ -43,7 +43,7 @@ export interface PaymentProvider {
 }
 
 /**
- * Demo provider. No real gateway is connected — this settles synchronously so
+ * Demo provider. No real gateway is connected - this settles synchronously so
  * the booking flow is exercisable end to end. Used automatically whenever
  * Razorpay credentials aren't set.
  */
@@ -72,11 +72,11 @@ const RAZORPAY_METHOD: Record<PaymentMethodType, string> = {
 };
 
 /**
- * Real Razorpay integration — Orders API to open an intent, Checkout.js on
+ * Real Razorpay integration - Orders API to open an intent, Checkout.js on
  * the client to collect payment, then either the client-side verify callback
  * (src/app/api/bookings/confirm/route.ts) or the webhook
  * (src/app/api/payments/webhook/razorpay/route.ts) confirms it server-side.
- * Razorpay is chosen over Stripe because it settles INR/UPI natively —
+ * Razorpay is chosen over Stripe because it settles INR/UPI natively -
  * Stripe's India support is limited to specific onboarded entities.
  */
 class RazorpayProvider implements PaymentProvider {
@@ -140,7 +140,7 @@ class RazorpayProvider implements PaymentProvider {
   }
 
   /** HMAC-SHA256 over the raw webhook body, keyed by RAZORPAY_WEBHOOK_SECRET,
-   * compared to the X-Razorpay-Signature header — per Razorpay's webhook spec. */
+   * compared to the X-Razorpay-Signature header - per Razorpay's webhook spec. */
   async verifyWebhook(rawBody: string, signature: string | null): Promise<boolean> {
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
     if (!secret || !signature) return false;
@@ -153,7 +153,7 @@ class RazorpayProvider implements PaymentProvider {
   }
 
   /** Verifies the signature Razorpay Checkout.js hands back to the client on
-   * success — separate scheme from the webhook signature (order_id|payment_id). */
+   * success - separate scheme from the webhook signature (order_id|payment_id). */
   static verifyCheckoutSignature(
     orderId: string,
     paymentId: string,

@@ -125,7 +125,7 @@ export default async function AdminReviewsPage({
       <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <KpiCard
           label="Average rating"
-          value={summary.average ? summary.average.toFixed(2) : "—"}
+          value={summary.average ? summary.average.toFixed(2) : "-"}
           hint={`${summary.count} published`}
           icon={Star}
         />
@@ -134,7 +134,7 @@ export default async function AdminReviewsPage({
           value={
             summary.count
               ? `${Math.round((summary.distribution[4] / summary.count) * 100)}%`
-              : "—"
+              : "-"
           }
           icon={TrendingUp}
         />

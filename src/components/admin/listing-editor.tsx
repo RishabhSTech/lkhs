@@ -54,7 +54,7 @@ const MAX_HIGHLIGHTS = 6;
  * from fixed catalogues, so the admin is picking from a list with icons
  * already mapped rather than typing free text that may or may not render.
  *
- * The whole form saves as one payload — the API replaces each list wholesale,
+ * The whole form saves as one payload - the API replaces each list wholesale,
  * which is what stops the form and the page drifting apart.
  */
 export function ListingEditor({
@@ -236,7 +236,7 @@ export function ListingEditor({
       if (!res.ok) throw new Error(data.error ?? "Could not save the listing.");
 
       toast.success("Listing updated", {
-        description: `${propertyName} — ${data.amenities} amenities, ${data.highlights} highlights.`,
+        description: `${propertyName} - ${data.amenities} amenities, ${data.highlights} highlights.`,
       });
       router.refresh();
     } catch (err) {

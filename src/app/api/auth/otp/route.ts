@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   const { devCode } = await requestOtp(parsed.data.identifier);
 
   // devCode is only non-null when the channel has no live delivery adapter
-  // yet (see requestOtp) — otherwise the guest actually receives the code
+  // yet (see requestOtp) - otherwise the guest actually receives the code
   // and it has no business being in this response.
   return NextResponse.json({ sent: true, devCode });
 }

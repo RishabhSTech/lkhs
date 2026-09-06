@@ -23,7 +23,7 @@ const patchSchema = z.object({
 export async function POST(request: Request) {
   const parsed = createSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Check the task details — something there isn't right." }, { status: 400 });
+    return NextResponse.json({ error: "Check the task details - something there isn't right." }, { status: 400 });
   }
   const { user } = await getCurrentAdminUser();
   const data = parsed.data;

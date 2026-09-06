@@ -9,7 +9,7 @@ import type { ReviewSummary } from "@/lib/property/reviews";
  * headline average, then the overall-rating distribution alongside the six
  * category sub-scores.
  *
- * The category strip scrolls sideways on narrow screens rather than wrapping —
+ * The category strip scrolls sideways on narrow screens rather than wrapping -
  * seven columns wrapped to two rows reads as a broken grid, and the whole point
  * of the strip is that it can be scanned in one pass.
  */
@@ -23,7 +23,7 @@ export function RatingSummary({
   if (summary.count === 0 || summary.average === null) return null;
 
   const scored = summary.categories.filter((c) => c.average !== null);
-  // A flawless listing reads "5.0", not "5.00" — two decimals only earn their
+  // A flawless listing reads "5.0", not "5.00" - two decimals only earn their
   // place when there is something after the point to distinguish.
   const headline =
     summary.average === 5 ? "5.0" : summary.average.toFixed(2);

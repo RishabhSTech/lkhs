@@ -44,7 +44,7 @@ export default async function ChannelsPage() {
         <span className="text-muted-foreground">
           No live OTA credentials are configured, so nothing is syncing to
           Airbnb, Booking.com or Agoda yet. You can map listings to properties
-          now — open a channel for its setup instructions.
+          now - open a channel for its setup instructions.
         </span>
       </p>
 

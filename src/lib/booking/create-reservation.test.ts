@@ -8,12 +8,12 @@ import { createReservation, InventoryConflictError } from "./create-reservation"
  * unique (unitId, date) constraint on InventoryNight is what actually
  * prevents a double-booking, not application-level locking. Runs against a
  * real database (no mocking Prisma) because that constraint only exists
- * there — a unit test of the JS wouldn't catch a migration that dropped it.
+ * there - a unit test of the JS wouldn't catch a migration that dropped it.
  *
  * Creates and tears down its own throwaway property/unit so it can run
  * against a shared dev database without disturbing seeded data.
  */
-describe("createReservation — inventory locking", () => {
+describe("createReservation - inventory locking", () => {
   const marker = `vitest-inv-lock-${Date.now()}`;
   let propertyId: string;
   let unitId: string;
@@ -82,7 +82,7 @@ describe("createReservation — inventory locking", () => {
     expect(rejected).toHaveLength(1);
     expect(rejected[0].reason).toBeInstanceOf(InventoryConflictError);
 
-    // Exactly one night row per night — the loser's transaction rolled back
+    // Exactly one night row per night - the loser's transaction rolled back
     // completely rather than leaving a partial write.
     const nights = await db.inventoryNight.findMany({
       where: { unitId, date: { gte: checkIn, lt: checkOut } },

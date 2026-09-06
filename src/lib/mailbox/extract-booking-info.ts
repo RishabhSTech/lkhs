@@ -4,7 +4,7 @@ import type { BookingSource } from "@prisma/client";
 /**
  * Turns one OTA notification email into structured fields. Uses Haiku with a
  * single forced tool call (same tool-use convention as src/lib/chat/tools.ts,
- * just a one-shot classification rather than a conversation) — this is a
+ * just a one-shot classification rather than a conversation) - this is a
  * background job classifying potentially many emails per poll, so it uses
  * the cheap/fast model, not the guest-facing chatbot's.
  */
@@ -68,7 +68,7 @@ const EXTRACTION_TOOL: Anthropic.Tool = {
       },
       confidence: {
         type: "number",
-        description: "0 to 1 — how confident you are in this extraction, especially the dates and classification.",
+        description: "0 to 1 - how confident you are in this extraction, especially the dates and classification.",
       },
     },
     required: ["classification", "messageBody", "confidence"],
@@ -82,7 +82,7 @@ export async function extractBookingInfo(args: {
   body: string;
 }): Promise<ExtractedBookingInfo> {
   if (!EXTRACTION_IS_CONFIGURED) {
-    throw new Error("ANTHROPIC_API_KEY is not set — cannot extract booking info from email.");
+    throw new Error("ANTHROPIC_API_KEY is not set - cannot extract booking info from email.");
   }
 
   const client = new Anthropic();

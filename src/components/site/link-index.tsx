@@ -8,7 +8,7 @@ export type IndexLink = { href: string; label: string; count: number };
  *
  * Not decoration: this is how those pages get discovered and how authority
  * reaches them from the strongest page on the site. Which is exactly why the
- * pill-farm version was wrong — a drift of identical rounded chips is the
+ * pill-farm version was wrong - a drift of identical rounded chips is the
  * universal visual signature of an SEO footer, and it invited the reader to
  * skip the one block on the page that is pure navigation.
  *

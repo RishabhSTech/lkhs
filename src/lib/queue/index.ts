@@ -3,7 +3,7 @@ import IORedis from "ioredis";
 
 /**
  * Background job infrastructure. Channel pushes and payment-hold expiry must
- * never block a request, and must never fail silently — they go on a
+ * never block a request, and must never fail silently - they go on a
  * retrying queue instead, with the failure surfaced as a ChannelSyncLog row
  * (channel sync) or a cancelled reservation (payment expiry).
  *
@@ -17,7 +17,7 @@ let connection: IORedis | null = null;
 function getConnection() {
   if (!process.env.REDIS_URL) return null;
   // lazyConnect + a bounded connectTimeout so an unreachable Redis fails the
-  // enqueue call quickly instead of hanging the request that's holding it —
+  // enqueue call quickly instead of hanging the request that's holding it -
   // enqueueX() below still races this against ENQUEUE_TIMEOUT_MS as a
   // second line of defence in case a connection drops mid-request.
   connection ??= new IORedis(process.env.REDIS_URL, {
@@ -73,14 +73,14 @@ export function getQueue(name: string): Queue | null {
   return queues.get(name)!;
 }
 
-/** Never lets a slow/unreachable Redis hang the caller — an enqueue that
+/** Never lets a slow/unreachable Redis hang the caller - an enqueue that
  * can't complete quickly is dropped (and logged) rather than blocking a
  * booking or payment confirmation indefinitely. */
 async function withEnqueueTimeout<T>(label: string, work: Promise<T>): Promise<T | null> {
   let timer: NodeJS.Timeout;
   const timeout = new Promise<null>((resolve) => {
     timer = setTimeout(() => {
-      console.warn(`[queue] ${label} timed out after ${ENQUEUE_TIMEOUT_MS}ms — dropped, not blocking the caller.`);
+      console.warn(`[queue] ${label} timed out after ${ENQUEUE_TIMEOUT_MS}ms - dropped, not blocking the caller.`);
       resolve(null);
     }, ENQUEUE_TIMEOUT_MS);
   });
@@ -98,7 +98,7 @@ export async function enqueueChannelSync(job: ChannelSyncJob) {
   const queue = getQueue(QUEUE_NAMES.channelSync);
   if (!queue) {
     console.warn(
-      "[queue] REDIS_URL not set — channel sync skipped for",
+      "[queue] REDIS_URL not set - channel sync skipped for",
       job.channelPropertyId,
     );
     return null;
@@ -113,7 +113,7 @@ export async function enqueueReservationExpiry(job: ReservationExpiryJob) {
   const queue = getQueue(QUEUE_NAMES.reservationExpiry);
   if (!queue) {
     console.warn(
-      "[queue] REDIS_URL not set — reservation expiry not scheduled for",
+      "[queue] REDIS_URL not set - reservation expiry not scheduled for",
       job.reservationId,
       `(will stay PENDING indefinitely if payment never completes)`,
     );
@@ -125,12 +125,12 @@ export async function enqueueReservationExpiry(job: ReservationExpiryJob) {
   );
 }
 
-/** Manual "Sync now" trigger — the scheduled poll (see scripts/worker.ts) runs
+/** Manual "Sync now" trigger - the scheduled poll (see scripts/worker.ts) runs
  * on its own timer regardless. */
 export async function enqueueMailboxPoll() {
   const queue = getQueue(QUEUE_NAMES.mailboxPoll);
   if (!queue) {
-    console.warn("[queue] REDIS_URL not set — mailbox sync-now skipped.");
+    console.warn("[queue] REDIS_URL not set - mailbox sync-now skipped.");
     return null;
   }
   return withEnqueueTimeout("mailbox-poll(manual)", queue.add("poll", {}));

@@ -21,7 +21,7 @@ const schema = z.object({
 
 /**
  * Staff paste an Airbnb/Booking.com/Agoda message here the moment they see
- * it on that app — no OTA messaging API exists for us to pull this
+ * it on that app - no OTA messaging API exists for us to pull this
  * automatically yet (see /admin/channels), so this is the bridge until one
  * does. It lands in the same unified inbox and fires the same instant alert
  * as a website inquiry.
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
   await alertTeam({
     type: "OTA_MESSAGE",
     title: `New ${label} message`,
-    body: `${guestName} — ${body.slice(0, 120)}${body.length > 120 ? "…" : ""}`,
+    body: `${guestName} - ${body.slice(0, 120)}${body.length > 120 ? "…" : ""}`,
     severity: "WARNING",
     link: "/admin/messages",
   });

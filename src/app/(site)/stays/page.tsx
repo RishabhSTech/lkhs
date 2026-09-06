@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/site/empty-state";
 import { AreaFilter } from "@/components/property/area-filter";
 
 /**
- * Reads `searchParams`, so this stays a per-request render — the filtered
+ * Reads `searchParams`, so this stays a per-request render - the filtered
  * result is the page. The `force-dynamic` it replaces was redundant, and kept
  * the route from ever being reconsidered.
  */
@@ -17,7 +17,7 @@ export const revalidate = 300;
 
 /**
  * `/stays` is the working search surface, not a landing page. Any filtered
- * state is kept out of the index — those queries are served far better by the
+ * state is kept out of the index - those queries are served far better by the
  * `/villas-in-<city>` pages, and letting a faceted URL space into the index
  * spends crawl budget on thousands of near-duplicates.
  */
@@ -32,7 +32,7 @@ export async function generateMetadata({
   return {
     title: "All stays",
     description:
-      "Browse every Lime Kraft home — serviced apartments, private villas and family houses, all run by our own team.",
+      "Browse every Lime Kraft home - serviced apartments, private villas and family houses, all run by our own team.",
     alternates: { canonical: "/stays" },
     robots: filtered ? { index: false, follow: true } : undefined,
   };
@@ -106,7 +106,7 @@ export default async function StaysPage({ searchParams }: PageProps<"/stays">) {
               className="mt-12"
               // The count is read off the same query that renders the grid.
               // This line used to say "we only have five homes" in fixed text,
-              // which stopped being true at the sixth — on the one screen
+              // which stopped being true at the sixth - on the one screen
               // where a visitor is already wondering whether the site works.
               title="Nothing matches those filters"
               description={`We run ${totalHomes} ${totalHomes === 1 ? "home" : "homes"} in total, so a narrow filter empties the page quickly. Widen the area or drop a guest and there will be more to look at.`}

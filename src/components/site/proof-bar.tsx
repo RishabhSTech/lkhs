@@ -8,17 +8,17 @@ import { CountUp, type CountUpFormat } from "@/components/site/count-up";
  * figures: someone who has never heard of us decides whether we are real
  * before they decide whether any particular home is nice. The reassurances
  * that used to sit here as a second row were saying the same four things as
- * the hero and the direct-booking section — three statements of one argument
+ * the hero and the direct-booking section - three statements of one argument
  * is not three times the trust, it is a page that protests too much.
  *
- * Every figure is read off the database. Nothing here is a marketing claim —
+ * Every figure is read off the database. Nothing here is a marketing claim -
  * the moment one of them is, the others stop working.
  *
  * Set as a ruled figure line rather than four equal boxes. Four equal columns
  * is what a statistics widget looks like, and a statistics widget is exactly
  * the thing a visitor has learned to skip. Hanging the figures off a single
  * hairline, against a line that says where they come from, makes them read as
- * a masthead — which is the register this band is actually in.
+ * a masthead - which is the register this band is actually in.
  */
 export function ProofBar({
   homes,
@@ -96,7 +96,7 @@ export function ProofBar({
           {/* Hairline-divided, hung from a shared rule: two columns on
               small screens, a flex row on wide ones.
 
-              Deliberately not `repeat(auto-fit, minmax(0, 1fr))` — a zero
+              Deliberately not `repeat(auto-fit, minmax(0, 1fr))` - a zero
               minimum means an unbounded number of tracks fit, so auto-fit
               collapses the whole row to one column. `flex-1` divides the row
               correctly for the two, three or four figures the inventory can

@@ -27,7 +27,7 @@ export interface NotificationProvider {
 
 /**
  * Demo transport. No email/SMS/WhatsApp credentials are wired, so messages are
- * logged rather than delivered — never silently dropped.
+ * logged rather than delivered - never silently dropped.
  */
 class LoggingNotificationProvider implements NotificationProvider {
   async send(message: OutboundMessage): Promise<SendResult> {
@@ -83,7 +83,7 @@ class ResendEmailProvider implements NotificationProvider {
 }
 
 /**
- * Real email delivery via SMTP — the no-reply@limekraftstays.com mailbox on
+ * Real email delivery via SMTP - the no-reply@limekraftstays.com mailbox on
  * Hostinger. This is the account every system email (OTP, booking
  * confirmations, team alerts) actually sends from once configured. One
  * transporter is reused across sends rather than reconnecting per message.
@@ -142,7 +142,7 @@ class CompositeNotificationProvider implements NotificationProvider {
     if (message.channel === "EMAIL" && this.email) {
       const result = await this.email.send(message);
       if (result.status === "SENT") return result;
-      // Real send failed (bad key, rate limit, etc) — log it so nothing is
+      // Real send failed (bad key, rate limit, etc) - log it so nothing is
       // silently lost, but report the real failure rather than masking it.
       await this.fallback.send(message);
       return result;

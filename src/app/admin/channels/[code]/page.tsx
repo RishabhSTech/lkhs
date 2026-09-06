@@ -79,7 +79,7 @@ export default async function ChannelGuidePage({
               {guide.name} requires approval before any connection works.
             </span>{" "}
             You can save your listing IDs and credentials below now, but nothing
-            will sync until {guide.name} approves API access — either directly or
+            will sync until {guide.name} approves API access - either directly or
             via a channel manager. Commission: {guide.commission}.
           </span>
         </p>
@@ -148,7 +148,7 @@ export default async function ChannelGuidePage({
           <p className="flex items-start gap-2 rounded-lg bg-muted/70 p-3 text-xs leading-relaxed text-muted-foreground">
             <Info className="mt-0.5 size-3.5 shrink-0" />
             Central Lime Kraft inventory is always the source of truth. Channels
-            receive availability from here — never the other way round.
+            receive availability from here - never the other way round.
           </p>
         </aside>
       </div>

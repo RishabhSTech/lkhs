@@ -10,7 +10,7 @@ import {
 // Optimistic gate in front of /admin and /stakeholder: reject requests with
 // no valid session before they render. The authoritative check still lives
 // in getCurrentAdminUser / getCurrentStakeholder (src/lib/auth/current-user.ts),
-// which re-verifies against the database — proxy alone is not a substitute
+// which re-verifies against the database - proxy alone is not a substitute
 // for that per Next's guidance on Proxy as an optimistic check only.
 const DEMO_FALLBACK_ENABLED = process.env.ALLOW_DEMO_FALLBACK === "true";
 

@@ -2,7 +2,7 @@ import webpush from "web-push";
 import { db } from "@/lib/db";
 
 /**
- * Browser push to every team member who has enabled instant alerts — this is
+ * Browser push to every team member who has enabled instant alerts - this is
  * what closes the gap between "an inquiry landed" and "someone saw it".
  * Delivered even if no one has the admin panel open.
  */
@@ -53,7 +53,7 @@ export async function sendPushToTeam(payload: PushPayload): Promise<void> {
       } catch (error) {
         const statusCode = (error as { statusCode?: number }).statusCode;
         // 404/410 mean the browser unsubscribed or the push service forgot
-        // this endpoint — safe to drop, anything else is worth keeping.
+        // this endpoint - safe to drop, anything else is worth keeping.
         if (statusCode === 404 || statusCode === 410) {
           staleIds.push(sub.id);
         } else {

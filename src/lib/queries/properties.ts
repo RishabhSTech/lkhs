@@ -14,8 +14,8 @@ import { summariseReviewTopics } from "@/lib/property/review-topics";
 
 /**
  * The columns a card actually paints. Previously these queries used `include`,
- * which returns every scalar on `Property` — description, house rules, policy
- * text — to render a tile showing six of them.
+ * which returns every scalar on `Property` - description, house rules, policy
+ * text - to render a tile showing six of them.
  */
 export const CARD_SELECT = {
   id: true,
@@ -42,8 +42,8 @@ export type PropertyRating = { average: number | null; count: number };
  * Ratings for a set of properties, averaged by the database.
  *
  * The cards used to pull `reviews: { select: { rating: true } }` through the
- * relation, which is one row per review per property — on a city page with a
- * few hundred reviews that was the bulk of the response — purely to average a
+ * relation, which is one row per review per property - on a city page with a
+ * few hundred reviews that was the bulk of the response - purely to average a
  * column Postgres can average itself. This is one extra round trip returning
  * one row per property instead.
  */
@@ -222,8 +222,8 @@ export const getDistinctAreas = cache(async function getDistinctAreas() {
 
 /**
  * Just the photographs, hero first. `getPropertyBySlug` already returns these
- * but drags the whole listing payload — amenities, highlights, things to know,
- * reviews and topic summaries — along with them, which is far more than a
+ * but drags the whole listing payload - amenities, highlights, things to know,
+ * reviews and topic summaries - along with them, which is far more than a
  * gallery on the homepage needs to render five images.
  */
 export const getPropertyGallery = cache(async function getPropertyGallery(

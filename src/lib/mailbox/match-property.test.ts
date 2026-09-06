@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { matchPropertyByHint } from "./match-property";
 
 /**
- * Runs against the real database (see create-reservation.test.ts for why) —
+ * Runs against the real database (see create-reservation.test.ts for why) -
  * the matching logic queries live Property rows, and the interesting
  * behavior here is entirely about how it scores real names against each
  * other, not something worth mocking out.

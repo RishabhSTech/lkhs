@@ -1,13 +1,13 @@
 import type { ThingToKnowGroup } from "@prisma/client";
 
 /**
- * "Things to know" — the three-column block at the foot of an Airbnb listing:
+ * "Things to know" - the three-column block at the foot of an Airbnb listing:
  * House rules, Safety & property, Cancellation policy.
  *
  * Each property stores a list of selected items. `code` points at the
  * catalogue below (which supplies the icon and the default wording); `label`
- * is the resolved text, so an admin can adjust the phrasing — or add a
- * one-off item with code `CUSTOM` — without needing a code change.
+ * is the resolved text, so an admin can adjust the phrasing - or add a
+ * one-off item with code `CUSTOM` - without needing a code change.
  */
 
 export type ThingToKnowDefinition = {
@@ -48,7 +48,7 @@ export const THINGS_TO_KNOW: ThingToKnowDefinition[] = [
   { code: "NO_COMMERCIAL_PHOTOGRAPHY", group: "HOUSE_RULES", label: "Commercial photography or filming not allowed", icon: "Camera" },
   { code: "NO_UNREGISTERED_VISITORS", group: "HOUSE_RULES", label: "Visitors must be registered with the host", icon: "UserCheck" },
   { code: "NO_SHOES", group: "HOUSE_RULES", label: "Please leave shoes at the door", icon: "Footprints" },
-  { code: "LEAVE_TIDY", group: "HOUSE_RULES", label: "Leave the home tidy — no deep cleaning needed", icon: "Sparkles" },
+  { code: "LEAVE_TIDY", group: "HOUSE_RULES", label: "Leave the home tidy - no deep cleaning needed", icon: "Sparkles" },
 
   // ── Safety & property ───────────────────────────────────────────────────
   { code: "SMOKE_ALARM", group: "SAFETY_PROPERTY", label: "Smoke alarm installed", icon: "AlarmSmoke" },
@@ -78,7 +78,7 @@ export const THINGS_TO_KNOW: ThingToKnowDefinition[] = [
   { code: "NO_REFUND_AFTER_CHECKIN", group: "CANCELLATION", label: "No refund once the stay has started", icon: "CalendarX2" },
   { code: "CLEANING_FEE_REFUND", group: "CANCELLATION", label: "The cleaning fee is always refunded if you cancel before check-in", icon: "Sparkles" },
   { code: "DATE_CHANGE", group: "CANCELLATION", label: "One free date change, subject to availability", icon: "CalendarSync" },
-  { code: "REVIEW_FULL_POLICY", group: "CANCELLATION", label: "Review the full policy — it applies even if you cancel for illness or travel disruption", icon: "FileText" },
+  { code: "REVIEW_FULL_POLICY", group: "CANCELLATION", label: "Review the full policy - it applies even if you cancel for illness or travel disruption", icon: "FileText" },
 ];
 
 export const THING_TO_KNOW_BY_CODE = new Map(

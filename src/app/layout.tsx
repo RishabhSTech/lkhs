@@ -12,8 +12,8 @@ import "./globals.css";
  * - `display` (Newsreader) is the brand voice: hero and section headlines on
  *   the marketing site only. Its optical-size axis is what makes it work at
  *   both 64px and 20px; `font-optical-sizing: auto` drives it from font-size.
- * - `heading` (Instrument Sans) carries product surfaces — admin, tables,
- *   dialogs — where a serif would read as decoration rather than structure.
+ * - `heading` (Instrument Sans) carries product surfaces - admin, tables,
+ *   dialogs - where a serif would read as decoration rather than structure.
  * - `body` (Inter) handles UI and long text at small sizes.
  *
  * Italic is loaded because the accent word in a headline is the cheapest
@@ -52,7 +52,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: {
-    default: `${SITE.name} — Villas, apartments and homes across India`,
+    default: `${SITE.name} - Villas, apartments and homes across India`,
     template: `%s · ${SITE.name}`,
   },
   description: SITE.description,
@@ -64,12 +64,12 @@ export const metadata: Metadata = {
     siteName: SITE.name,
     locale: SITE.locale,
     url: SITE.url,
-    title: `${SITE.name} — Villas, apartments and homes across India`,
+    title: `${SITE.name} - Villas, apartments and homes across India`,
     description: SITE.description,
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE.name} — Villas, apartments and homes across India`,
+    title: `${SITE.name} - Villas, apartments and homes across India`,
     description: SITE.description,
   },
   robots: {

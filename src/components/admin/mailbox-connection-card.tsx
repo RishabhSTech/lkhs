@@ -103,9 +103,9 @@ export function MailboxConnectionCard({
             <Mail className="size-4 text-muted-foreground" />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-foreground">Mailbox — OTA email parsing</h2>
+            <h2 className="text-sm font-semibold text-foreground">Mailbox - OTA email parsing</h2>
             <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-              Reads homestay@limekraftgroup.com (Hostinger/IMAP — no OAuth needed) for Airbnb,
+              Reads homestay@limekraftgroup.com (Hostinger/IMAP - no OAuth needed) for Airbnb,
               Booking.com and Agoda notification emails every 5 minutes and pulls inquiries and
               bookings into the site.
             </p>
@@ -183,7 +183,7 @@ export function MailboxConnectionCard({
             Hostinger/Titan mail defaults: imap.hostinger.com, port 993, SSL/TLS on. Username is the
             full email address; use the mailbox password (or an app password if the mailbox has
             extra verification enabled). The connection is tested before anything is saved, and the
-            password is encrypted at rest — never shown again after saving.
+            password is encrypted at rest - never shown again after saving.
           </p>
 
           <div className="flex gap-2">

@@ -5,11 +5,11 @@ import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:
  * AES-256-GCM at-rest encryption for the one real secret this integration
  * stores in our own database: the Hostinger/IMAP mailbox password. Hostinger
  * has no OAuth alternative for a plain IMAP mailbox, so unlike an OAuth
- * refresh token this is the actual account password — never logged, never
+ * refresh token this is the actual account password - never logged, never
  * returned from any API response, only ever decrypted right before an IMAP
  * connection attempt.
  *
- * ENCRYPTION_KEY can be any string (not necessarily 32 bytes) — scrypt
+ * ENCRYPTION_KEY can be any string (not necessarily 32 bytes) - scrypt
  * derives a proper 32-byte key from it, so `openssl rand -base64 32` or a
  * long passphrase both work.
  */
@@ -19,7 +19,7 @@ const IV_LENGTH = 12; // recommended for GCM
 function deriveKey(): Buffer {
   const secret = process.env.ENCRYPTION_KEY;
   if (!secret) {
-    throw new Error("ENCRYPTION_KEY is not set — cannot encrypt/decrypt stored credentials.");
+    throw new Error("ENCRYPTION_KEY is not set - cannot encrypt/decrypt stored credentials.");
   }
   return scryptSync(secret, "lime-kraft-mailbox-integration", 32);
 }

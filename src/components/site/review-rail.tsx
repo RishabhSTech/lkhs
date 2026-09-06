@@ -21,7 +21,7 @@ export type RailReview = {
  *
  * A grid caps the section at whatever fits one row, which quietly tells the
  * visitor that three is all there is. A rail carries every review worth showing
- * at full size and reads as "there is more here" — and it is built on the same
+ * at full size and reads as "there is more here" - and it is built on the same
  * native scroll-snap the category rail uses, so it drags, flicks, scrolls with
  * a trackpad and tabs through without a carousel library or a single pixel of
  * transform maths.

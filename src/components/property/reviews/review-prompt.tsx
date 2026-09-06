@@ -10,7 +10,7 @@ import {
  * "Write a review", resolved after hydration instead of during the render.
  *
  * The listing page is otherwise identical for every visitor, so this one
- * signed-in-only affordance was the only reason it read cookies — and a single
+ * signed-in-only affordance was the only reason it read cookies - and a single
  * cookie read forces the whole route to be rendered per request. Asking for it
  * separately lets the page ship as prerendered HTML and lets the button appear
  * a moment later for the small share of visitors who can use it.

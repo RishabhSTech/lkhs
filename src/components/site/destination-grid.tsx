@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
  * dark-gradient-plus-bottom-left-label treatment as the category rail two
  * sections above, so at a glance the page appeared to show the same component
  * twice. The lead city now takes a tall portrait tile and the rest sit beside
- * it, and the caption is a frosted plate rather than a gradient — the
+ * it, and the caption is a frosted plate rather than a gradient - the
  * photograph keeps its own contrast and the two sections stop rhyming.
  */
 export function DestinationGrid({
@@ -26,7 +26,7 @@ export function DestinationGrid({
   cities: CityRecord[];
   /**
    * Cities we have announced but cannot yet sell. They sit in the stack
-   * beside the open ones, marked as such and never priced — a city with no
+   * beside the open ones, marked as such and never priced - a city with no
    * bookable homes must not be able to borrow the shape of one that has them.
    */
   upcoming?: UpcomingCity[];
@@ -40,7 +40,7 @@ export function DestinationGrid({
   // is still two tiles, and the lead should run tall against them.
   const solo = rest.length === 0 && upcoming.length === 0;
 
-  // The stack holds three. Open cities have first claim on those slots — an
+  // The stack holds three. Open cities have first claim on those slots - an
   // announcement never displaces a city you can actually book tonight.
   const stack = rest.slice(0, 3);
   const announcements = upcoming.slice(0, Math.max(0, 3 - stack.length));
@@ -128,7 +128,7 @@ function CityTile({
 
           {/* A frosted plate, seated on the bottom edge. It carries its own
               contrast, so the photograph above it is never dimmed to make the
-              type work — which is what the old full-height gradient was doing
+              type work - which is what the old full-height gradient was doing
               to every city image on the page. */}
           <div className="plate absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 px-5 py-4">
             <div className="min-w-0">
@@ -182,7 +182,7 @@ function UpcomingTile({
   return (
     <Spotlight className="h-full rounded-2xl">
       <Link
-        // Not a stays URL — there is nothing to list. The one useful thing
+        // Not a stays URL - there is nothing to list. The one useful thing
         // someone can do about a city that has not opened is tell us their
         // dates, so that is where this goes.
         href="/contact"

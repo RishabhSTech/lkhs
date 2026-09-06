@@ -21,11 +21,11 @@ import { formatINR } from "@/lib/format";
 import { DESTINATIONS } from "../../../../prisma/seed-data";
 
 /**
- * The whole SEO matrix — `/villas-in-indore`, `/apartments-in-goa`,
- * `/stays-in-<anywhere-we-open-next>` — is served by this one route, so a new
+ * The whole SEO matrix - `/villas-in-indore`, `/apartments-in-goa`,
+ * `/stays-in-<anywhere-we-open-next>` - is served by this one route, so a new
  * city needs a property rather than a deploy.
  *
- * Deliberately no `generateStaticParams`, and deliberately not ISR — but not
+ * Deliberately no `generateStaticParams`, and deliberately not ISR - but not
  * for the reason this comment used to give.
  *
  * The original claim was that rendering per request keeps `notFound()` a real
@@ -33,7 +33,7 @@ import { DESTINATIONS } from "../../../../prisma/seed-data";
  * body. Re-tested on Next 16.3.1 against a built server: the 200 is not caused
  * by prerendering at all. `notFound()` returns 200 on *every* streamed
  * response, this route and `/booking-confirmation/[code]` alike, which is
- * documented behaviour — once the body has started streaming the status is
+ * documented behaviour - once the body has started streaming the status is
  * already sent and cannot be changed. Next compensates by injecting
  * `<meta name="robots" content="noindex">`, which is present here and is what
  * actually keeps these URLs out of the index.
@@ -46,7 +46,7 @@ import { DESTINATIONS } from "../../../../prisma/seed-data";
  * average a column.
  *
  * Getting a true 404 status here would mean checking the slug in `proxy`
- * before the response streams, per Next's guidance — which needs a list of
+ * before the response streams, per Next's guidance - which needs a list of
  * every non-collection top-level route to avoid 404-ing `/about`, so it is a
  * deliberate piece of work rather than a tweak.
  */
@@ -75,7 +75,7 @@ export async function generateMetadata({
 
   // Title carries the exact query plus a differentiator, and stays inside the
   // ~60 characters Google renders before truncating.
-  const title = `${spec.plural} in ${city} — ${count} to book direct`;
+  const title = `${spec.plural} in ${city} - ${count} to book direct`;
   // "1 villas in Goa" is what an unattended template looks like, and it goes
   // straight into the search snippet.
   const noun = (count === 1 ? spec.singular : spec.plural).toLowerCase();
@@ -85,7 +85,7 @@ export async function generateMetadata({
           data.rating !== null
             ? `Rated ${data.rating.toFixed(1)}/5 by ${data.reviewCount} guests. `
             : ""
-        }Book direct — no channel mark-up, no booking fee.`
+        }Book direct - no channel mark-up, no booking fee.`
       : `${spec.plural} in ${city} from Lime Kraft Home Stays. Book direct for the best available price.`;
 
   const path = `/${kind}-in-${data.city.slug}`;
@@ -99,7 +99,7 @@ export async function generateMetadata({
     // `max-image-preview:large` and `max-snippet:-1` that these pages benefit
     // from most. Omitting the key entirely is what inherits it.
     ...(count === 0
-      ? // Nothing to show yet — keep it out of the index, but let its links
+      ? // Nothing to show yet - keep it out of the index, but let its links
         // still be crawled.
         { robots: { index: false, follow: true } }
       : {}),
@@ -140,7 +140,7 @@ function buildFaqs(
 
   faqs.push({
     question: `Is it cheaper to book ${noun} in ${city} direct?`,
-    answer: `Yes. The booking channels take fourteen to sixteen percent, and we never undercut ourselves on them — booking on this site is always at least as cheap as anywhere else you will find us, and there is no booking fee on top.`,
+    answer: `Yes. The booking channels take fourteen to sixteen percent, and we never undercut ourselves on them - booking on this site is always at least as cheap as anywhere else you will find us, and there is no booking fee on top.`,
   });
 
   if (areas.length > 0) {
@@ -162,7 +162,7 @@ function buildFaqs(
 
   faqs.push({
     question: `Can I book ${noun} in ${city} for a long stay?`,
-    answer: `Yes — stays of a week or more are priced lower per night automatically, and monthly stays are common in our ${city} homes. Search your dates to see the exact total before you commit.`,
+    answer: `Yes - stays of a week or more are priced lower per night automatically, and monthly stays are common in our ${city} homes. Search your dates to see the exact total before you commit.`,
   });
 
   return faqs;

@@ -26,11 +26,11 @@ export interface OtaProvider {
 }
 
 /**
- * Airbnb gates their Calendar/Pricing API behind partner approval — the exact
+ * Airbnb gates their Calendar/Pricing API behind partner approval - the exact
  * request contract (base URL, payload shape, auth scheme) is handed over
  * during onboarding and isn't publicly documented. This adapter is wired for
- * real use — it reads live credentials, signs the request, and surfaces the
- * real HTTP result into ChannelSyncLog — but the endpoint path and payload
+ * real use - it reads live credentials, signs the request, and surfaces the
+ * real HTTP result into ChannelSyncLog - but the endpoint path and payload
  * below are the best-known shape and MUST be checked against Airbnb's actual
  * partner docs once AIRBNB_API_KEY is issued, before this can be trusted.
  */
@@ -45,7 +45,7 @@ class AirbnbProvider implements OtaProvider {
       return {
         ok: false,
         message:
-          "Airbnb partner API is not configured — set AIRBNB_API_KEY and AIRBNB_API_BASE_URL once partner access is approved.",
+          "Airbnb partner API is not configured - set AIRBNB_API_KEY and AIRBNB_API_BASE_URL once partner access is approved.",
       };
     }
 
@@ -87,17 +87,17 @@ class AirbnbProvider implements OtaProvider {
   }
 }
 
-/** Direct bookings never need pushing anywhere — central inventory is the
+/** Direct bookings never need pushing anywhere - central inventory is the
  * source of truth for the site itself. */
 class WebsiteProvider implements OtaProvider {
   readonly code = "WEBSITE" as const;
   async push(): Promise<ChannelSyncOutcome> {
-    return { ok: true, message: "Direct listing — nothing to push." };
+    return { ok: true, message: "Direct listing - nothing to push." };
   }
 }
 
 /** No adapter has been built yet for this channel. Honest, not a fake
- * success — matches how the rest of the app treats unconfigured channels. */
+ * success - matches how the rest of the app treats unconfigured channels. */
 class UnimplementedProvider implements OtaProvider {
   constructor(readonly code: ChannelCode) {}
   async push(): Promise<ChannelSyncOutcome> {

@@ -6,7 +6,7 @@ import { RazorpayProvider } from "@/lib/payments/provider";
 
 /**
  * Hit by the client once Razorpay Checkout's success handler fires. This is
- * a convenience path for immediate UX — the webhook (see
+ * a convenience path for immediate UX - the webhook (see
  * src/app/api/payments/webhook/razorpay/route.ts) is the authoritative
  * confirmation and will also fire, but confirmReservation() is idempotent so
  * whichever arrives first wins and the second is a no-op.
@@ -21,7 +21,7 @@ const schema = z.object({
 export async function POST(request: Request) {
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "We couldn't read the payment confirmation. Don't pay again — message us with your booking reference and we'll finish it by hand." }, { status: 400 });
+    return NextResponse.json({ error: "We couldn't read the payment confirmation. Don't pay again - message us with your booking reference and we'll finish it by hand." }, { status: 400 });
   }
   const { reservationId, razorpay_order_id, razorpay_payment_id, razorpay_signature } = parsed.data;
 
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     razorpay_signature,
   );
   if (!valid) {
-    return NextResponse.json({ error: "We couldn't verify that payment with the gateway. Nothing has been charged twice — send us your booking reference and we'll sort it out today." }, { status: 400 });
+    return NextResponse.json({ error: "We couldn't verify that payment with the gateway. Nothing has been charged twice - send us your booking reference and we'll sort it out today." }, { status: 400 });
   }
 
   const payment = await db.reservationPayment.findFirst({

@@ -117,7 +117,7 @@ export function SignInForm() {
           {devCode && (
             <p className="rounded-lg bg-chart-4/10 p-3 text-xs leading-relaxed text-muted-foreground">
               <span className="font-medium text-foreground">Demo mode:</span> no
-              email or SMS provider is connected, so here is your code —{" "}
+              email or SMS provider is connected, so here is your code -{" "}
               <span className="font-mono font-semibold text-foreground">
                 {devCode}
               </span>

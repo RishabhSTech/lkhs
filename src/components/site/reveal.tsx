@@ -18,7 +18,7 @@ const useArmingEffect =
  * Single-shot fade-and-rise on scroll. Respects reduced-motion via Framer.
  *
  * Use this for a section heading or a single standout block. For a grid, reach
- * for `RevealGroup` instead — wrapping every card in one of these was costing a
+ * for `RevealGroup` instead - wrapping every card in one of these was costing a
  * motion component per card and, more to the point, made the whole page arrive
  * at the same speed, which reads as lag rather than craft.
  */
@@ -59,8 +59,8 @@ export function RevealGroup({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   // `armed` is the safety interlock: the hiding class is only applied once
-  // this component is running and has an observer attached. Server output —
-  // and any client where scripting is off or IntersectionObserver is missing —
+  // this component is running and has an observer attached. Server output -
+  // and any client where scripting is off or IntersectionObserver is missing -
   // therefore renders the content plainly visible. Hiding first and relying on
   // JS to undo it means one broken script turns the page blank.
   const [armed, setArmed] = useState(false);
@@ -79,7 +79,7 @@ export function RevealGroup({
 
     // An observer always delivers one callback shortly after `observe()`,
     // whether or not the target is on screen. That first delivery is the proof
-    // of life we wait for — cancel the failsafe on any callback, not just an
+    // of life we wait for - cancel the failsafe on any callback, not just an
     // intersecting one. A timer that survives until the user scrolls would
     // reveal every group early and flatten the stagger it exists to protect.
     let failsafe: number | undefined = window.setTimeout(() => {

@@ -33,7 +33,7 @@ export type ReviewableStay = {
   reservationId: string;
   code: string;
   propertyName: string;
-  /** ISO string — only the month is rendered. */
+  /** ISO string - only the month is rendered. */
   checkOut: string;
   /** Derived from the booking, never typed in by the guest. */
   nights: number;
@@ -70,7 +70,7 @@ export function WriteReview({
     if (!rating) return setError("Give the stay an overall rating.");
     if (body.trim().length < MIN_BODY) {
       return setError(
-        `Tell future guests a little more — at least ${MIN_BODY} characters.`,
+        `Tell future guests a little more - at least ${MIN_BODY} characters.`,
       );
     }
 
@@ -125,7 +125,7 @@ export function WriteReview({
             How was {stay.propertyName}?
           </DialogTitle>
           {/* Stay length comes from the booking, so it is stated rather than
-              asked — it is the part of the review guests trust most. */}
+              asked - it is the part of the review guests trust most. */}
           <p className="mt-1 text-sm text-muted-foreground">
             {formatStayLength(stay.nights)} ·{" "}
             {formatReviewMonth(stay.checkOut)} · booking {stay.code}

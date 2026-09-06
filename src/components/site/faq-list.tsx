@@ -13,7 +13,7 @@ export type Faq = { question: string; answer: string };
  * the right is the single most recognisable component on the web, and it made
  * a section of genuinely useful answers look like boilerplate. Numbering the
  * questions and hanging them off the same hairline the rest of the page uses
- * puts them back in the document — and the answer is indented into the measure
+ * puts them back in the document - and the answer is indented into the measure
  * so an open row reads as a paragraph rather than as a drawer.
  */
 export function FaqList({ faqs }: { faqs: Faq[] }) {

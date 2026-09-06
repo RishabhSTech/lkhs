@@ -23,7 +23,7 @@ function makeClient(creds: ImapCredentials, extra?: Partial<ConstructorParameter
 }
 
 /**
- * Connects and disconnects immediately (`verifyOnly`) — used by the
+ * Connects and disconnects immediately (`verifyOnly`) - used by the
  * Settings → Integrations "Save & test connection" flow so bad credentials
  * are caught before anything is stored.
  */

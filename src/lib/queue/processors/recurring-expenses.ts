@@ -13,7 +13,7 @@ function computeNextRun(current: Date, dayOfMonth: number, frequency: ExpenseFre
 
 /**
  * Runs daily. Posts the Transaction for any recurring expense whose
- * nextRunDate has arrived, then rolls nextRunDate forward — replacing what
+ * nextRunDate has arrived, then rolls nextRunDate forward - replacing what
  * used to be a one-time seed script with an actual schedule.
  */
 export async function processRecurringExpenseRollover() {
@@ -55,7 +55,7 @@ export async function processRecurringExpenseRollover() {
         frequency: expense.frequency,
         description:
           expense.description ||
-          `${expense.category.name} — ${expense.nextRunDate.toLocaleDateString("en-IN", { month: "long", year: "numeric" })}`,
+          `${expense.category.name} - ${expense.nextRunDate.toLocaleDateString("en-IN", { month: "long", year: "numeric" })}`,
       },
     });
 

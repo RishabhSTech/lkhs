@@ -15,7 +15,7 @@ export type TourImage = { id: string; url: string; alt: string | null };
  * A listing thumbnail tells you a house exists; it does not tell you what it
  * would be like to be inside it, which is the actual thing being decided. This
  * lays the home's photographs out on an arc in 3D so the neighbouring rooms
- * stay visible at the edges of the frame — you can see there is more house
+ * stay visible at the edges of the frame - you can see there is more house
  * before you interact, which is what makes anyone interact.
  *
  * Built on CSS 3D rather than WebGL deliberately. The content is photographs
@@ -31,7 +31,7 @@ export type TourImage = { id: string; url: string; alt: string | null };
 const STEP_ROTATE = 34;
 const STEP_DEPTH = 175;
 const STEP_SHIFT = 54;
-/** Slots further out than this are not rendered — they are invisible anyway. */
+/** Slots further out than this are not rendered - they are invisible anyway. */
 const VISIBLE = 2;
 
 export function RoomTour({
@@ -127,7 +127,7 @@ export function RoomTour({
               <button
                 key={image.id}
                 type="button"
-                // The centre plane is inert — it is the thing you are already
+                // The centre plane is inert - it is the thing you are already
                 // looking at, so a click on it has nothing to do. It stays in
                 // the accessibility tree, though: its image carries the alt
                 // text for the room currently on screen, and `aria-hidden`
@@ -148,8 +148,8 @@ export function RoomTour({
                   isActive
                     ? "cursor-default shadow-[0_50px_90px_-40px_rgba(0,0,0,0.85)]"
                     : "cursor-pointer",
-                  // Reduced motion keeps the arc — it is layout, not
-                  // decoration — but removes the animated traversal.
+                  // Reduced motion keeps the arc - it is layout, not
+                  // decoration - but removes the animated traversal.
                   "motion-reduce:transition-none",
                 )}
                 style={{
@@ -184,7 +184,7 @@ export function RoomTour({
           })}
         </div>
 
-        {/* Controls sit above the 3D context, not inside it — a transformed
+        {/* Controls sit above the 3D context, not inside it - a transformed
             ancestor would drag them onto the arc with everything else. */}
         <div className="absolute inset-x-4 bottom-4 z-20 flex items-center justify-between gap-3 sm:inset-x-6 sm:bottom-6">
           <p

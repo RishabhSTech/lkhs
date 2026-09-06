@@ -55,7 +55,7 @@ export function Gallery({
           >
             <Image
               src={image.url}
-              alt={image.alt ?? `${propertyName} — photo ${i + 1}`}
+              alt={image.alt ?? `${propertyName} - photo ${i + 1}`}
               fill
               priority={i === 0}
               sizes="86vw"
@@ -92,7 +92,7 @@ export function Gallery({
           >
             <Image
               src={image.url}
-              alt={image.alt ?? `${propertyName} — photo ${i + 2}`}
+              alt={image.alt ?? `${propertyName} - photo ${i + 2}`}
               fill
               sizes="25vw"
               className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
@@ -161,7 +161,7 @@ export function Gallery({
                 src={images[lightboxIndex].url}
                 alt={
                   images[lightboxIndex].alt ??
-                  `${propertyName} — photo ${lightboxIndex + 1}`
+                  `${propertyName} - photo ${lightboxIndex + 1}`
                 }
                 fill
                 sizes="100vw"

@@ -23,7 +23,7 @@ const SOURCES = [
 
 /**
  * There's no messaging API for Airbnb/Booking.com/Agoda yet (see
- * /admin/channels) — this is the bridge until there is. Paste a message the
+ * /admin/channels) - this is the bridge until there is. Paste a message the
  * moment it shows up on that app and it joins the same inbox, with the same
  * instant alert, as a website inquiry.
  */
@@ -56,7 +56,7 @@ export function LogOtaMessageDialog() {
       const data = await res.json().catch(() => null);
       if (!res.ok) throw new Error(data?.error ?? "Could not log that message.");
 
-      toast.success("Logged — the team's been alerted.");
+      toast.success("Logged - the team's been alerted.");
       reset();
       setOpen(false);
       router.refresh();

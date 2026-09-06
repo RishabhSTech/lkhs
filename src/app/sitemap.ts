@@ -5,8 +5,8 @@ import { absoluteUrl } from "@/lib/seo/site";
 import { slugify } from "@/lib/seo/slug";
 import { DESTINATIONS, JOURNAL_POSTS } from "../../prisma/seed-data";
 
-// Built from live inventory on request, so a newly activated property — or a
-// whole new city — is in the sitemap immediately rather than at the next deploy.
+// Built from live inventory on request, so a newly activated property - or a
+// whole new city - is in the sitemap immediately rather than at the next deploy.
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -33,7 +33,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
 
   // City hubs rank highest of the generated set, then the type pages, weighted
-  // by how much inventory actually backs them — a page with one home should not
+  // by how much inventory actually backs them - a page with one home should not
   // claim the same priority as one with forty.
   const maxCount = Math.max(1, ...targets.map((t) => t.count));
 

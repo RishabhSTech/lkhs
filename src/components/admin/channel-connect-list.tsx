@@ -109,7 +109,7 @@ export function ChannelConnectList({
           </h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {isDirect
-              ? "Every property is bookable directly — nothing to configure."
+              ? "Every property is bookable directly - nothing to configure."
               : "Link each property to its listing on this channel."}
           </p>
         </div>
@@ -219,7 +219,7 @@ export function ChannelConnectList({
             <p className="rounded-lg bg-muted/70 p-3 text-xs leading-relaxed text-muted-foreground">
               Saving records the mapping so reservations from this channel land
               on the right property. Syncing stays off until {channelName} grants
-              API access — the status will show as pending, not connected.
+              API access - the status will show as pending, not connected.
             </p>
 
             <div className="flex gap-2">

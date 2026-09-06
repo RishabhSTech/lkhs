@@ -17,7 +17,7 @@ const unlinkSchema = z.object({
 export async function POST(request: Request) {
   const parsed = linkSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Check the connection details — something there isn't right." }, { status: 400 });
+    return NextResponse.json({ error: "Check the connection details - something there isn't right." }, { status: 400 });
   }
   const { channelCode, propertyId, externalListingId } = parsed.data;
 
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
       channelPropertyId: link.id,
       direction: "PUSH",
       status: "ERROR",
-      message: `Listing mapped, but ${channel.name} API access is not configured — nothing has been synced yet.`,
+      message: `Listing mapped, but ${channel.name} API access is not configured - nothing has been synced yet.`,
       finishedAt: new Date(),
     },
   });

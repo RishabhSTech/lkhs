@@ -13,7 +13,7 @@ const buttonVariants = cva(
         accent:
           // Gold on the deep-blue bands. Azure-on-blue is the one pairing the
           // palette cannot make work, so the accent button carries the warm
-          // counterweight instead — with ink text, since gold cannot hold
+          // counterweight instead - with ink text, since gold cannot hold
           // white legibly.
           "bg-brand-gold text-brand-ink hover:bg-brand-gold/90 active:translate-y-px",
         outline:

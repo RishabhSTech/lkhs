@@ -242,7 +242,7 @@ export function MasterCalendar({
                     </div>
 
                     <dl className="space-y-2.5 text-sm">
-                      <Row label="Booking ID" value={selected.code ?? "—"} mono />
+                      <Row label="Booking ID" value={selected.code ?? "-"} mono />
                       <Row
                         label="Check-in"
                         value={formatDateLong(selected.startDate)}

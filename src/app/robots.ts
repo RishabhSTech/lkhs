@@ -20,7 +20,7 @@ export default function robots(): MetadataRoute.Robots {
         ],
         // Deliberately NOT blocking filtered `/stays?...` URLs here. Those
         // carry `noindex` in their metadata, and a page blocked in robots.txt
-        // is never crawled — so the noindex is never read, and the URL can
+        // is never crawled - so the noindex is never read, and the URL can
         // still be indexed from inbound links with no snippet at all. Blocking
         // and de-indexing are different jobs; only one of them can be used per
         // URL, and de-indexing is the one we want.

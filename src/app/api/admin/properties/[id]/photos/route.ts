@@ -20,7 +20,7 @@ export async function POST(request: Request, { params }: RouteParams) {
   const { id: propertyId } = await params;
   const parsed = createSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "We couldn't add that photo — check the file and try again." }, { status: 400 });
+    return NextResponse.json({ error: "We couldn't add that photo - check the file and try again." }, { status: 400 });
   }
 
   const [{ user }, count] = await Promise.all([
@@ -52,7 +52,7 @@ export async function POST(request: Request, { params }: RouteParams) {
   return NextResponse.json({ id: image.id });
 }
 
-/** Reorders every photo in one shot — `order` is the full list of image ids
+/** Reorders every photo in one shot - `order` is the full list of image ids
  * in their new sequence, so index 0 becomes the hero. */
 export async function PATCH(request: Request, { params }: RouteParams) {
   const { id: propertyId } = await params;

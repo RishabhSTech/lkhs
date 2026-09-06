@@ -30,7 +30,7 @@ export function ConfirmationHero({ guestName }: { guestName: string }) {
           Your stay is confirmed.
         </h1>
         <p className="mt-3 text-[0.9375rem] text-muted-foreground">
-          Thanks, {guestName.split(" ")[0]}. Everything&apos;s set — here are the
+          Thanks, {guestName.split(" ")[0]}. Everything&apos;s set - here are the
           details.
         </p>
       </motion.div>

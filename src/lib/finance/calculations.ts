@@ -6,7 +6,7 @@ import type {
 } from "@prisma/client";
 
 /**
- * Every figure here is derived from Transaction rows — nothing is read from a
+ * Every figure here is derived from Transaction rows - nothing is read from a
  * stored total. Refundable security deposits are tracked as DEPOSIT_IN /
  * DEPOSIT_OUT and deliberately excluded from expenses and NOI.
  */
@@ -34,7 +34,7 @@ export type PLStatement = {
   operatingExpenses: number;
   expensesByCategory: { name: string; amount: number }[];
   netOperatingIncome: number;
-  /** Refundable deposits — held, not earned/spent. Shown separately. */
+  /** Refundable deposits - held, not earned/spent. Shown separately. */
   depositsHeld: number;
 };
 

@@ -271,7 +271,7 @@ export function ExpenseForm({
         <p className="flex items-start gap-2 rounded-lg bg-chart-3/8 p-3 text-xs leading-relaxed text-muted-foreground">
           <Info className="mt-0.5 size-3.5 shrink-0 text-chart-3" />
           Refundable deposits are recorded as capital tied up, not as an expense
-          — this will count towards funds deployed but will not reduce net
+          - this will count towards funds deployed but will not reduce net
           operating income.
         </p>
       )}
@@ -286,7 +286,7 @@ export function ExpenseForm({
 
       {receiptName && !receiptUrl && !uploadingReceipt && (
         <p className="text-xs text-destructive">
-          That receipt didn&apos;t upload — object storage may not be configured. The
+          That receipt didn&apos;t upload - object storage may not be configured. The
           expense will still save, just without the attachment.
         </p>
       )}

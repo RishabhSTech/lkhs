@@ -7,7 +7,7 @@ import { TRANSACTION_CATEGORY_DEFS } from "./seed-data";
 /**
  * Bootstraps just the TransactionCategory rows application code assumes
  * exist (postBookingFinancials, the budget routes, the recurring-expense
- * rollover all look categories up by group+name) — without the full demo
+ * rollover all look categories up by group+name) - without the full demo
  * seed in seed.ts, which wipes every table. Safe to run repeatedly: each
  * category is upserted on its (name, group) unique constraint.
  *

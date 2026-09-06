@@ -7,7 +7,7 @@ import type { ReviewableStay } from "@/components/property/reviews/write-review"
 
 /**
  * The signed-in guest's most recent completed stay at this property that they
- * haven't reviewed yet — the thing that unlocks "Write a review".
+ * haven't reviewed yet - the thing that unlocks "Write a review".
  *
  * Eligibility is checked here and again in the POST handler; this call only
  * decides whether to render the button.

@@ -1,5 +1,5 @@
 /**
- * Review topics — the emoji chips Airbnb shows between the rating breakdown
+ * Review topics - the emoji chips Airbnb shows between the rating breakdown
  * and the reviews themselves ("🧸 Family 3", "🛋️ Comfort 2"), each counting how
  * many reviews talk about that thing and filtering the list when tapped.
  *
@@ -181,7 +181,7 @@ export type TopicableReview = {
   body: string;
   /**
    * Optional on purpose. A caller may hand us a row selected without the
-   * column, and topics are decoration — they must never be able to take a
+   * column, and topics are decoration - they must never be able to take a
    * listing page down. Absent behaves exactly like empty: infer from the body.
    */
   topics?: string[] | null;
@@ -207,7 +207,7 @@ export type ReviewTopicCount = {
 };
 
 /**
- * Chips are only worth showing when a topic recurs — a chip reading "1" tells
+ * Chips are only worth showing when a topic recurs - a chip reading "1" tells
  * a guest nothing they couldn't get from reading the one review. Below six
  * reviews there isn't enough to recur, so the row stays hidden entirely.
  */

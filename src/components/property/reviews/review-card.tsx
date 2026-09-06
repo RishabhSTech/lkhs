@@ -42,7 +42,7 @@ export function Stars({
 }
 
 /**
- * "3 years on Lime Kraft" — how long the reviewer has been booking with us,
+ * "3 years on Lime Kraft" - how long the reviewer has been booking with us,
  * which is the line Airbnb prints under the name when it has no city to show.
  * Computed at render rather than stored, so it never goes stale.
  */

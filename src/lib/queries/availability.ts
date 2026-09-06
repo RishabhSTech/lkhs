@@ -16,7 +16,7 @@ export type { NightAvailability, PortfolioAvailability };
  * Portfolio-wide availability, one row per calendar night.
  *
  * The homepage asks a visitor for their dates in the hero and then never
- * mentions dates again — which means the single question that decides whether
+ * mentions dates again - which means the single question that decides whether
  * a trip happens at all ("is anything free when I want to go, and what will
  * it cost?") went unanswered on the page best placed to answer it. This
  * module is the query behind that answer.
@@ -29,8 +29,8 @@ export type { NightAvailability, PortfolioAvailability };
 
 /**
  * Only the date-driven rules. A calendar cell is one night with no stay
- * attached to it, so the rules that price a *stay* rather than a *night* —
- * LONG_STAY needs a length, LAST_MINUTE needs a check-in date — have no
+ * attached to it, so the rules that price a *stay* rather than a *night* -
+ * LONG_STAY needs a length, LAST_MINUTE needs a check-in date - have no
  * defined answer here. Applying them anyway would quote a discount the
  * visitor cannot actually get by clicking the cell, which is exactly the kind
  * of number that destroys trust in every other figure on the page.
@@ -69,7 +69,7 @@ function ruleAppliesToNight(rule: PricingRule, night: Date): boolean {
  * Mirrors `buildQuote`'s ordering deliberately: an explicit DailyRate wins
  * outright, otherwise active rules stack in priority order on the base price.
  * Kept as its own function rather than calling `buildQuote` because that one
- * prices a whole stay — nights, cleaning fee, discount and tax — and we need a
+ * prices a whole stay - nights, cleaning fee, discount and tax - and we need a
  * single night's headline rate for a few thousand property/date pairs.
  */
 function nightlyPrice(
@@ -96,7 +96,7 @@ function nightlyPrice(
 
 /**
  * Reads the whole window in two queries and resolves it in memory. At a dozen
- * properties over four months that is roughly 1,500 property-night pairs —
+ * properties over four months that is roughly 1,500 property-night pairs -
  * cheap enough that doing it per-night in SQL would cost more round trips than
  * it saves work, and the page is prerendered on a 300s revalidate anyway.
  */
@@ -131,7 +131,7 @@ export const getPortfolioAvailability = cache(
     const unitIds = properties.flatMap((p) => p.units.map((u) => u.id));
 
     // A row in InventoryNight exists only when that night is taken, so this is
-    // the complete set of unavailability in the window — absence is the
+    // the complete set of unavailability in the window - absence is the
     // availability.
     const taken = unitIds.length
       ? await db.inventoryNight.findMany({
@@ -165,7 +165,7 @@ export const getPortfolioAvailability = cache(
       const blockedUnits = blocked.get(iso);
 
       const rates = prepared.map((property) => {
-        // No units means nothing to sell — `findAvailableUnitId` treats such a
+        // No units means nothing to sell - `findAvailableUnitId` treats such a
         // property as unbookable and so must this, or the calendar would
         // advertise a home the booking flow then refuses.
         const free = property.unitIds.some(

@@ -45,10 +45,10 @@ export default async function MessagesPage() {
       <p className="mt-5 rounded-lg bg-muted/60 p-4 text-sm leading-relaxed text-muted-foreground">
         No email, SMS or WhatsApp provider is connected here, so outbound
         messages are logged rather than delivered. Inbound messages are
-        different — every one (website, chat, or an OTA message you log
+        different - every one (website, chat, or an OTA message you log
         below) fires an instant push + email alert. Turn that on from the
         bell icon in the top bar, and use &ldquo;Log OTA message&rdquo; to
-        bring in an Airbnb/Booking.com/Agoda message the moment you see it —
+        bring in an Airbnb/Booking.com/Agoda message the moment you see it -
         there&apos;s no messaging API for those yet (see{" "}
         <Link href="/admin/channels" className="underline">Channels</Link>).
       </p>

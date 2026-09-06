@@ -131,7 +131,7 @@ export function PricingRuleEditor({
 
       <ul className="mt-3 space-y-2">
         {rules.length === 0 && (
-          <li className="text-sm text-muted-foreground">No rules yet — base rate applies every night.</li>
+          <li className="text-sm text-muted-foreground">No rules yet - base rate applies every night.</li>
         )}
         {rules.map((rule) => (
           <li key={rule.id} className="flex items-center justify-between gap-3 text-sm">

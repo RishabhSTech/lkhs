@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 export const MAX_TOPICS = 5;
 
 /**
- * "What stood out?" — the optional topic tags on a review. Anything ticked
+ * "What stood out?" - the optional topic tags on a review. Anything ticked
  * here wins over the keyword matching that otherwise infers the chips, so a
  * reviewer or an admin can always correct what the listing ends up claiming
  * the review is about.

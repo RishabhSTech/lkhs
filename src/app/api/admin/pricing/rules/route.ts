@@ -88,7 +88,7 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   const parsed = patchSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "We couldn't update that pricing rule — check the values and try again." }, { status: 400 });
+    return NextResponse.json({ error: "We couldn't update that pricing rule - check the values and try again." }, { status: 400 });
   }
   const { user } = await getCurrentAdminUser();
   const rule = await db.pricingRule.update({

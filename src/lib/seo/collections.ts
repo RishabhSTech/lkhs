@@ -3,7 +3,7 @@ import { slugify } from "@/lib/seo/slug";
 
 /**
  * The SEO surface is a matrix of {stay type} × {city}, addressed by
- * keyword-exact URLs — `/villas-in-indore`, `/apartments-in-goa`. One dynamic
+ * keyword-exact URLs - `/villas-in-indore`, `/apartments-in-goa`. One dynamic
  * route serves the whole matrix, so a new city needs no new files: the moment a
  * property in that city goes ACTIVE, its pages exist and enter the sitemap.
  */
@@ -11,7 +11,7 @@ import { slugify } from "@/lib/seo/slug";
 export type CollectionKind = "stays" | "villas" | "apartments" | "homes" | "cottages";
 
 type CollectionSpec = {
-  /** null means "every type" — the city hub page. */
+  /** null means "every type" - the city hub page. */
   propertyType: PropertyType | null;
   /** Used in the H1: "Villas in Indore". */
   plural: string;
@@ -30,7 +30,7 @@ export const COLLECTIONS: Record<CollectionKind, CollectionSpec> = {
     singular: "Stay",
     synonyms: ["places to stay", "holiday rentals", "vacation rentals", "homestays", "accommodation"],
     intro:
-      "Every home we run in {city} — booked direct, with no channel mark-up and a real person on the other end of the message.",
+      "Every home we run in {city} - booked direct, with no channel mark-up and a real person on the other end of the message.",
   },
   villas: {
     propertyType: "VILLA",
@@ -38,7 +38,7 @@ export const COLLECTIONS: Record<CollectionKind, CollectionSpec> = {
     singular: "Villa",
     synonyms: ["private villas", "luxury villas", "villas with garden", "villa rentals"],
     intro:
-      "Standalone villas in {city} with the whole place to yourself — space for a group, private outdoor room, and none of the shared-corridor feeling of a hotel.",
+      "Standalone villas in {city} with the whole place to yourself - space for a group, private outdoor room, and none of the shared-corridor feeling of a hotel.",
   },
   apartments: {
     propertyType: "APARTMENT",
@@ -46,7 +46,7 @@ export const COLLECTIONS: Record<CollectionKind, CollectionSpec> = {
     singular: "Apartment",
     synonyms: ["serviced apartments", "flats", "self-catering apartments", "furnished apartments"],
     intro:
-      "Fully furnished, self-contained apartments in {city}. A kitchen, a proper desk and a working washing machine — the things that matter past night three.",
+      "Fully furnished, self-contained apartments in {city}. A kitchen, a proper desk and a working washing machine - the things that matter past night three.",
   },
   homes: {
     propertyType: "HOME",
@@ -62,7 +62,7 @@ export const COLLECTIONS: Record<CollectionKind, CollectionSpec> = {
     singular: "Cottage",
     synonyms: ["cottages with garden", "quiet cottages", "weekend cottages"],
     intro:
-      "Smaller, quieter cottages around {city} — the ones people book when the point of the trip is to slow down.",
+      "Smaller, quieter cottages around {city} - the ones people book when the point of the trip is to slow down.",
   },
 };
 
@@ -70,7 +70,7 @@ export const COLLECTION_KINDS = Object.keys(COLLECTIONS) as CollectionKind[];
 
 /**
  * "VILLA" → "villas". Lets a single listing page describe itself in the same
- * nouns — and link to the same URL — as its collection page, so
+ * nouns - and link to the same URL - as its collection page, so
  * `/stays/assagao-garden-villa` and `/villas-in-goa` reinforce one vocabulary
  * instead of two.
  */

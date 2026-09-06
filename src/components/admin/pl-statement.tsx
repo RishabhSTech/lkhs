@@ -66,7 +66,7 @@ export function PLStatement({
         {pl.depositsHeld !== 0 && (
           <p className="mt-3 rounded-lg bg-muted/60 p-3 text-xs leading-relaxed text-muted-foreground">
             {formatINR(pl.depositsHeld)} in refundable security deposits is held
-            separately — it is capital tied up, not an expense, so it never
+            separately - it is capital tied up, not an expense, so it never
             touches net operating income.
           </p>
         )}

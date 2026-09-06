@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
  * listing. Drawn inline rather than shipped as an asset so it inherits
  * `currentColor` and stays crisp at any size in either theme.
  *
- * The stem is the two cubics below — a long outward sweep that hooks back in
- * at the foot — and the leaves are sampled off it, each rotated to sit on the
+ * The stem is the two cubics below - a long outward sweep that hooks back in
+ * at the foot - and the leaves are sampled off it, each rotated to sit on the
  * outer edge. Full almond leaves rather than thin ellipses: at the size this
  * renders (around 80px tall) anything narrower reads as a smudge.
  */

@@ -77,13 +77,13 @@ export default async function TripsPage() {
               {[
                 { value: "upcoming", list: upcoming, empty: "Nothing booked yet." },
                 { value: "past", list: past, empty: "No stays behind you yet." },
-                { value: "cancelled", list: cancelled, empty: "Nothing cancelled — long may it last." },
+                { value: "cancelled", list: cancelled, empty: "Nothing cancelled - long may it last." },
               ].map((tab) => (
                 <TabsContent key={tab.value} value={tab.value} className="mt-5">
                   {tab.list.length === 0 ? (
                     <EmptyState
                       title={tab.empty}
-                      description="Every Lime Kraft booking lands here — dates, address and invoice in one place."
+                      description="Every Lime Kraft booking lands here - dates, address and invoice in one place."
                       action={{ href: "/stays", label: "Browse stays" }}
                     />
                   ) : (

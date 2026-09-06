@@ -27,7 +27,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://lime_kraft:lime_kraft@localhost:5432/lime_kraft
       DIRECT_URL: postgresql://lime_kraft:lime_kraft@localhost:5432/lime_kraft
-      # The CI postgres service container doesn't speak TLS — see PGSSL_DISABLE
+      # The CI postgres service container doesn't speak TLS - see PGSSL_DISABLE
       # in src/lib/db-config.ts. Never set this against a real deployment.
       PGSSL_DISABLE: "true"
       AUTH_SECRET: ci-only-secret-not-for-real-use-32-characters
@@ -52,7 +52,7 @@ jobs:
       - run: npx prisma migrate deploy
 
       # Booking/finance code assumes a handful of TransactionCategory rows
-      # exist by name (see prisma/seed-reference-data.ts) — a fresh migrated
+      # exist by name (see prisma/seed-reference-data.ts) - a fresh migrated
       # DB has none. The full demo seed (prisma/seed.ts) would also work but
       # wipes and recreates every table, which is unnecessary here.
       - run: npm run seed:reference

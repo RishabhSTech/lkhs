@@ -8,7 +8,7 @@ import type { ReviewTopicCount } from "@/lib/property/review-topics";
  * is a toggle: picking one narrows the list below to the reviews that mention
  * that topic, picking it again clears the filter.
  *
- * Rendered as a scrolling rail rather than a wrapping grid — the chips are a
+ * Rendered as a scrolling rail rather than a wrapping grid - the chips are a
  * single band in the design, and wrapping them to three rows on a phone turns
  * a glanceable summary into a wall.
  */

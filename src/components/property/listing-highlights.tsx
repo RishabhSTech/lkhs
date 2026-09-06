@@ -2,7 +2,7 @@ import { DynamicIcon } from "@/components/property/dynamic-icon";
 import type { ResolvedHighlight } from "@/lib/property/highlights";
 
 /**
- * The icon + headline + one-liner block that sits under the listing header —
+ * The icon + headline + one-liner block that sits under the listing header -
  * "Self check-in", "Unbeatable location", "Park for free".
  */
 export function ListingHighlights({

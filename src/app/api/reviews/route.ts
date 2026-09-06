@@ -7,7 +7,7 @@ import { todayUTC } from "@/lib/dates";
 import { REVIEW_TOPIC_BY_CODE } from "@/lib/property/review-topics";
 
 /**
- * Whether the signed-in guest may review this property — the affordance the
+ * Whether the signed-in guest may review this property - the affordance the
  * listing page used to resolve on the server. It moved here so that
  * `/stays/[property]` reads no cookies and can be prerendered; the button is
  * a personalisation on top of a static page, not part of it.
@@ -54,7 +54,7 @@ const schema = z.object({
  * Eligibility is re-checked here rather than trusted from the client: the
  * reservation must belong to the signed-in guest, must have checked out, and
  * must not already carry a review. The nights and stay month are never taken
- * from the request — they come from the reservation, which is what makes the
+ * from the request - they come from the reservation, which is what makes the
  * "Verified stay · Stayed 4 nights" line on the listing worth anything.
  */
 export async function POST(request: Request) {
@@ -92,7 +92,7 @@ export async function POST(request: Request) {
   }
   if (reservation.checkOut > todayUTC()) {
     return NextResponse.json(
-      { error: "Reviews open once you've checked out — we'll email you when yours does." },
+      { error: "Reviews open once you've checked out - we'll email you when yours does." },
       { status: 409 },
     );
   }
@@ -116,7 +116,7 @@ export async function POST(request: Request) {
       location: data.location ?? null,
       value: data.value ?? null,
       tripType: data.tripType ?? null,
-      // Unknown codes are dropped rather than stored — an unrecognised topic
+      // Unknown codes are dropped rather than stored - an unrecognised topic
       // would silently stop the review counting towards any chip.
       topics: (data.topics ?? []).filter((code) =>
         REVIEW_TOPIC_BY_CODE.has(code),

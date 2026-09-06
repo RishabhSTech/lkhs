@@ -44,7 +44,7 @@ export default async function AccountPage() {
                 Sign in to see your trips
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                We&apos;ll send a code to your email or mobile — no password needed.
+                We&apos;ll send a code to your email or mobile - no password needed.
                 If you&apos;ve booked with us before, your trips are already here.
               </p>
               <Button render={<Link href="/signin" />} size="lg" className="mt-5">

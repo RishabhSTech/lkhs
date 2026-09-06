@@ -43,7 +43,7 @@ export function SiteHeader({ transparent = false }: { transparent?: boolean }) {
       )}
     >
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:h-18">
-        <Link href="/" aria-label="Lime Kraft Home Stays — home">
+        <Link href="/" aria-label="Lime Kraft Home Stays - home">
           <Logo tone={solid ? "dark" : "light"} />
         </Link>
 

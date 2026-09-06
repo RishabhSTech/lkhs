@@ -117,7 +117,7 @@ export default async function PropertyFinancePage({
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
         <PLStatement
-          title="Profit & loss — this month"
+          title="Profit & loss - this month"
           pl={currentMonth}
           channels={channels}
         />

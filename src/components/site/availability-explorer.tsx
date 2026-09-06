@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
  * The hero asks for dates and the rest of the page then argues about price,
  * quality and trust without ever coming back to the only question that decides
  * whether a trip happens: is anything actually free when I want to go. This
- * section answers it against live inventory — every cell is a real count of
+ * section answers it against live inventory - every cell is a real count of
  * homes with a free unit that night and the real cheapest rate among exactly
  * those homes, with the weekend and festive uplifts already applied.
  *
@@ -31,7 +31,7 @@ export type NightAvailability = {
    * A number is that home's rate for this night; `null` means it is already
    * taken. Encoding availability as the absence of a price rather than as a
    * second parallel array is what lets the client answer a *range* question
-   * exactly — a home is offerable for a stay only where none of its nights is
+   * exactly - a home is offerable for a stay only where none of its nights is
    * null, and the stay's price is the sum of the numbers that survive.
    */
   rates: (number | null)[];
@@ -58,7 +58,7 @@ function compactRate(value: number): string {
  * Month and day names from a fixed table rather than `toLocaleDateString`.
  * This component is server-rendered and then hydrated, and Intl output can
  * differ between the Node build and the browser (ICU version, locale data,
- * timezone) — which surfaces as a hydration mismatch on a calendar, the one
+ * timezone) - which surfaces as a hydration mismatch on a calendar, the one
  * place a mismatch is guaranteed to be visible.
  */
 const MONTH_NAMES = [
@@ -84,8 +84,8 @@ type Month = { key: string; days: (string | null)[] };
 
 /**
  * Every month in the window as a Monday-first grid, with `null` only for the
- * leading blanks before the 1st. Days the window does not cover — the current
- * month starts today, not on the 1st — are still emitted, because the renderer
+ * leading blanks before the 1st. Days the window does not cover - the current
+ * month starts today, not on the 1st - are still emitted, because the renderer
  * has to draw them as ordinary past dates. Dropping them made the first month
  * appear two-thirds empty, which reads as a broken calendar rather than as a
  * month already underway. Nothing in the past is "sold out".
@@ -215,7 +215,7 @@ export function AvailabilityExplorer({
         </div>
 
         {/* The meter is length-encoded on a single hue, so this legend explains
-            a scale rather than a colour key — and every cell repeats the count
+            a scale rather than a colour key - and every cell repeats the count
             in its accessible name, because availability must never be carried
             by the bar alone. */}
         <p className="flex items-center gap-2.5 text-[0.8125rem] text-muted-foreground">
@@ -282,8 +282,8 @@ export function AvailabilityExplorer({
                 aria-pressed={selected}
                 aria-label={
                   soldOut
-                    ? `${dayLabel(iso)} — fully booked`
-                    : `${dayLabel(iso)} — ${free} of ${homes.length} homes free, from ${low !== null ? formatINR(low) : "—"} a night`
+                    ? `${dayLabel(iso)} - fully booked`
+                    : `${dayLabel(iso)} - ${free} of ${homes.length} homes free, from ${low !== null ? formatINR(low) : "-"} a night`
                 }
                 className={cn(
                   "group relative flex aspect-square flex-col items-center justify-center gap-1 rounded-lg text-center transition-colors duration-150 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
@@ -327,7 +327,7 @@ export function AvailabilityExplorer({
                     selected ? "text-white/80" : "text-muted-foreground",
                   )}
                 >
-                  {soldOut || low === null ? "—" : compactRate(low)}
+                  {soldOut || low === null ? "-" : compactRate(low)}
                 </span>
               </button>
             );
@@ -377,7 +377,7 @@ export function AvailabilityExplorer({
               Clear
             </Button>
           )}
-          {/* `disabled` on an anchor does nothing — it stays focusable and
+          {/* `disabled` on an anchor does nothing - it stays focusable and
               still navigates. When there is nothing to see, this has to be a
               real button element that is really disabled. */}
           {stay?.count === 0 ? (

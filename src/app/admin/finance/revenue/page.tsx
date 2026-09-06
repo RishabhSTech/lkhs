@@ -132,10 +132,10 @@ export default async function RevenuePage() {
                   </td>
                   <td className="py-2.5 text-foreground">{t.property.name}</td>
                   <td className="py-2.5 text-foreground">
-                    {t.reservation?.guest.name ?? "—"}
+                    {t.reservation?.guest.name ?? "-"}
                   </td>
                   <td className="py-2.5 font-mono text-xs text-muted-foreground">
-                    {t.reservation?.code ?? "—"}
+                    {t.reservation?.code ?? "-"}
                   </td>
                   <td className="py-2.5">
                     {t.reservation && (

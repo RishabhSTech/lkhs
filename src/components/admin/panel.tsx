@@ -55,7 +55,7 @@ export function Panel({
   );
 }
 
-/** Consistent table chrome — sticky header, hairline rows, tabular figures. */
+/** Consistent table chrome - sticky header, hairline rows, tabular figures. */
 export function DataTable({
   headers,
   children,

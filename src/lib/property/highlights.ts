@@ -1,5 +1,5 @@
 /**
- * Listing highlights — the icon + headline + one-liner block Airbnb renders
+ * Listing highlights - the icon + headline + one-liner block Airbnb renders
  * directly under the host row ("Self check-in", "Unbeatable location",
  * "Park for free", …).
  *
@@ -7,7 +7,7 @@
  * catalogue below is admin-selectable per property: pick a highlight, and
  * optionally override the default one-liner. Anything with `dynamic: true` has
  * its one-liner filled in from live data (review scores, cancellation policy)
- * when the admin hasn't written their own — see `resolveHighlight`.
+ * when the admin hasn't written their own - see `resolveHighlight`.
  */
 
 export type HighlightCode =
@@ -58,7 +58,7 @@ export const HIGHLIGHTS: HighlightDefinition[] = [
   {
     code: "SELF_CHECK_IN",
     title: "Self check-in",
-    subtitle: "Check yourself in — no waiting around for anyone.",
+    subtitle: "Check yourself in - no waiting around for anyone.",
     icon: "KeyRound",
     group: "Check-in",
   },
@@ -163,7 +163,7 @@ export const HIGHLIGHTS: HighlightDefinition[] = [
   {
     code: "FAST_WIFI",
     title: "Fast Wi-Fi",
-    subtitle: "Tested at over 100 Mbps — good for calls and streaming.",
+    subtitle: "Tested at over 100 Mbps - good for calls and streaming.",
     icon: "Gauge",
     group: "Amenities",
   },
@@ -248,7 +248,7 @@ export const HIGHLIGHTS: HighlightDefinition[] = [
   {
     code: "FREE_CANCELLATION",
     title: "Free cancellation",
-    subtitle: "Cancel free of charge — see the policy for the exact window.",
+    subtitle: "Cancel free of charge - see the policy for the exact window.",
     icon: "CalendarCheck",
     dynamic: true,
     group: "Booking",

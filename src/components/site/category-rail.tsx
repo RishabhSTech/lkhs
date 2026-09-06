@@ -3,7 +3,7 @@ import Link from "next/link";
 
 /**
  * A rail rather than a six-up grid. At `lg:grid-cols-6` inside a 72rem
- * container each tile landed around 170px wide — too small to work as imagery,
+ * container each tile landed around 170px wide - too small to work as imagery,
  * too big to work as a chip. Scrolling sideways lets each tile be a real
  * photograph and reads as browsing rather than navigation.
  */

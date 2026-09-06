@@ -10,7 +10,7 @@ import { matchPropertyByHint } from "@/lib/mailbox/match-property";
 import { decrypt } from "@/lib/mailbox/crypto";
 
 const CONFIDENCE_THRESHOLD_FOR_AUTO_BOOKING = 0.6;
-// How far back to search on a poll — deliberately wider than the 5-minute
+// How far back to search on a poll - deliberately wider than the 5-minute
 // cadence so a missed/late poll (worker restart, transient IMAP failure)
 // can't permanently skip an email; ProcessedEmailMessage dedupe handles the
 // overlap.
@@ -32,7 +32,7 @@ type Envelope = { from: string; subject: string; receivedAt: Date };
 
 /**
  * The one entry point both the scheduled job and "Sync now" call. Never
- * throws for an individual bad email — each message's outcome is isolated so
+ * throws for an individual bad email - each message's outcome is isolated so
  * one malformed email can't stall the whole poll.
  */
 export async function runMailboxPoll(): Promise<PollSummary> {
@@ -86,7 +86,7 @@ export async function runMailboxPoll(): Promise<PollSummary> {
       const source = sourceFromAddress(envelope.from);
       if (!source) {
         // Matched the IMAP search's domain filter but our stricter
-        // per-source check disagrees (e.g. a forwarded copy) — log it
+        // per-source check disagrees (e.g. a forwarded copy) - log it
         // rather than silently drop it, but don't guess a source.
         await db.processedEmailMessage.create({
           data: {
@@ -188,7 +188,7 @@ export async function ingestInquiryMessage(args: {
   await alertTeam({
     type: "OTA_MESSAGE",
     title: `New ${label} message`,
-    body: `${guestName} — ${extraction.messageBody.slice(0, 120)}${extraction.messageBody.length > 120 ? "…" : ""}`,
+    body: `${guestName} - ${extraction.messageBody.slice(0, 120)}${extraction.messageBody.length > 120 ? "…" : ""}`,
     severity: "WARNING",
     link: "/admin/messages",
   });
@@ -235,7 +235,7 @@ export async function upsertBookingFromEmail(args: {
   const label = OTA_LABELS[source] ?? source;
 
   // Best-effort parse up front so the guest-email fallback lookup below can
-  // require the dates to be in the same ballpark — without this, a repeat
+  // require the dates to be in the same ballpark - without this, a repeat
   // guest's brand-new booking could get matched (and its dates silently
   // overwritten) onto an unrelated older stay just because the email address
   // is the same.
@@ -262,7 +262,7 @@ export async function upsertBookingFromEmail(args: {
     if (!existing) {
       await needsReview(
         args,
-        "Cancellation email received, but no matching reservation was found to cancel — check manually.",
+        "Cancellation email received, but no matching reservation was found to cancel - check manually.",
       );
       return;
     }
@@ -274,7 +274,7 @@ export async function upsertBookingFromEmail(args: {
     await alertTeam({
       type: "NEW_BOOKING",
       title: `${label} reservation cancelled`,
-      body: `${existing.code} — cancelled via ${label} email.`,
+      body: `${existing.code} - cancelled via ${label} email.`,
       severity: "WARNING",
       link: `/admin/reservations?code=${existing.code}`,
     });
@@ -287,7 +287,7 @@ export async function upsertBookingFromEmail(args: {
     return;
   }
   if (!extraction.checkIn || !extraction.checkOut) {
-    await needsReview(args, "Booking email did not have clear check-in/check-out dates — logged as a message instead.");
+    await needsReview(args, "Booking email did not have clear check-in/check-out dates - logged as a message instead.");
     return;
   }
 
@@ -296,17 +296,17 @@ export async function upsertBookingFromEmail(args: {
     checkIn = parseISODate(extraction.checkIn);
     checkOut = parseISODate(extraction.checkOut);
   } catch {
-    await needsReview(args, "Booking email had unparseable dates — logged as a message instead.");
+    await needsReview(args, "Booking email had unparseable dates - logged as a message instead.");
     return;
   }
   if (checkOut <= checkIn) {
-    await needsReview(args, "Booking email's check-out wasn't after check-in — logged as a message instead.");
+    await needsReview(args, "Booking email's check-out wasn't after check-in - logged as a message instead.");
     return;
   }
 
   const propertyMatch = extraction.propertyHint ? await matchPropertyByHint(extraction.propertyHint) : null;
   if (!propertyMatch) {
-    await needsReview(args, "Could not confidently match this booking to a property — logged as a message instead.");
+    await needsReview(args, "Could not confidently match this booking to a property - logged as a message instead.");
     return;
   }
 
@@ -316,7 +316,7 @@ export async function upsertBookingFromEmail(args: {
   });
   const unitId = property?.units[0]?.id;
   if (!property || !unitId) {
-    await needsReview(args, `Matched property "${propertyMatch.propertyName}" has no bookable unit — logged as a message instead.`);
+    await needsReview(args, `Matched property "${propertyMatch.propertyName}" has no bookable unit - logged as a message instead.`);
     return;
   }
 
@@ -354,7 +354,7 @@ export async function upsertBookingFromEmail(args: {
   }
 
   const rawData = { extraction, emailMessageId, fromAddress: envelope.from, subject: envelope.subject } as Prisma.InputJsonValue;
-  const internalNotes = `Auto-created from a parsed ${label} email — please verify guest details and amount.`;
+  const internalNotes = `Auto-created from a parsed ${label} email - please verify guest details and amount.`;
 
   try {
     if (existing) {
@@ -421,7 +421,7 @@ export async function upsertBookingFromEmail(args: {
       await alertTeam({
         type: "NEW_BOOKING",
         title: `New ${label} booking`,
-        body: `${extraction.guestName ?? "A guest"} booked ${property.name} · ${created.code} (from a parsed email — please verify).`,
+        body: `${extraction.guestName ?? "A guest"} booked ${property.name} · ${created.code} (from a parsed email - please verify).`,
         severity: "INFO",
         link: `/admin/reservations?code=${created.code}`,
       });
@@ -429,7 +429,7 @@ export async function upsertBookingFromEmail(args: {
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       // Genuine double-booking: those dates are already taken by another
-      // reservation. Never silently overwritten — flagged for a human.
+      // reservation. Never silently overwritten - flagged for a human.
       const loggedMessage = await db.message.create({
         data: {
           guestId: guest.id,
@@ -441,7 +441,7 @@ export async function upsertBookingFromEmail(args: {
           status: "DELIVERED",
         },
       });
-      await recordProcessed(args, null, loggedMessage.id, "FAILED", "Possible double-booking — dates already reserved on this unit.");
+      await recordProcessed(args, null, loggedMessage.id, "FAILED", "Possible double-booking - dates already reserved on this unit.");
       await alertTeam({
         type: "OTA_SYNC_FAILED",
         title: `Possible double-booking from a ${label} email`,

@@ -33,7 +33,7 @@ function buildIntegrations(mailboxStatus: string | null) {
   return [
     {
       name: "OTA email parsing",
-      detail: "Mailbox (Hostinger IMAP) — Airbnb / Booking.com / Agoda",
+      detail: "Mailbox (Hostinger IMAP) - Airbnb / Booking.com / Agoda",
       status: mailboxStatus === "CONNECTED" ? "Connected" : "Not connected",
       note:
         mailboxStatus === "CONNECTED"
@@ -76,7 +76,7 @@ function buildIntegrations(mailboxStatus: string | null) {
       status: redisConfigured ? "Connected" : "Not connected",
       note: redisConfigured
         ? "Channel sync, payment-hold expiry and recurring expenses run on schedule."
-        : "REDIS_URL not set — jobs are skipped, not queued.",
+        : "REDIS_URL not set - jobs are skipped, not queued.",
     },
     {
       name: "Object storage",
@@ -195,7 +195,7 @@ export default async function SettingsPage() {
               Integration status
             </h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Nothing here is faked — anything not connected says so.
+              Nothing here is faked - anything not connected says so.
             </p>
             <ul className="mt-4 divide-y divide-border">
               {integrations.map((integration) => (

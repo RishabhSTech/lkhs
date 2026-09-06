@@ -57,19 +57,19 @@ export function renderTemplate(
     case "BOOKING_CONFIRMED":
       return {
         subject: `Your stay at ${ctx.propertyName} is confirmed`,
-        body: `Hi ${ctx.guestName}, you're booked.\n\n${ctx.propertyName}\n${stay}\nBooking ${ctx.bookingCode}\n\nThe address and access details reach you three days before you travel. Anything you need before then — an early check-in, a question about the area — just reply to this message.\n\n— Lime Kraft Home Stays`,
+        body: `Hi ${ctx.guestName}, you're booked.\n\n${ctx.propertyName}\n${stay}\nBooking ${ctx.bookingCode}\n\nThe address and access details reach you three days before you travel. Anything you need before then - an early check-in, a question about the area - just reply to this message.\n\n- Lime Kraft Home Stays`,
       };
     case "PAYMENT_RECEIVED":
       return {
         subject: `Payment received · ${ctx.bookingCode}`,
         body: `Hi ${ctx.guestName}, ${
           ctx.total ? `we've received ${formatINR(ctx.total)}` : "your payment has come through"
-        } for ${ctx.propertyName}. Booking ${ctx.bookingCode} is paid in full — nothing else to settle, at the house or on the way out.`,
+        } for ${ctx.propertyName}. Booking ${ctx.bookingCode} is paid in full - nothing else to settle, at the house or on the way out.`,
       };
     case "PRE_ARRIVAL":
       return {
         subject: `Getting ready for your stay at ${ctx.propertyName}`,
-        body: `Hi ${ctx.guestName}, we're three days out — your stay begins ${formatDateLong(
+        body: `Hi ${ctx.guestName}, we're three days out - your stay begins ${formatDateLong(
           ctx.checkIn,
         )} and the house is yours from 2:00 PM.${
           ctx.address ? `\n\nAddress: ${ctx.address}` : ""
@@ -85,17 +85,17 @@ export function renderTemplate(
     case "DURING_STAY":
       return {
         subject: `Settling in?`,
-        body: `Hi ${ctx.guestName}, hope the first night at ${ctx.propertyName} went well. Fresh towels, a spare key, somewhere good to eat nearby — reply here and one of us will sort it.`,
+        body: `Hi ${ctx.guestName}, hope the first night at ${ctx.propertyName} went well. Fresh towels, a spare key, somewhere good to eat nearby - reply here and one of us will sort it.`,
       };
     case "CHECKOUT":
       return {
         subject: `Checkout tomorrow · ${ctx.propertyName}`,
-        body: `Hi ${ctx.guestName}, checkout is by 11:00 AM tomorrow. Leave the keys on the kitchen counter and pull the door shut behind you — that's all there is to it.\n\nNeed a couple of extra hours? Ask, and we'll check what's coming in after you. Safe travels.`,
+        body: `Hi ${ctx.guestName}, checkout is by 11:00 AM tomorrow. Leave the keys on the kitchen counter and pull the door shut behind you - that's all there is to it.\n\nNeed a couple of extra hours? Ask, and we'll check what's coming in after you. Safe travels.`,
       };
     case "REVIEW_REQUEST":
       return {
         subject: `How was ${ctx.propertyName}?`,
-        body: `Hi ${ctx.guestName}, thank you for staying with us. If you have two minutes, we'd genuinely like to know how it went — the good and the parts we got wrong. We read every one, and it's how these homes get better.`,
+        body: `Hi ${ctx.guestName}, thank you for staying with us. If you have two minutes, we'd genuinely like to know how it went - the good and the parts we got wrong. We read every one, and it's how these homes get better.`,
       };
   }
 }

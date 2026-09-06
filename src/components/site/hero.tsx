@@ -31,7 +31,7 @@ export function Hero({
 
   // Parallax: the photograph leaves at roughly four-fifths of the page's speed
   // and dims as it goes, so the section below arrives over it rather than
-  // after it. Small numbers on purpose — anything larger reads as a broken
+  // after it. Small numbers on purpose - anything larger reads as a broken
   // sticky header rather than depth.
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -54,7 +54,7 @@ export function Hero({
   return (
     <section ref={ref} className="relative">
       <div className="relative flex h-[92svh] max-h-[56rem] min-h-[44rem] w-full flex-col overflow-hidden">
-        {/* One slow settle on load — enough to feel alive, no looping drift —
+        {/* One slow settle on load - enough to feel alive, no looping drift -
             and the scroll parallax layered on top of it. */}
         <motion.div
           initial={{ scale: 1.06 }}
@@ -78,9 +78,9 @@ export function Hero({
 
         {/* One scrim, not three. The old stack (floor + left anchor + top wash)
             was compensating for an un-art-directed photo and turned it to mud;
-            a single multi-stop gradient does the same three jobs — dark floor
+            a single multi-stop gradient does the same three jobs - dark floor
             for the copy, mid clearing so the image survives, light top wash for
-            the transparent nav — while leaving the photograph legible. It is
+            the transparent nav - while leaving the photograph legible. It is
             mixed toward the brand blue rather than neutral black, which is what
             makes a stock photograph look commissioned. */}
         <div
@@ -130,13 +130,13 @@ export function Hero({
               Stay somewhere worth <em className="italic">remembering</em>.
             </h1>
             {/* The old line read "Beautiful homes, thoughtful spaces and stays
-                made for feeling at home" — three near-synonyms, the word
+                made for feeling at home" - three near-synonyms, the word
                 "home" twice, and not one fact a competitor could not print
                 under their own logo. A subheadline's job under a headline that
                 has already made the promise is to say what is actually behind
                 it, which is that we own the operation end to end. */}
             <p className="mt-5 max-w-md text-base leading-relaxed text-white/80 sm:text-lg">
-              Villas, apartments and whole houses we run ourselves — furnished,
+              Villas, apartments and whole houses we run ourselves - furnished,
               cleaned and answered for by our own team, never handed to a
               letting agent.
             </p>

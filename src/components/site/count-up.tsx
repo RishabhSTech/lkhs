@@ -15,13 +15,13 @@ const useArmingEffect =
  *
  * The server renders the *final* value, not zero. That ordering matters: with
  * scripting off, or if this component never hydrates, the page still states
- * the real figure — which is the entire point of the band it sits in. The
+ * the real figure - which is the entire point of the band it sits in. The
  * reset to zero happens in a layout effect, before paint, so the animation
  * still starts from nothing without ever flashing the wrong number.
  */
 /**
  * Named formats rather than a formatter callback: this is a client component,
- * and a function prop cannot cross the server/client boundary — the caller is
+ * and a function prop cannot cross the server/client boundary - the caller is
  * a server component, so passing one fails the render outright.
  */
 const FORMATS = {

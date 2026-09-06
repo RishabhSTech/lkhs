@@ -19,8 +19,8 @@ import { slugify } from "@/lib/seo/slug";
 
 /**
  * Listings are prerendered and refreshed in the background. Nothing on this
- * page is per-visitor any more — availability and the live quote are fetched
- * by the booking card, and "Write a review" resolves after hydration — so
+ * page is per-visitor any more - availability and the live quote are fetched
+ * by the booking card, and "Write a review" resolves after hydration - so
  * serving it per request meant repeating the same large query (every review
  * body, all images, amenities, pricing rules) for identical HTML.
  */
@@ -44,7 +44,7 @@ export async function generateMetadata({
   }
 
   // A listing's own name only wins the branded query. The type, size and city
-  // are what let it also compete for "3 bedroom villa in Goa" — so they go in
+  // are what let it also compete for "3 bedroom villa in Goa" - so they go in
   // the title, front-loaded, rather than being left to the description alone.
   const kind = kindForType(property.propertyType);
   const noun = kind ? COLLECTIONS[kind].singular.toLowerCase() : "stay";
@@ -55,11 +55,11 @@ export async function generateMetadata({
     ? property.city
     : `${property.locationArea}, ${property.city}`;
 
-  const title = `${property.name} — ${property.bedrooms}-bedroom ${noun} in ${place}`;
+  const title = `${property.name} - ${property.bedrooms}-bedroom ${noun} in ${place}`;
 
   const description =
     property.tagline
-      ? `${property.tagline}. Sleeps ${property.maxGuests} in ${property.locationArea}, ${property.city}. Book direct — no channel mark-up, no booking fee.`
+      ? `${property.tagline}. Sleeps ${property.maxGuests} in ${property.locationArea}, ${property.city}. Book direct - no channel mark-up, no booking fee.`
       : property.description.slice(0, 155);
 
   return {
@@ -99,7 +99,7 @@ export default async function PropertyPage({
   // Routed through the city hub and its type page rather than through
   // `/stays`. Listings are where inbound links and shares land, so their
   // breadcrumb is the main path by which authority reaches the collection
-  // pages — pointing it at the un-indexed search surface wasted that entirely.
+  // pages - pointing it at the un-indexed search surface wasted that entirely.
   const citySlug = slugify(property.city);
   const kind = kindForType(property.propertyType);
 

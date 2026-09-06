@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
  *
  * The move handler writes two CSS custom properties straight onto the node and
  * never calls `setState`. A twelve-card grid therefore does no React work while
- * the mouse crosses it — the gradient in `.spotlight` (globals.css) is redrawn
+ * the mouse crosses it - the gradient in `.spotlight` (globals.css) is redrawn
  * by the compositor alone. Reduced-motion and touch both opt out in CSS.
  */
 export function Spotlight({

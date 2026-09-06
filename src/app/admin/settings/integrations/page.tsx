@@ -54,7 +54,7 @@ export default async function IntegrationsPage() {
       <div className="mt-4">
         <PageHeader
           title="Integrations"
-          description="Airbnb, Booking.com and Agoda have no messaging or reservation API for this account — their notification emails are parsed instead."
+          description="Airbnb, Booking.com and Agoda have no messaging or reservation API for this account - their notification emails are parsed instead."
         />
       </div>
 
@@ -78,7 +78,7 @@ export default async function IntegrationsPage() {
           <div className="border-b border-border p-5">
             <h2 className="text-sm font-semibold text-foreground">Recently parsed emails</h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Every email checked, and exactly what happened to it — nothing here is hidden.
+              Every email checked, and exactly what happened to it - nothing here is hidden.
             </p>
           </div>
 

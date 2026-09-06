@@ -9,7 +9,7 @@ import {
 import { formatDateLong, formatINR, formatPercent } from "@/lib/format";
 
 /**
- * Deterministic question answering over real aggregates — not a language model.
+ * Deterministic question answering over real aggregates - not a language model.
  * Every answer is computed from the database, and anything that would change
  * data is returned as a proposal for explicit confirmation rather than applied.
  */
@@ -326,7 +326,7 @@ async function pricingRecommendation(): Promise<AskLimeAnswer> {
   if (suggestion === 0) {
     return {
       matched: true,
-      answer: `Next weekend is ${formatPercent(occupancy)} booked — that's a normal pace. I'd leave rates as they are.`,
+      answer: `Next weekend is ${formatPercent(occupancy)} booked - that's a normal pace. I'd leave rates as they are.`,
     };
   }
 

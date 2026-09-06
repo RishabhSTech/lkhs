@@ -1,7 +1,7 @@
 import type { AmenityCategory } from "@prisma/client";
 
 /**
- * The amenity catalogue — modelled on Airbnb's "What this place offers".
+ * The amenity catalogue - modelled on Airbnb's "What this place offers".
  *
  * This list is the seed source for the `Amenity` table; admins then tick the
  * ones that apply to each property (and mark any as "not included", which is

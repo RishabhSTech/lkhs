@@ -129,7 +129,7 @@ export function CheckoutFlow({
       if (!res.ok) {
         throw new Error(
           data.error ??
-            "We couldn't complete that booking. Nothing has been charged — try again, or message us and we'll hold the dates.",
+            "We couldn't complete that booking. Nothing has been charged - try again, or message us and we'll hold the dates.",
         );
       }
 
@@ -143,7 +143,7 @@ export function CheckoutFlow({
       setError(
         err instanceof Error
           ? err.message
-          : "We couldn't complete that booking. Nothing has been charged — try again, or message us and we'll hold the dates.",
+          : "We couldn't complete that booking. Nothing has been charged - try again, or message us and we'll hold the dates.",
       );
       setSubmitting(false);
     }
@@ -157,7 +157,7 @@ export function CheckoutFlow({
     const loaded = await loadRazorpayScript();
     if (!loaded || !window.Razorpay) {
       setError(
-        "The payment window wouldn't load. Check your connection and try again — nothing has been charged.",
+        "The payment window wouldn't load. Check your connection and try again - nothing has been charged.",
       );
       setSubmitting(false);
       return;
@@ -187,7 +187,7 @@ export function CheckoutFlow({
           if (!confirmRes.ok) {
             throw new Error(
               confirmData.error ??
-                `We couldn't confirm that payment. Don't pay again — message us with booking ${booking.code} and we'll finish it by hand.`,
+                `We couldn't confirm that payment. Don't pay again - message us with booking ${booking.code} and we'll finish it by hand.`,
             );
           }
           router.push(`/booking-confirmation/${booking.code}`);
@@ -195,14 +195,14 @@ export function CheckoutFlow({
           setError(
             err instanceof Error
               ? err.message
-              : `We couldn't confirm that payment. Don't pay again — message us with booking ${booking.code} and we'll finish it by hand.`,
+              : `We couldn't confirm that payment. Don't pay again - message us with booking ${booking.code} and we'll finish it by hand.`,
           );
           setSubmitting(false);
         }
       },
       modal: {
         ondismiss: () => {
-          setError("Payment was cancelled. Your dates are held for 20 minutes — try again anytime before then.");
+          setError("Payment was cancelled. Your dates are held for 20 minutes - try again anytime before then.");
           setSubmitting(false);
         },
       },
@@ -316,7 +316,7 @@ export function CheckoutFlow({
               {step === 1 && (
                 <StepCard
                   title="Who's staying?"
-                  description="No password needed — we'll create your Lime Kraft account automatically after booking."
+                  description="No password needed - we'll create your Lime Kraft account automatically after booking."
                 >
                   <div className="grid gap-4">
                     <Field label="Full name" required>
@@ -410,7 +410,7 @@ export function CheckoutFlow({
 
                   <p className="mt-4 rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
                     {isMockPayment
-                      ? "Demo environment — no payment gateway is connected, so no money moves. The booking is created for real and appears in the Lime Kraft dashboard."
+                      ? "Demo environment - no payment gateway is connected, so no money moves. The booking is created for real and appears in the Lime Kraft dashboard."
                       : "You'll be asked to complete payment via Razorpay next. Your dates are held for 20 minutes while you do."}
                   </p>
 

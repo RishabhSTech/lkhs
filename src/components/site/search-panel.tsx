@@ -46,7 +46,7 @@ function nightsBetween(checkIn: string, checkOut: string) {
 
 /**
  * Two months side by side is the difference between "pick a date" and "plan a
- * trip" — but it does not fit a phone, so the count follows the viewport.
+ * trip" - but it does not fit a phone, so the count follows the viewport.
  */
 function useMonthCount() {
   const [count, setCount] = useState(1);
@@ -130,7 +130,7 @@ export function SearchPanel({
     setCheckIn(toISO(range.from));
     if (range.to) {
       setCheckOut(toISO(range.to));
-      setOpenCell(null); // both ends chosen — get out of the way
+      setOpenCell(null); // both ends chosen - get out of the way
     } else {
       setCheckOut("");
     }

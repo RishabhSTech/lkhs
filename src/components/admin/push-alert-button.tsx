@@ -16,7 +16,7 @@ type Status = "checking" | "unsupported" | "unconfigured" | "off" | "on";
 
 /**
  * Enables browser push so a new inquiry reaches the team the instant it
- * lands — install this as an app (Add to Home Screen / Install app) and it
+ * lands - install this as an app (Add to Home Screen / Install app) and it
  * behaves like a real push notification even with the tab closed.
  */
 export function PushAlertButton() {
@@ -44,7 +44,7 @@ export function PushAlertButton() {
     try {
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
-        toast.error("Notifications were blocked — enable them in your browser's site settings to get instant alerts.");
+        toast.error("Notifications were blocked - enable them in your browser's site settings to get instant alerts.");
         return;
       }
 
@@ -64,7 +64,7 @@ export function PushAlertButton() {
       if (!res.ok) throw new Error((await res.json().catch(() => null))?.error ?? "Could not enable alerts.");
 
       setStatus("on");
-      toast.success("Instant alerts enabled — send yourself a test to confirm it reaches this device.");
+      toast.success("Instant alerts enabled - send yourself a test to confirm it reaches this device.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not enable instant alerts.");
     } finally {
@@ -99,7 +99,7 @@ export function PushAlertButton() {
     try {
       const res = await fetch("/api/admin/push/test", { method: "POST" });
       if (!res.ok) throw new Error();
-      toast.success("Test alert sent — check for a push notification.");
+      toast.success("Test alert sent - check for a push notification.");
     } catch {
       toast.error("Could not send the test alert.");
     } finally {
@@ -114,7 +114,7 @@ export function PushAlertButton() {
       <div className="flex items-center gap-1">
         <Button variant="ghost" size="icon-sm" disabled={busy} onClick={sendTest} title="Send a test alert">
           <BellRing className="text-chart-1" />
-          <span className="sr-only">Instant alerts on — send test</span>
+          <span className="sr-only">Instant alerts on - send test</span>
         </Button>
         <Button variant="ghost" size="icon-sm" disabled={busy} onClick={disable} title="Turn off instant alerts">
           <BellOff />

@@ -19,8 +19,8 @@ function MonthGrid({ className }: { className?: string }) {
 /**
  * Stand-in for the real calendar while its chunk arrives.
  *
- * `Calendar` pulls in `react-day-picker` and its `date-fns` helpers — around
- * 21 kB gzipped — for a control that only ever appears inside a popover. Both
+ * `Calendar` pulls in `react-day-picker` and its `date-fns` helpers - around
+ * 21 kB gzipped - for a control that only ever appears inside a popover. Both
  * pickers load it on demand instead, so the homepage and the listing pages no
  * longer ship a date picker to visitors who never open one.
  *

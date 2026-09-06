@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 export type HowItWorksStep = {
   title: string;
   body: string;
-  /** A real photograph from live inventory — never an illustration of a UI. */
+  /** A real photograph from live inventory - never an illustration of a UI. */
   image: string;
   /** The reassurance that belongs with this step, not with the others. */
   caption: string;
@@ -23,8 +23,8 @@ export type HowItWorksStep = {
  * panel advancing on its own is what pulls the eye back to a section people
  * would otherwise scroll straight past.
  *
- * It is a real tablist — arrow keys move between steps, the panel is labelled
- * by its tab — because the alternative is a widget that only works for people
+ * It is a real tablist - arrow keys move between steps, the panel is labelled
+ * by its tab - because the alternative is a widget that only works for people
  * using a mouse. Auto-advance stops permanently on the first interaction: once
  * someone has chosen a step, moving it under them is hostile.
  */
@@ -95,7 +95,7 @@ export function HowItWorks({ steps }: { steps: HowItWorksStep[] }) {
                   it runs the length of the dwell so the advance is telegraphed
                   rather than sprung on you, it freezes under the pointer while
                   someone is reading, and finishing is what moves the section
-                  on. Once a step has been chosen by hand it stops for good —
+                  on. Once a step has been chosen by hand it stops for good -
                   moving the panel out from under someone who just picked it is
                   the thing that makes carousels infuriating. */}
               {selected && !taken && (

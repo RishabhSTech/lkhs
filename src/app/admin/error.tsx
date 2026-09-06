@@ -19,7 +19,7 @@ export default function AdminError({
         Something went wrong loading this page
       </h1>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-        This is usually a database connection hiccup. Try again — if it keeps
+        This is usually a database connection hiccup. Try again - if it keeps
         happening, check that DATABASE_URL is reachable.
       </p>
       {error.digest && (

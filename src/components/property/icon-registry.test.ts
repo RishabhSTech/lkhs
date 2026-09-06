@@ -6,7 +6,7 @@ import { ICON_REGISTRY } from "./icon-registry";
 /**
  * The registry exists so that `DynamicIcon` can resolve a database-supplied
  * icon name without pulling all of lucide-react into the bundle. That only
- * holds while the registry actually covers the catalogues — a missing name
+ * holds while the registry actually covers the catalogues - a missing name
  * renders a silent tick, which is easy to ship and hard to notice.
  */
 const CATALOGUE_DIR = join(process.cwd(), "src/lib/property");

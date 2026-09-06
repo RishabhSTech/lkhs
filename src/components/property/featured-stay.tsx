@@ -14,7 +14,7 @@ import { formatINR } from "@/lib/format";
  * element on this page sits flat in the same centred column, so the section
  * that is supposed to read as the page's strongest statement was arriving with
  * exactly as much presence as the FAQ. Letting the panel climb onto the
- * photograph is the cheapest depth on the page and it costs no layout risk —
+ * photograph is the cheapest depth on the page and it costs no layout risk -
  * below `lg` the two simply stack.
  */
 export function FeaturedStay({ property }: { property: PropertyCardData }) {
