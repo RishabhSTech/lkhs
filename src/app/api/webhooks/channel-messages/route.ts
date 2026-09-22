@@ -1,7 +1,14 @@
+import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { alertTeam } from "@/lib/notifications/alert";
+
+function safeEqual(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  return bufA.length === bufB.length && timingSafeEqual(bufA, bufB);
+}
 
 const OTA_LABELS: Record<string, string> = {
   AIRBNB: "Airbnb",
@@ -37,7 +44,8 @@ export async function POST(request: Request) {
   if (!expected) {
     return NextResponse.json({ error: "Webhook not configured." }, { status: 503 });
   }
-  if (request.headers.get("x-webhook-secret") !== expected) {
+  const provided = request.headers.get("x-webhook-secret");
+  if (!provided || !safeEqual(provided, expected)) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 

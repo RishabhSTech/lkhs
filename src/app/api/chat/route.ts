@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import Anthropic from "@anthropic-ai/sdk";
 import { CHAT_TOOLS, runChatTool } from "@/lib/chat/tools";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const CHAT_IS_CONFIGURED = Boolean(process.env.ANTHROPIC_API_KEY);
 
@@ -36,6 +37,9 @@ export async function POST(request: Request) {
         "Chat isn't available right now - please use the contact form and our team will get back to you.",
     });
   }
+
+  const limited = await checkRateLimit(request, { bucket: "chat", limit: 30, windowSeconds: 600 });
+  if (limited) return limited;
 
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {

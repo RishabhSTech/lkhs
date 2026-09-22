@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { alertTeam } from "@/lib/notifications/alert";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({
   name: z.string().min(2, "Enter your name."),
@@ -11,6 +12,9 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
+  const limited = await checkRateLimit(request, { bucket: "contact", limit: 5, windowSeconds: 600 });
+  if (limited) return limited;
+
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json(

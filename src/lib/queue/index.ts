@@ -14,7 +14,9 @@ import IORedis from "ioredis";
 
 let connection: IORedis | null = null;
 
-function getConnection() {
+/** Shared lazily-connecting Redis client, also used outside the queue (e.g.
+ * request rate limiting) so the app doesn't open a second connection. */
+export function getConnection() {
   if (!process.env.REDIS_URL) return null;
   // lazyConnect + a bounded connectTimeout so an unreachable Redis fails the
   // enqueue call quickly instead of hanging the request that's holding it -
@@ -30,7 +32,6 @@ function getConnection() {
 
 export const QUEUE_NAMES = {
   channelSync: "channel-sync",
-  notifications: "notifications",
   recurringExpenses: "recurring-expenses",
   reservationExpiry: "reservation-expiry",
   mailboxPoll: "mailbox-poll",

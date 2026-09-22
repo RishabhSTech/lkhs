@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { releasePendingReservation } from "@/lib/booking/create-reservation";
+import { alertTeam } from "@/lib/notifications/alert";
 import type { ReservationExpiryJob } from "@/lib/queue";
 
 /**
@@ -17,13 +18,11 @@ export async function processReservationExpiry(job: ReservationExpiryJob) {
   });
   if (!reservation) return;
 
-  await db.notification.create({
-    data: {
-      type: "PAYMENT_FAILED",
-      title: "Booking hold released",
-      body: `${reservation.code} was never paid for and its dates have been released.`,
-      severity: "WARNING",
-      link: `/admin/reservations?code=${reservation.code}`,
-    },
+  await alertTeam({
+    type: "PAYMENT_FAILED",
+    title: "Booking hold released",
+    body: `${reservation.code} was never paid for and its dates have been released.`,
+    severity: "WARNING",
+    link: `/admin/reservations?code=${reservation.code}`,
   });
 }

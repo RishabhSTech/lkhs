@@ -1,5 +1,14 @@
 import { cn } from "@/lib/utils";
 
+// Source art is a 2172x724 wordmark lockup; white glyph for dark surfaces,
+// black glyph for light surfaces - both transparent SVGs so either drops
+// onto any background. Plain <img>, not next/image: Next's image optimizer
+// refuses local SVGs unless `images.dangerouslyAllowSVG` is set.
+const LOGO_SRC = {
+  light: "/lkhs-white.svg",
+  dark: "/lkhs-dark.svg",
+} as const;
+
 export function Logo({
   className,
   tone = "dark",
@@ -8,37 +17,21 @@ export function Logo({
   tone?: "dark" | "light";
 }) {
   return (
-    <span
-      className={cn(
-        "inline-flex items-baseline gap-1.5 font-heading text-lg leading-none tracking-tight",
-        tone === "light" ? "text-white" : "text-foreground",
-        className,
-      )}
-    >
-      <span
-        aria-hidden
-        className={cn(
-          "size-2 translate-y-[-2px] rounded-full",
-          tone === "light" ? "bg-brand-azure" : "bg-brand-azure",
-        )}
-      />
-      Lime Kraft
-    </span>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={LOGO_SRC[tone]}
+      alt="Lime Kraft Home Stay"
+      className={cn("h-12 w-auto object-contain", className)}
+    />
   );
 }
 
-export function LogoStacked({ tone = "dark" }: { tone?: "dark" | "light" }) {
-  return (
-    <span className="inline-flex flex-col leading-none">
-      <Logo tone={tone} />
-      <span
-        className={cn(
-          "mt-1 pl-3.5 font-sans text-[0.625rem] font-medium tracking-[0.18em] uppercase",
-          tone === "light" ? "text-white/55" : "text-muted-foreground",
-        )}
-      >
-        Home Stays
-      </span>
-    </span>
-  );
+export function LogoStacked({
+  tone = "dark",
+  className,
+}: {
+  tone?: "dark" | "light";
+  className?: string;
+}) {
+  return <Logo tone={tone} className={cn("h-11", className)} />;
 }

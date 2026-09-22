@@ -56,3 +56,9 @@ export const ADMIN_ROLES: RoleName[] = [
 ];
 
 export const STAKEHOLDER_ROLES: RoleName[] = ["OWNER", "INVESTOR"];
+
+/** Roles allowed to create/edit budgets and expenses. Narrower than
+ * ADMIN_ROLES - Cleaner/Marketing/Operations/Manager logins can use the
+ * rest of the admin console but shouldn't be able to write financial
+ * transactions. */
+export const FINANCE_WRITE_ROLES: RoleName[] = ["SUPER_ADMIN", "ADMIN", "FINANCE"];

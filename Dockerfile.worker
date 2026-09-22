@@ -1,0 +1,22 @@
+# Production image for the BullMQ consumer process (scripts/worker.ts).
+# This is a separate, long-running process from the Next.js app - it handles
+# reservation-expiry cleanup, OTA channel sync, recurring-expense rollover,
+# and inbound-mailbox polling. Deploy it alongside the app (see README.md
+# "Production deployment" section), not instead of it.
+FROM node:22-slim
+
+WORKDIR /app
+
+# `prisma generate` runs as an `npm ci` postinstall hook and needs the schema
+# present at that point, so it's copied in before dependencies install.
+COPY package.json package-lock.json ./
+COPY prisma ./prisma
+
+# devDependencies are kept - the worker runs scripts/worker.ts through tsx
+# (TypeScript, unbundled, no separate build step), and `prisma generate`
+# needs the `prisma` CLI, both devDeps.
+RUN npm ci
+
+COPY . .
+
+CMD ["npm", "run", "worker"]

@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getCurrentAdminUser } from "@/lib/auth/current-user";
 
 export async function GET(request: Request) {
+  await getCurrentAdminUser();
+
   const q = new URL(request.url).searchParams.get("q")?.trim();
   if (!q || q.length < 2) {
     return NextResponse.json({ reservations: [], guests: [], transactions: [] });

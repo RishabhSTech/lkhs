@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { parseISODate, startOfMonthUTC } from "@/lib/dates";
 import { getCurrentAdminUser } from "@/lib/auth/current-user";
+import { FINANCE_WRITE_ROLES } from "@/lib/auth/session-shared";
 import { formatINR } from "@/lib/format";
 
 const schema = z.object({
@@ -34,6 +35,12 @@ export async function POST(request: Request) {
     db.property.findUnique({ where: { id: data.propertyId } }),
   ]);
 
+  if (!FINANCE_WRITE_ROLES.includes(user.role)) {
+    return NextResponse.json(
+      { error: "You don't have permission to record expenses." },
+      { status: 403 },
+    );
+  }
   if (!category || !property) {
     return NextResponse.json(
       { error: "That property or expense category no longer exists. Refresh and pick again." },

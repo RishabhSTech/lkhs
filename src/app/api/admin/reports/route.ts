@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { buildPL, type TxWithCategory } from "@/lib/finance/calculations";
 import { buildPortfolioReportPdf, buildTransactionsReportPdf } from "@/lib/finance/pdf";
+import { getCurrentAdminUser } from "@/lib/auth/current-user";
 
 function toCsv(rows: (string | number)[][]) {
   return rows
@@ -17,6 +18,8 @@ function toCsv(rows: (string | number)[][]) {
 }
 
 export async function GET(request: Request) {
+  await getCurrentAdminUser();
+
   const params = new URL(request.url).searchParams;
   const type = params.get("type") ?? "portfolio";
   const format = params.get("format") ?? "csv";

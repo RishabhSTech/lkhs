@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentAdminUser } from "@/lib/auth/current-user";
+import { alertTeam } from "@/lib/notifications/alert";
 
 const STATUSES = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"] as const;
 const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
@@ -43,14 +44,12 @@ export async function POST(request: Request) {
     },
   });
 
-  await db.notification.create({
-    data: {
-      type: "MAINTENANCE_ISSUE",
-      title: "New maintenance issue",
-      body: task.title,
-      severity: data.priority === "URGENT" ? "CRITICAL" : data.priority === "HIGH" ? "WARNING" : "INFO",
-      link: "/admin/operations",
-    },
+  await alertTeam({
+    type: "MAINTENANCE_ISSUE",
+    title: "New maintenance issue",
+    body: task.title,
+    severity: data.priority === "URGENT" ? "CRITICAL" : data.priority === "HIGH" ? "WARNING" : "INFO",
+    link: "/admin/operations",
   });
 
   await db.auditLog.create({

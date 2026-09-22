@@ -19,9 +19,9 @@ export type SectionSize = "feature" | "default" | "quiet";
  * the box. This is the one place optical beats arithmetic.
  */
 const SECTION_PADDING: Record<SectionSize, string> = {
-  feature: "pt-20 pb-24 lg:pt-28 lg:pb-32",
-  default: "pt-14 pb-16 lg:pt-20 lg:pb-24",
-  quiet: "pt-10 pb-12 lg:pt-12 lg:pb-14",
+  feature: "pt-14 pb-16 lg:pt-20 lg:pb-24",
+  default: "pt-10 pb-12 lg:pt-14 lg:pb-16",
+  quiet: "pt-7 pb-9 lg:pt-9 lg:pb-10",
 };
 
 export function Section({
@@ -171,7 +171,7 @@ export function SectionHeading({
   // is a locator, not a label, so it never sits above the rule competing with
   // the eyebrow underneath.
   const rule = index && (
-    <div className="rule-index mb-8 lg:mb-10">
+    <div className="rule-index mb-6 lg:mb-8">
       <span
         className={cn(
           "rule-index__num",

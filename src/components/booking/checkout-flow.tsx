@@ -105,7 +105,7 @@ export function CheckoutFlow({
   }, [property.id, checkIn, checkOut]);
 
   const datesValid = Boolean(quote && available);
-  const detailsValid = name.trim().length >= 2 && (email.trim() || phone.trim());
+  const detailsValid = name.trim().length >= 2 && /\S+@\S+\.\S+/.test(email.trim());
 
   async function submit() {
     setSubmitting(true);
@@ -327,7 +327,7 @@ export function CheckoutFlow({
                         autoComplete="name"
                       />
                     </Field>
-                    <Field label="Email">
+                    <Field label="Email" required>
                       <Input
                         type="email"
                         value={email}
@@ -346,8 +346,8 @@ export function CheckoutFlow({
                       />
                     </Field>
                     <p className="text-xs text-muted-foreground">
-                      Give us at least one of email or mobile so we can send your
-                      confirmation and check-in details.
+                      We&apos;ll send your confirmation and check-in details to this
+                      email address.
                     </p>
                   </div>
 

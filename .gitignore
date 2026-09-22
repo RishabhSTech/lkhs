@@ -50,5 +50,8 @@ prisma/*.db
 !.vscode/extensions.json
 .idea
 
+# Claude Code local agent/skill config (not part of the app)
+.claude/
+
 # local docker volumes (minio/redis bind mounts, if any)
 .data/

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentAdminUser } from "@/lib/auth/current-user";
+import { FINANCE_WRITE_ROLES } from "@/lib/auth/session-shared";
 import { startOfMonthUTC, todayUTC } from "@/lib/dates";
 
 const schema = z.object({
@@ -24,6 +25,12 @@ export async function POST(request: Request) {
     db.property.findUnique({ where: { id: propertyId }, select: { name: true } }),
     db.transactionCategory.findUnique({ where: { id: categoryId }, select: { name: true } }),
   ]);
+  if (!FINANCE_WRITE_ROLES.includes(user.role)) {
+    return NextResponse.json(
+      { error: "You don't have permission to set budgets." },
+      { status: 403 },
+    );
+  }
   if (!property || !category) {
     return NextResponse.json({ error: "That property or budget category no longer exists. Refresh and pick again." }, { status: 404 });
   }

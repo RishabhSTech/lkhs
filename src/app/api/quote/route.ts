@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { parseISODate, toISODate } from "@/lib/dates";
 import { buildQuote } from "@/lib/pricing/engine";
 import { isPropertyAvailable } from "@/lib/booking/availability";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({
   propertyId: z.string().min(1),
@@ -12,6 +13,9 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
+  const limited = await checkRateLimit(request, { bucket: "quote", limit: 60, windowSeconds: 60 });
+  if (limited) return limited;
+
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json(

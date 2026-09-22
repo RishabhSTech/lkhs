@@ -297,13 +297,13 @@ export default async function HomePage() {
           </Reveal>
 
           {hero && (
-            <Reveal className="mt-12 lg:mt-16">
+            <Reveal className="mt-8 lg:mt-10">
               <FeaturedStay property={hero} />
             </Reveal>
           )}
 
           {rest.length > 0 && (
-            <RevealGroup className="mt-14 grid gap-x-8 gap-y-10 sm:grid-cols-2 sm:items-start lg:mt-20">
+            <RevealGroup className="mt-10 grid gap-x-6 gap-y-8 sm:grid-cols-2 sm:items-start lg:mt-12">
               {rest.map((property, i) => (
                 <div
                   key={property.slug}
@@ -311,7 +311,7 @@ export default async function HomePage() {
                   // same baseline is the shape of a search result; staggering
                   // them keeps the pair reading as an editor's pick, and it
                   // gives the eye somewhere to go after the featured panel.
-                  className={i === 1 ? "lg:mt-16" : undefined}
+                  className={i === 1 ? "lg:mt-10" : undefined}
                 >
                   <PropertyCard property={property} />
                 </div>
@@ -341,7 +341,7 @@ export default async function HomePage() {
                 description={`Every room of ${hero.name}, in perspective - drag, swipe or use the arrow keys to move through the house.`}
               />
             </Reveal>
-            <Reveal className="mt-12 lg:mt-14">
+            <Reveal className="mt-8 lg:mt-10">
               <RoomTour
                 images={gallery}
                 propertyName={hero.name}
@@ -389,7 +389,7 @@ export default async function HomePage() {
               action={{ href: "/destinations", label: "All destinations" }}
             />
           </Reveal>
-          <Reveal className="mt-10 lg:mt-14">
+          <Reveal className="mt-7 lg:mt-9">
             <DestinationGrid cities={cities} upcoming={upcoming} />
           </Reveal>
         </Section>
@@ -410,7 +410,7 @@ export default async function HomePage() {
               </h3>
             </Reveal>
           </Container>
-          <div className="mt-7">
+          <div className="mt-5">
             <CategoryRail categories={CATEGORIES} />
           </div>
         </Section>
@@ -433,7 +433,7 @@ export default async function HomePage() {
             className="absolute -top-40 -right-32 size-[38rem] rounded-full bg-brand-azure/25 blur-[120px]"
           />
           <Container className="relative z-[2]">
-            <div className="grid gap-10 lg:grid-cols-[1fr_0.85fr] lg:gap-16">
+            <div className="grid gap-8 lg:grid-cols-[1fr_0.85fr] lg:gap-10">
               <div>
                 <Reveal>
                   <SectionHeading
@@ -452,7 +452,7 @@ export default async function HomePage() {
                   />
                 </Reveal>
 
-                <RevealGroup className="mt-10 grid gap-x-10 gap-y-7 sm:grid-cols-2">
+                <RevealGroup className="mt-7 grid gap-x-8 gap-y-5 sm:grid-cols-2">
                   {DIRECT_BENEFITS.map((benefit) => (
                     <div key={benefit.title}>
                       <h3 className="font-display-sm text-lg text-white">
@@ -506,7 +506,7 @@ export default async function HomePage() {
                 />
               </Reveal>
             </Container>
-            <div className="mt-10">
+            <div className="mt-7">
               <ReviewRail reviews={railReviews} />
             </div>
           </Section>
@@ -532,7 +532,7 @@ export default async function HomePage() {
               description="No sign-up wall, no waiting on a confirmation, no phone number to call."
             />
           </Reveal>
-          <Reveal className="mt-12 lg:mt-16">
+          <Reveal className="mt-8 lg:mt-10">
             <HowItWorks steps={steps} />
           </Reveal>
         </Section>
@@ -549,7 +549,7 @@ export default async function HomePage() {
             />
           </Reveal>
 
-          <div className="mt-10 grid gap-10 lg:grid-cols-[1.35fr_0.65fr] lg:gap-16">
+          <div className="mt-7 grid gap-8 lg:grid-cols-[1.35fr_0.65fr] lg:gap-10">
             <Reveal>
               <FaqList faqs={FAQS} />
             </Reveal>
@@ -597,7 +597,7 @@ export default async function HomePage() {
                 title="Jump straight to it"
               />
             </Reveal>
-            <Reveal className="mt-7">
+            <Reveal className="mt-5">
               <LinkIndex links={collectionLinks} />
             </Reveal>
           </Section>
@@ -615,7 +615,7 @@ export default async function HomePage() {
             <h2 className="headline mt-5 max-w-[16ch] font-display text-[clamp(2.75rem,7.5vw,5.5rem)] text-brand-blue">
               Find your <em className="italic">next</em> stay.
             </h2>
-            <div className="mt-10 flex flex-col gap-8 border-t border-border pt-8 sm:flex-row sm:items-end sm:justify-between lg:mt-14">
+            <div className="mt-7 flex flex-col gap-6 border-t border-border pt-6 sm:flex-row sm:items-end sm:justify-between lg:mt-10">
               <p className="copy max-w-sm text-base leading-relaxed text-muted-foreground">
                 {propertyCount} homes across {where}, each set up the way we&apos;d
                 want to arrive somewhere ourselves.

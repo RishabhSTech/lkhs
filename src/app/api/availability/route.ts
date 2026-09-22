@@ -2,12 +2,16 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getBlockedDates } from "@/lib/booking/availability";
 import { addMonths, parseISODate, todayUTC } from "@/lib/dates";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 /**
  * Dates a property cannot be booked on, so the guest calendar can grey them out
  * before the guest ever tries to reserve.
  */
 export async function GET(request: Request) {
+  const limited = await checkRateLimit(request, { bucket: "availability", limit: 120, windowSeconds: 60 });
+  if (limited) return limited;
+
   const params = new URL(request.url).searchParams;
   const slug = params.get("property");
   if (!slug) {
