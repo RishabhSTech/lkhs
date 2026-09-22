@@ -38,6 +38,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# railway CLI local project link
+.railway
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
@@ -55,3 +58,4 @@ prisma/*.db
 
 # local docker volumes (minio/redis bind mounts, if any)
 .data/
+.env*

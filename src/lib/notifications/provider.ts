@@ -142,8 +142,11 @@ class CompositeNotificationProvider implements NotificationProvider {
     if (message.channel === "EMAIL" && this.email) {
       const result = await this.email.send(message);
       if (result.status === "SENT") return result;
-      // Real send failed (bad key, rate limit, etc) - log it so nothing is
-      // silently lost, but report the real failure rather than masking it.
+      // Real send failed (bad key, rate limit, etc) - the reason only lives
+      // on `result`, which callers like requestOtp only inspect `.status`
+      // on, so log it here or it's gone. Message itself still gets logged
+      // via the fallback so nothing is silently lost.
+      console.error(`[notification:EMAIL] send to ${message.to} failed: ${result.error ?? "unknown error"}`);
       await this.fallback.send(message);
       return result;
     }

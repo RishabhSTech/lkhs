@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "worker": "tsx scripts/worker.ts",
-    "seed:reference": "tsx prisma/seed-reference-data.ts"
+    "seed:reference": "tsx prisma/seed-reference-data.ts",
+    "env:sync": "bash scripts/sync-env.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.124.0",
