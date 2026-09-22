@@ -1,4 +1,3 @@
-import "server-only";
 import { ImapFlow } from "imapflow";
 import { simpleParser, type ParsedMail } from "mailparser";
 import { buildImapSearchQuery } from "@/lib/mailbox/parse-email";
