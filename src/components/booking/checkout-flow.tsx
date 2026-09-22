@@ -316,7 +316,7 @@ export function CheckoutFlow({
               {step === 1 && (
                 <StepCard
                   title="Who's staying?"
-                  description="No password needed - we'll create your Lime Kraft account automatically after booking."
+                  description="No account needed to book. Once you're done, you can save this trip with a one-time code - no password."
                 >
                   <div className="grid gap-4">
                     <Field label="Full name" required>

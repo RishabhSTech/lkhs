@@ -19,11 +19,20 @@ function clientIp(request: Request): string {
   return request.headers.get("x-real-ip") ?? "unknown";
 }
 
+// The shared connection (src/lib/queue/index.ts) sets maxRetriesPerRequest:
+// null so BullMQ never drops a queued job - but that also means a command
+// issued while Redis is unreachable just queues forever instead of
+// rejecting, so the try/catch below would never fire. Race it against a
+// short timeout so an outage fails this check open quickly instead of
+// hanging the request (and its caller's `await res.json()`) indefinitely.
+const CHECK_TIMEOUT_MS = 1_500;
+
 /**
  * Fixed-window rate limiter backed by the same Redis instance as the job
  * queue. Fails open (returns null, i.e. "allowed") if Redis isn't
- * configured or unreachable - guests being able to book matters more than
- * this particular defence holding up during a Redis outage.
+ * configured, unreachable, or too slow to answer - guests being able to
+ * book matters more than this particular defence holding up during a Redis
+ * outage.
  */
 export async function checkRateLimit(
   request: Request,
@@ -35,10 +44,13 @@ export async function checkRateLimit(
   const redisKey = `ratelimit:${bucket}:${key ?? clientIp(request)}`;
 
   try {
-    const count = await conn.incr(redisKey);
-    if (count === 1) {
-      await conn.expire(redisKey, windowSeconds);
-    }
+    const count = await withTimeout(async () => {
+      const value = await conn.incr(redisKey);
+      if (value === 1) {
+        await conn.expire(redisKey, windowSeconds);
+      }
+      return value;
+    });
     if (count > limit) {
       return NextResponse.json(
         { error: "Too many requests. Please wait a bit and try again." },
@@ -53,4 +65,23 @@ export async function checkRateLimit(
     );
     return null;
   }
+}
+
+function withTimeout<T>(work: () => Promise<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error(`rate limit check timed out after ${CHECK_TIMEOUT_MS}ms`)),
+      CHECK_TIMEOUT_MS,
+    );
+    work().then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
 }

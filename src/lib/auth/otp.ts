@@ -72,20 +72,37 @@ export async function verifyOtp(
   return { ok: true };
 }
 
-/** Finds or creates the user behind an identifier - no passwords involved. */
-export async function findOrCreateUser(identifier: string, name?: string) {
+/** Finds or creates the user behind an identifier - no passwords involved.
+ * Also claims any Guest rows created anonymously (e.g. a booking made before
+ * this identifier had an account) so past trips show up immediately under
+ * the new account rather than staying orphaned. */
+export async function findOrCreateUser(
+  identifier: string,
+  name?: string,
+  avatarUrl?: string | null,
+) {
   const where = isEmail(identifier)
     ? { email: identifier }
     : { phone: identifier };
 
   const existing = await db.user.findFirst({ where });
-  if (existing) return existing;
+  const user = existing
+    ? !existing.avatarUrl && avatarUrl
+      ? await db.user.update({ where: { id: existing.id }, data: { avatarUrl } })
+      : existing
+    : await db.user.create({
+        data: {
+          name: name ?? identifier.split("@")[0],
+          role: "GUEST",
+          avatarUrl: avatarUrl ?? undefined,
+          ...(isEmail(identifier) ? { email: identifier } : { phone: identifier }),
+        },
+      });
 
-  return db.user.create({
-    data: {
-      name: name ?? identifier.split("@")[0],
-      role: "GUEST",
-      ...(isEmail(identifier) ? { email: identifier } : { phone: identifier }),
-    },
+  await db.guest.updateMany({
+    where: { userId: null, ...where },
+    data: { userId: user.id },
   });
+
+  return user;
 }

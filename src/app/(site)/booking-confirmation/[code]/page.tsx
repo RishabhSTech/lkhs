@@ -5,8 +5,10 @@ import { notFound } from "next/navigation";
 import { CalendarDays, KeyRound, MapPin, Receipt, Users } from "lucide-react";
 import { SiteHeader } from "@/components/site/site-header";
 import { ConfirmationHero } from "@/components/booking/confirmation-hero";
+import { ClaimTripForm } from "@/components/booking/claim-trip-form";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
+import { getSession } from "@/lib/auth/session";
 import { formatDateLong, formatDateRange, formatINR } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -32,6 +34,8 @@ export default async function BookingConfirmationPage({
   if (!reservation) notFound();
 
   const payment = reservation.payments[0];
+  const session = await getSession();
+  const claimIdentifier = reservation.guest.email ?? reservation.guest.phone;
 
   return (
     <>
@@ -129,6 +133,10 @@ export default async function BookingConfirmationPage({
               </div>
             </div>
           </div>
+
+          {!session && claimIdentifier && (
+            <ClaimTripForm identifier={claimIdentifier} name={reservation.guest.name} />
+          )}
         </div>
       </main>
     </>

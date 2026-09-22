@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { SiteHeader } from "@/components/site/site-header";
 import { SignInForm } from "@/components/site/signin-form";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Sign in",
   robots: { index: false },
