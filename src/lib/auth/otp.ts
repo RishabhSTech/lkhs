@@ -1,12 +1,17 @@
 import "server-only";
+import { randomInt } from "node:crypto";
 import { db } from "@/lib/db";
 import { EMAIL_IS_LIVE, getNotificationProvider } from "@/lib/notifications/provider";
 
 const OTP_TTL_MINUTES = 10;
 const MAX_ATTEMPTS = 5;
 
+// Math.random() is not cryptographically secure - V8's PRNG state is
+// predictable enough, given other outputs, to make guessing a sign-in code
+// meaningfully easier than the 1-in-900000 the 6-digit space implies.
+// crypto.randomInt is CSPRNG-backed and just as easy to call.
 function generateCode() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  return String(randomInt(100000, 1000000));
 }
 
 export function isEmail(identifier: string) {

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { parseISODate, todayUTC } from "@/lib/dates";
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
   const session = await getSession();
 
   try {
-    const { reservation, status } = await createReservation({
+    const { reservation, status, notify } = await createReservation({
       propertyId: property.id,
       checkIn,
       checkOut,
@@ -78,6 +78,10 @@ export async function POST(request: Request) {
       source: "DIRECT",
       userId: session?.userId ?? null,
     });
+
+    // Reservation is already committed - don't make the guest wait on the
+    // channel-sync push or the confirmation email/team alert.
+    after(notify);
 
     return NextResponse.json({
       code: reservation.code,

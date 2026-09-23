@@ -4,7 +4,7 @@ import {
   addDays, endOfMonthUTC, startOfMonthUTC, todayUTC,
 } from "@/lib/dates";
 import {
-  buildCapitalPosition, buildPL, type TxWithCategory,
+  buildCapitalPosition, buildPL, PL_TRANSACTION_SELECT, type TxWithCategory,
 } from "@/lib/finance/calculations";
 import { formatDateLong, formatINR, formatPercent } from "@/lib/format";
 
@@ -84,13 +84,13 @@ async function arrivals(date: Date, label: string): Promise<AskLimeAnswer> {
 
 async function propertyPLs() {
   const properties = await db.property.findMany({
-    include: { transactions: { include: { category: true } } },
+    select: { name: true, transactions: { select: PL_TRANSACTION_SELECT } },
   });
 
   return properties.map((p) => ({
     property: p,
-    pl: buildPL(p.transactions as TxWithCategory[]),
-    capital: buildCapitalPosition(p.transactions as TxWithCategory[]),
+    pl: buildPL(p.transactions),
+    capital: buildCapitalPosition(p.transactions),
   }));
 }
 
@@ -137,33 +137,40 @@ async function highestRoi(): Promise<AskLimeAnswer> {
 async function budgetStatus(): Promise<AskLimeAnswer> {
   const today = todayUTC();
   const monthStart = startOfMonthUTC(today);
+  const monthEnd = endOfMonthUTC(today);
 
   const budgets = await db.budget.findMany({
     where: { month: monthStart },
-    include: { property: true, category: true },
+    include: {
+      property: { select: { name: true } },
+      category: { select: { name: true } },
+    },
   });
 
-  const rows = await Promise.all(
-    budgets.map(async (b) => {
-      const spent = await db.transaction.aggregate({
-        where: {
-          propertyId: b.propertyId,
-          categoryId: b.categoryId,
-          type: "EXPENSE",
-          date: { gte: monthStart, lte: endOfMonthUTC(today) },
-        },
-        _sum: { amount: true },
-      });
-      const actual = Number(spent._sum.amount ?? 0);
-      return {
-        property: b.property.name,
-        category: b.category.name,
-        budget: Number(b.amount),
-        actual,
-        over: actual > Number(b.amount),
-      };
-    }),
+  const spentByKey = await db.transaction.groupBy({
+    by: ["propertyId", "categoryId"],
+    where: {
+      type: "EXPENSE",
+      date: { gte: monthStart, lte: monthEnd },
+      propertyId: { in: budgets.map((b) => b.propertyId) },
+      categoryId: { in: budgets.map((b) => b.categoryId) },
+    },
+    _sum: { amount: true },
+  });
+  const spentByPropertyAndCategory = new Map(
+    spentByKey.map((s) => [`${s.propertyId}:${s.categoryId}`, Number(s._sum.amount ?? 0)]),
   );
+
+  const rows = budgets.map((b) => {
+    const actual = spentByPropertyAndCategory.get(`${b.propertyId}:${b.categoryId}`) ?? 0;
+    return {
+      property: b.property.name,
+      category: b.category.name,
+      budget: Number(b.amount),
+      actual,
+      over: actual > Number(b.amount),
+    };
+  });
 
   const over = rows.filter((r) => r.over);
   if (over.length === 0) {

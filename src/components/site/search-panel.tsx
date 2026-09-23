@@ -220,6 +220,7 @@ export function SearchPanel({
           <PopoverContent align="start" className="w-auto p-0">
             <Calendar
               mode="range"
+              min={1}
               selected={selectedRange}
               onSelect={handleRange}
               numberOfMonths={months}

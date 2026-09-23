@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { CalendarDays, KeyRound, MapPin, Receipt, Users } from "lucide-react";
 import { SiteHeader } from "@/components/site/site-header";
@@ -9,6 +10,7 @@ import { ClaimTripForm } from "@/components/booking/claim-trip-form";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
+import { clientIp, isOverLimit } from "@/lib/rate-limit";
 import { formatDateLong, formatDateRange, formatINR } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -18,17 +20,48 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
+/**
+ * This page is a public, unauthenticated lookup by `code` (see the fetch
+ * below) that renders guest PII - name, email, dates, amount paid. Nothing
+ * stops a script from trying codes in sequence, so cap attempts per IP the
+ * same way the OTP/booking API routes do, via the same timeout-guarded
+ * `isOverLimit` those use (a bare `conn.incr()` here would hang the whole
+ * page indefinitely during a Redis outage - the shared connection retries
+ * forever rather than rejecting; see the comment on `isOverLimit`).
+ */
+async function isRateLimited(): Promise<boolean> {
+  const hdrs = await headers();
+  const key = `ratelimit:booking-confirmation:${clientIp(hdrs)}`;
+  return isOverLimit(key, { limit: 30, windowSeconds: 600 });
+}
+
+function maskEmail(email: string): string {
+  const [user, domain] = email.split("@");
+  if (!user || !domain) return email;
+  const visible = user.slice(0, Math.min(2, user.length));
+  return `${visible}${"*".repeat(Math.max(user.length - visible.length, 1))}@${domain}`;
+}
+
 export default async function BookingConfirmationPage({
   params,
 }: PageProps<"/booking-confirmation/[code]">) {
   const { code } = await params;
 
+  if (await isRateLimited()) notFound();
+
   const reservation = await db.reservation.findUnique({
     where: { code },
     include: {
-      property: { include: { images: { orderBy: { sortOrder: "asc" }, take: 1 } } },
-      guest: true,
-      payments: true,
+      property: {
+        select: {
+          name: true,
+          locationArea: true,
+          city: true,
+          images: { orderBy: { sortOrder: "asc" }, take: 1, select: { url: true } },
+        },
+      },
+      guest: { select: { name: true, email: true, phone: true } },
+      payments: { select: { method: true, status: true } },
     },
   });
   if (!reservation) notFound();
@@ -36,6 +69,9 @@ export default async function BookingConfirmationPage({
   const payment = reservation.payments[0];
   const session = await getSession();
   const claimIdentifier = reservation.guest.email ?? reservation.guest.phone;
+  const maskedEmail = reservation.guest.email
+    ? maskEmail(reservation.guest.email)
+    : null;
 
   return (
     <>
@@ -121,7 +157,7 @@ export default async function BookingConfirmationPage({
                 {reservation.status === "PENDING" ? (
                   <>
                     We&apos;ve sent a copy of this request
-                    {reservation.guest.email ? ` to ${reservation.guest.email}` : ""}.
+                    {maskedEmail ? ` to ${maskedEmail}` : ""}.
                     Our team will reach out to confirm your stay and share
                     payment details - access instructions and the exact
                     address follow once that&apos;s settled.
@@ -129,7 +165,7 @@ export default async function BookingConfirmationPage({
                 ) : (
                   <>
                     We&apos;ve sent your confirmation
-                    {reservation.guest.email ? ` to ${reservation.guest.email}` : ""}.
+                    {maskedEmail ? ` to ${maskedEmail}` : ""}.
                     Access instructions and the exact address arrive three
                     days before you travel.
                   </>

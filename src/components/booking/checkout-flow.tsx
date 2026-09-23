@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertCircle, ArrowLeft, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,14 @@ export function CheckoutFlow({
   initial,
 }: {
   property: PropertySummary;
-  initial: { checkIn: string; checkOut: string; guests: number };
+  initial: {
+    checkIn: string;
+    checkOut: string;
+    guests: number;
+    quote?: Quote | null;
+    available?: boolean | null;
+    blockedDates?: string[];
+  };
 }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -42,16 +49,31 @@ export function CheckoutFlow({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
 
-  const [quote, setQuote] = useState<Quote | null>(null);
-  const [available, setAvailable] = useState<boolean | null>(null);
+  const [quote, setQuote] = useState<Quote | null>(initial.quote ?? null);
+  const [available, setAvailable] = useState<boolean | null>(
+    initial.available ?? null,
+  );
   const [quoting, setQuoting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // The server already priced `initial.checkIn`/`initial.checkOut` before
+  // this ever hit the client - skip re-fetching the identical quote on
+  // mount, and only hit /api/quote once the guest actually changes a date.
+  const skipNextQuote = useRef(
+    Boolean(initial.quote) &&
+      initial.checkIn === checkIn &&
+      initial.checkOut === checkOut,
+  );
 
   useEffect(() => {
     if (!checkIn || !checkOut || checkOut <= checkIn) {
       setQuote(null);
       setAvailable(null);
+      return;
+    }
+    if (skipNextQuote.current) {
+      skipNextQuote.current = false;
       return;
     }
     const controller = new AbortController();
@@ -180,6 +202,7 @@ export function CheckoutFlow({
                         setCheckIn(next.checkIn);
                         setCheckOut(next.checkOut);
                       }}
+                      initialBlocked={initial.blockedDates}
                     />
                   </Field>
                   <Field label="Guests" className="mt-4 max-w-[12rem]">

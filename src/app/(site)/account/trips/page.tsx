@@ -29,7 +29,12 @@ export default async function TripsPage() {
         where: { guest: { userId: session.userId } },
         include: {
           property: {
-            include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
+            select: {
+              name: true,
+              locationArea: true,
+              city: true,
+              images: { take: 1, orderBy: { sortOrder: "asc" }, select: { url: true } },
+            },
           },
           review: { select: { id: true } },
         },

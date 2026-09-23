@@ -18,31 +18,38 @@ export default async function PropertiesPage() {
 
   const properties = await db.property.findMany({
     include: {
-      images: { take: 1, orderBy: { sortOrder: "asc" } },
-      transactions: { include: { category: true } },
+      images: { take: 1, orderBy: { sortOrder: "asc" }, select: { url: true } },
+      transactions: { select: { amount: true, type: true, category: { select: { name: true } } } },
       units: { select: { id: true } },
     },
     orderBy: { name: "asc" },
   });
 
-  const rows = await Promise.all(
-    properties.map(async (p) => {
-      const soldNights = await db.inventoryNight.count({
-        where: {
-          unitId: { in: p.units.map((u) => u.id) },
-          date: { gte: monthStart, lte: monthEnd },
-          reservationId: { not: null },
-        },
-      });
-      const availableNights = p.units.length * monthEnd.getUTCDate();
-      return {
-        property: p,
-        pl: buildPL(p.transactions as TxWithCategory[]),
-        occupancy:
-          availableNights > 0 ? (soldNights / availableNights) * 100 : 0,
-      };
-    }),
-  );
+  const allUnitIds = properties.flatMap((p) => p.units.map((u) => u.id));
+  const nightCounts = await db.inventoryNight.groupBy({
+    by: ["unitId"],
+    where: {
+      unitId: { in: allUnitIds },
+      date: { gte: monthStart, lte: monthEnd },
+      reservationId: { not: null },
+    },
+    _count: { _all: true },
+  });
+  const soldNightsByUnit = new Map(nightCounts.map((n) => [n.unitId, n._count._all]));
+
+  const rows = properties.map((p) => {
+    const soldNights = p.units.reduce(
+      (sum, u) => sum + (soldNightsByUnit.get(u.id) ?? 0),
+      0,
+    );
+    const availableNights = p.units.length * monthEnd.getUTCDate();
+    return {
+      property: p,
+      pl: buildPL(p.transactions as TxWithCategory[]),
+      occupancy:
+        availableNights > 0 ? (soldNights / availableNights) * 100 : 0,
+    };
+  });
 
   return (
     <AdminPage>

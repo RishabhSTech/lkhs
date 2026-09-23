@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { db } from "@/lib/db";
 import {
   addDays, addMonths, endOfMonthUTC, startOfMonthUTC, todayUTC,
@@ -6,6 +7,22 @@ import {
 import {
   buildMonthlySeries, buildPL, type TxWithCategory,
 } from "@/lib/finance/calculations";
+
+/**
+ * The admin layout (top-bar bell) and the dashboard page (Alerts panel)
+ * both need unread notifications, and both render on every /admin/*
+ * request. `cache()` collapses their two calls into one query per request -
+ * fetch the larger of the two `take`s here and let the smaller caller slice.
+ */
+export const getUnreadNotifications = cache(async function getUnreadNotifications(
+  limit = 8,
+) {
+  return db.notification.findMany({
+    where: { isRead: false },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
+});
 
 export type PortfolioKpis = {
   todayRevenue: number;
@@ -107,22 +124,35 @@ export async function getRevenueSeries(monthsBack = 6) {
 
 export async function getOccupancySeries(monthsBack = 6) {
   const today = todayUTC();
-  const unitCount = await db.unit.count();
-  const points: { month: string; occupancy: number }[] = [];
+  const rangeStart = startOfMonthUTC(addMonths(today, -(monthsBack - 1)));
+  const rangeEnd = endOfMonthUTC(today);
 
+  const [unitCount, nights] = await Promise.all([
+    db.unit.count(),
+    db.inventoryNight.findMany({
+      where: {
+        date: { gte: rangeStart, lte: rangeEnd },
+        reservationId: { not: null },
+      },
+      select: { date: true },
+    }),
+  ]);
+
+  const nightsByMonth = new Map<string, number>();
+  for (const { date } of nights) {
+    const key = date.toISOString().slice(0, 7);
+    nightsByMonth.set(key, (nightsByMonth.get(key) ?? 0) + 1);
+  }
+
+  const points: { month: string; occupancy: number }[] = [];
   for (let i = monthsBack - 1; i >= 0; i--) {
     const monthStart = startOfMonthUTC(addMonths(today, -i));
     const monthEnd = endOfMonthUTC(monthStart);
-    const nights = await db.inventoryNight.count({
-      where: {
-        date: { gte: monthStart, lte: monthEnd },
-        reservationId: { not: null },
-      },
-    });
+    const key = monthStart.toISOString().slice(0, 7);
     const available = unitCount * monthEnd.getUTCDate();
     points.push({
-      month: monthStart.toISOString().slice(0, 7),
-      occupancy: available > 0 ? (nights / available) * 100 : 0,
+      month: key,
+      occupancy: available > 0 ? ((nightsByMonth.get(key) ?? 0) / available) * 100 : 0,
     });
   }
 

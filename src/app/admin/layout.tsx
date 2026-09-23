@@ -2,6 +2,7 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminMobileNav } from "@/components/admin/admin-mobile-nav";
 import { AdminTopBar } from "@/components/admin/admin-top-bar";
 import { getCurrentAdminUser } from "@/lib/auth/current-user";
+import { getUnreadNotifications } from "@/lib/queries/admin-metrics";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -10,11 +11,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const { user, isDemoFallback } = await getCurrentAdminUser();
 
   const [notifications, properties] = await Promise.all([
-    db.notification.findMany({
-      where: { isRead: false },
-      orderBy: { createdAt: "desc" },
-      take: 8,
-    }),
+    getUnreadNotifications(),
     db.property.findMany({
       select: { id: true, name: true, slug: true },
       orderBy: { name: "asc" },

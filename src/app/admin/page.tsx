@@ -14,9 +14,8 @@ import { Panel } from "@/components/admin/panel";
 import { getCurrentAdminUser } from "@/lib/auth/current-user";
 import {
   getChannelHealth, getOccupancySeries, getPortfolioKpis, getRevenueSeries,
-  getTodayOperations, getUpcomingReservations,
+  getTodayOperations, getUnreadNotifications, getUpcomingReservations,
 } from "@/lib/queries/admin-metrics";
-import { db } from "@/lib/db";
 import { formatDateRange, formatINR, formatINRCompact, formatPercent } from "@/lib/format";
 import { SOURCE_LABELS, sourceBadgeClass } from "@/lib/admin/sources";
 
@@ -33,7 +32,7 @@ function greeting() {
 export default async function AdminOverviewPage() {
   const [
     { user }, kpis, revenueSeries, occupancySeries, upcoming, operations,
-    channelHealth, alerts,
+    channelHealth, allAlerts,
   ] = await Promise.all([
     getCurrentAdminUser(),
     getPortfolioKpis(),
@@ -42,12 +41,9 @@ export default async function AdminOverviewPage() {
     getUpcomingReservations(6),
     getTodayOperations(),
     getChannelHealth(),
-    db.notification.findMany({
-      where: { isRead: false },
-      orderBy: { createdAt: "desc" },
-      take: 4,
-    }),
+    getUnreadNotifications(),
   ]);
+  const alerts = allAlerts.slice(0, 4);
 
   return (
     <AdminPage>

@@ -100,6 +100,14 @@ class SmtpEmailProvider implements NotificationProvider {
       port: Number(process.env.SMTP_PORT ?? 465),
       secure: process.env.SMTP_SECURE !== "false", // true unless explicitly disabled
       auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD },
+      // nodemailer's defaults let a stuck connection hang for 2 minutes
+      // (connectionTimeout) or 10 (socketTimeout) - this call sits in the
+      // OTP-login and booking-request request paths, so an unreachable or
+      // slow Hostinger box would otherwise hang the guest's click for that
+      // long. Bounded to match ResendEmailProvider's 10s AbortSignal below.
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 10_000,
     });
     return this.transporter;
   }

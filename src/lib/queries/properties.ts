@@ -95,6 +95,8 @@ export async function getPropertyCards(options?: {
   city?: string;
   guests?: number;
   limit?: number;
+  /** Restricts the result to exactly these slugs (e.g. a guest's saved list). */
+  slugs?: string[];
   savedSlugs?: string[];
 }): Promise<PropertyCardData[]> {
   const properties = await db.property.findMany({
@@ -103,6 +105,7 @@ export async function getPropertyCards(options?: {
       ...(options?.area ? { locationArea: options.area } : {}),
       ...(options?.city ? { city: options.city } : {}),
       ...(options?.guests ? { maxGuests: { gte: options.guests } } : {}),
+      ...(options?.slugs ? { slug: { in: options.slugs } } : {}),
     },
     select: CARD_SELECT,
     orderBy: { basePrice: "asc" },

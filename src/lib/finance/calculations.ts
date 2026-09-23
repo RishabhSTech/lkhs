@@ -1,5 +1,6 @@
 import type {
   BookingSource,
+  Prisma,
   Transaction,
   TransactionCategory,
   TransactionType,
@@ -13,16 +14,61 @@ import type {
 
 export type TxWithCategory = Transaction & { category: TransactionCategory };
 
+/**
+ * The exact fields `buildPL`/`buildCapitalPosition`/`buildMonthlySeries`
+ * read off a transaction - `amount`, `type`, `date`,
+ * `category.name`/`.isRefundableDeposit`. Deliberately a plain structural
+ * type (not tied to any one Prisma query) rather than `TxWithCategory`, so a
+ * caller can `select` just these fields instead of the full row; any wider
+ * fetch - `TxWithCategory`, or a query using `PL_TRANSACTION_SELECT` below -
+ * is still assignable here, so nothing already passing a full row needs to
+ * change.
+ */
+type PLInput = {
+  amount: Transaction["amount"];
+  type: Transaction["type"];
+  date: Transaction["date"];
+  category: {
+    name: TransactionCategory["name"];
+    isRefundableDeposit: TransactionCategory["isRefundableDeposit"];
+  };
+};
+
+/** `PLInput` plus `reservation.source`, the extra field `buildChannelProfitability` needs. */
+type ChannelInput = PLInput & {
+  reservation: { source: BookingSource } | null;
+};
+
+/**
+ * A `select` covering every field any build*() function in this file reads,
+ * for callers that want one query to feed several of them at once. Lighter
+ * than `include: { category: true }`, which pulls every scalar on both
+ * Transaction and TransactionCategory (description, paymentMethod,
+ * recurringExpenseId, category.group, ...) for figures that only ever
+ * reduce over a handful of fields.
+ */
+export const PL_TRANSACTION_SELECT = {
+  amount: true,
+  type: true,
+  date: true,
+  category: { select: { name: true, isRefundableDeposit: true } },
+  reservation: { select: { source: true } },
+} satisfies Prisma.TransactionSelect;
+
+export type PLTransaction = Prisma.TransactionGetPayload<{
+  select: typeof PL_TRANSACTION_SELECT;
+}>;
+
 const REVENUE_TYPES: TransactionType[] = ["REVENUE"];
 const FEE_TYPES: TransactionType[] = ["OTA_FEE", "PAYMENT_FEE"];
 const EXPENSE_TYPES: TransactionType[] = ["EXPENSE"];
 const INVESTMENT_TYPES: TransactionType[] = ["INVESTMENT"];
 
-function sum(txs: TxWithCategory[]): number {
+function sum(txs: PLInput[]): number {
   return txs.reduce((total, t) => total + Number(t.amount), 0);
 }
 
-function byTypes(txs: TxWithCategory[], types: TransactionType[]) {
+function byTypes(txs: PLInput[], types: TransactionType[]) {
   return txs.filter((t) => types.includes(t.type));
 }
 
@@ -38,7 +84,7 @@ export type PLStatement = {
   depositsHeld: number;
 };
 
-export function buildPL(txs: TxWithCategory[]): PLStatement {
+export function buildPL(txs: PLInput[]): PLStatement {
   const grossRevenue = sum(byTypes(txs, REVENUE_TYPES));
   const otaFees = sum(txs.filter((t) => t.type === "OTA_FEE"));
   const paymentFees = sum(txs.filter((t) => t.type === "PAYMENT_FEE"));
@@ -84,7 +130,7 @@ export type CapitalPosition = {
  * Funds deployed counts INVESTMENT plus refundable security deposits paid out
  * (cash is genuinely tied up), even though deposits are recoverable later.
  */
-export function buildCapitalPosition(txs: TxWithCategory[]): CapitalPosition {
+export function buildCapitalPosition(txs: PLInput[]): CapitalPosition {
   const investment = sum(byTypes(txs, INVESTMENT_TYPES));
   const refundableDeposits = sum(
     txs.filter((t) => t.type === "DEPOSIT_OUT" && t.category.isRefundableDeposit),
@@ -122,7 +168,7 @@ export type ChannelProfitability = {
  * fall into OTHER.
  */
 export function buildChannelProfitability(
-  txs: (TxWithCategory & { reservation: { source: BookingSource } | null })[],
+  txs: ChannelInput[],
 ): ChannelProfitability[] {
   const map = new Map<BookingSource, { gross: number; fees: number }>();
 
@@ -167,7 +213,7 @@ export type BreakEven = {
  * share of gross revenue consumed by OTA and payment fees.
  */
 export function buildBreakEven(
-  txs: TxWithCategory[],
+  txs: PLInput[],
   monthlyFixedCosts: number,
 ): BreakEven {
   const grossRevenue = sum(byTypes(txs, REVENUE_TYPES));
@@ -194,7 +240,7 @@ export type MonthlySeriesPoint = {
 };
 
 export function buildMonthlySeries(
-  txs: TxWithCategory[],
+  txs: PLInput[],
   months: Date[],
 ): MonthlySeriesPoint[] {
   return months.map((monthStart) => {

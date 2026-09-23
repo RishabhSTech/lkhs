@@ -13,35 +13,43 @@ interface RateLimitOptions {
   key?: string;
 }
 
-function clientIp(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for");
+/** Anything with a `Headers`-like `.get()` - a `Request` or the `Headers`
+ * object `next/headers`' `headers()` resolves to, so Server Components can
+ * derive the same key without needing a `Request` to exist. */
+interface HeaderSource {
+  get(name: string): string | null;
+}
+
+export function clientIp(headers: HeaderSource): string {
+  const forwarded = headers.get("x-forwarded-for");
   if (forwarded) return forwarded.split(",")[0]!.trim();
-  return request.headers.get("x-real-ip") ?? "unknown";
+  return headers.get("x-real-ip") ?? "unknown";
 }
 
 // The shared connection (src/lib/queue/index.ts) sets maxRetriesPerRequest:
 // null so BullMQ never drops a queued job - but that also means a command
 // issued while Redis is unreachable just queues forever instead of
-// rejecting, so the try/catch below would never fire. Race it against a
-// short timeout so an outage fails this check open quickly instead of
-// hanging the request (and its caller's `await res.json()`) indefinitely.
+// rejecting, so a plain try/catch around it would never fire. Race it
+// against a short timeout so an outage fails this check open quickly
+// instead of hanging the request indefinitely.
 const CHECK_TIMEOUT_MS = 1_500;
 
 /**
- * Fixed-window rate limiter backed by the same Redis instance as the job
- * queue. Fails open (returns null, i.e. "allowed") if Redis isn't
- * configured, unreachable, or too slow to answer - guests being able to
- * book matters more than this particular defence holding up during a Redis
- * outage.
+ * Fixed-window check backed by the same Redis instance as the job queue.
+ * Fails open (returns false, i.e. "allowed") if Redis isn't configured,
+ * unreachable, or too slow to answer - guests being able to act matters
+ * more than this particular defence holding up during a Redis outage.
+ *
+ * Shared core for `checkRateLimit` below and any Server Component (which
+ * has no `Request` to build a key from) that needs the same fail-fast
+ * behaviour - see `isRateLimited` in the booking-confirmation page.
  */
-export async function checkRateLimit(
-  request: Request,
-  { bucket, limit, windowSeconds, key }: RateLimitOptions,
-): Promise<NextResponse | null> {
+export async function isOverLimit(
+  redisKey: string,
+  { limit, windowSeconds }: { limit: number; windowSeconds: number },
+): Promise<boolean> {
   const conn = getConnection();
-  if (!conn) return null;
-
-  const redisKey = `ratelimit:${bucket}:${key ?? clientIp(request)}`;
+  if (!conn) return false;
 
   try {
     const count = await withTimeout(async () => {
@@ -51,20 +59,28 @@ export async function checkRateLimit(
       }
       return value;
     });
-    if (count > limit) {
-      return NextResponse.json(
-        { error: "Too many requests. Please wait a bit and try again." },
-        { status: 429 },
-      );
-    }
-    return null;
+    return count > limit;
   } catch (error) {
     console.warn(
-      `[rate-limit] ${bucket} check failed, allowing request:`,
+      `[rate-limit] ${redisKey} check failed, allowing request:`,
       error instanceof Error ? error.message : error,
     );
-    return null;
+    return false;
   }
+}
+
+export async function checkRateLimit(
+  request: Request,
+  { bucket, limit, windowSeconds, key }: RateLimitOptions,
+): Promise<NextResponse | null> {
+  const redisKey = `ratelimit:${bucket}:${key ?? clientIp(request.headers)}`;
+  const limited = await isOverLimit(redisKey, { limit, windowSeconds });
+  if (!limited) return null;
+
+  return NextResponse.json(
+    { error: "Too many requests. Please wait a bit and try again." },
+    { status: 429 },
+  );
 }
 
 function withTimeout<T>(work: () => Promise<T>): Promise<T> {

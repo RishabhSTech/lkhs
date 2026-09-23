@@ -5,7 +5,8 @@ import {
 } from "@/lib/dates";
 import {
   buildBreakEven, buildBudgetVariance, buildCapitalPosition,
-  buildChannelProfitability, buildMonthlySeries, buildPL, type TxWithCategory,
+  buildChannelProfitability, buildMonthlySeries, buildPL,
+  PL_TRANSACTION_SELECT, type TxWithCategory,
 } from "@/lib/finance/calculations";
 
 export type PropertyFinance = Awaited<ReturnType<typeof getPropertyFinance>>;
@@ -85,15 +86,13 @@ export async function getPortfolioFinance(monthsBack = 6) {
 
   const properties = await db.property.findMany({
     include: {
-      transactions: {
-        include: { category: true, reservation: { select: { source: true } } },
-      },
+      transactions: { select: PL_TRANSACTION_SELECT },
     },
     orderBy: { name: "asc" },
   });
 
   const perProperty = properties.map((p) => {
-    const txs = p.transactions as TxWithCategory[];
+    const txs = p.transactions;
     const monthTxs = txs.filter((t) => {
       const d = new Date(t.date);
       return d >= monthStart && d <= monthEnd;
@@ -108,9 +107,7 @@ export async function getPortfolioFinance(monthsBack = 6) {
     };
   });
 
-  const allTxs = properties.flatMap((p) => p.transactions) as (TxWithCategory & {
-    reservation: { source: never } | null;
-  })[];
+  const allTxs = properties.flatMap((p) => p.transactions);
 
   const months = Array.from({ length: monthsBack }, (_, i) =>
     startOfMonthUTC(addMonths(today, -(monthsBack - 1 - i))),

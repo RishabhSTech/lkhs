@@ -25,8 +25,10 @@ export default async function SavedPage() {
       ).map((w) => w.property.slug)
     : [];
 
-  const all = await getPropertyCards({ savedSlugs });
-  const saved = all.filter((p) => savedSlugs.includes(p.slug));
+  const saved =
+    savedSlugs.length > 0
+      ? await getPropertyCards({ slugs: savedSlugs, savedSlugs })
+      : [];
 
   return (
     <>

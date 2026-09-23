@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
-import { buildPL, type TxWithCategory } from "@/lib/finance/calculations";
+import { buildPL, PL_TRANSACTION_SELECT } from "@/lib/finance/calculations";
 import { buildPortfolioReportPdf, buildTransactionsReportPdf } from "@/lib/finance/pdf";
 import { getCurrentAdminUser } from "@/lib/auth/current-user";
 
@@ -79,11 +79,11 @@ export async function GET(request: Request) {
   }
 
   const properties = await db.property.findMany({
-    include: { transactions: { include: { category: true } } },
+    include: { transactions: { select: PL_TRANSACTION_SELECT } },
     orderBy: { name: "asc" },
   });
   const portfolioRows = properties.map((p) => {
-    const pl = buildPL(p.transactions as TxWithCategory[]);
+    const pl = buildPL(p.transactions);
     return {
       name: p.name,
       locationArea: p.locationArea,

@@ -34,20 +34,30 @@ export function DateRangePicker({
   checkOut,
   onChange,
   className,
+  initialBlocked,
 }: {
   propertySlug: string;
   checkIn: string;
   checkOut: string;
   onChange: (next: { checkIn: string; checkOut: string }) => void;
   className?: string;
+  /**
+   * Blocked dates the caller already fetched server-side (e.g. the checkout
+   * page just rendered them). Seeding from this skips the redundant
+   * client round trip and its loading spinner on mount; a background
+   * refresh still runs to keep long-lived sessions correct.
+   */
+  initialBlocked?: string[];
 }) {
-  const [blocked, setBlocked] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
+  const [blocked, setBlocked] = useState<Set<string>>(
+    () => new Set(initialBlocked ?? []),
+  );
+  const [loading, setLoading] = useState(!initialBlocked);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
-    setLoading(true);
+    if (!initialBlocked) setLoading(true);
     fetch(`/api/availability?property=${encodeURIComponent(propertySlug)}`, {
       signal: controller.signal,
     })
@@ -56,6 +66,7 @@ export function DateRangePicker({
       .catch(() => {})
       .finally(() => setLoading(false));
     return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [propertySlug]);
 
   const selected: DateRange | undefined = useMemo(() => {
@@ -139,6 +150,7 @@ export function DateRangePicker({
       <PopoverContent align="start" className="w-auto p-0">
         <Calendar
           mode="range"
+          min={1}
           selected={selected}
           onSelect={handleSelect}
           numberOfMonths={1}

@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ListingEditor } from "@/components/admin/listing-editor";
 import { PhotoManager } from "@/components/admin/photo-manager";
 import { db } from "@/lib/db";
-import { buildPL, type TxWithCategory } from "@/lib/finance/calculations";
+import { buildPL, PL_TRANSACTION_SELECT } from "@/lib/finance/calculations";
 import { SOURCE_LABELS, STATUS_LABELS, sourceBadgeClass, statusBadgeClass } from "@/lib/admin/sources";
 import { formatDateRange, formatINR, formatINRCompact } from "@/lib/format";
 
@@ -29,7 +29,7 @@ export default async function AdminPropertyPage({
       thingsToKnow: { orderBy: { sortOrder: "asc" } },
       units: true,
       pricingRules: { orderBy: { priority: "desc" } },
-      transactions: { include: { category: true } },
+      transactions: { select: PL_TRANSACTION_SELECT },
       reviews: { include: { guest: { select: { name: true } } }, take: 5, orderBy: { createdAt: "desc" } },
       channelProperties: { include: { channel: true } },
       reservations: {
@@ -46,7 +46,7 @@ export default async function AdminPropertyPage({
   });
   if (!property) notFound();
 
-  const pl = buildPL(property.transactions as TxWithCategory[]);
+  const pl = buildPL(property.transactions);
 
   const amenityCatalog = await db.amenity.findMany({
     orderBy: [{ category: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
