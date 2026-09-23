@@ -12,6 +12,8 @@ export type OutboundMessage = {
   to: string;
   subject?: string;
   body: string;
+  /** Rich body for EMAIL; ignored by channels without an HTML rendering. */
+  html?: string;
   templateKey?: string;
 };
 
@@ -62,6 +64,7 @@ class ResendEmailProvider implements NotificationProvider {
           to: [message.to],
           subject: message.subject ?? "Lime Kraft Home Stays",
           text: message.body,
+          html: message.html,
         }),
         signal: AbortSignal.timeout(10_000),
       });
@@ -108,6 +111,7 @@ class SmtpEmailProvider implements NotificationProvider {
         to: message.to,
         subject: message.subject ?? "Lime Kraft Home Stays",
         text: message.body,
+        html: message.html,
       });
       return { status: "SENT", providerRef: info.messageId };
     } catch (error) {

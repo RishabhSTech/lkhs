@@ -1,5 +1,6 @@
 import type { MessageChannel } from "@prisma/client";
 import { formatDateLong, formatINR } from "@/lib/format";
+import { absoluteUrl } from "@/lib/seo/site";
 
 export type TemplateKey =
   | "BOOKING_CONFIRMED"
@@ -18,9 +19,18 @@ export type TemplateContext = {
   bookingCode: string;
   total?: number;
   address?: string;
+  // Only used to build the richer BOOKING_CONFIRMED HTML email, which mirrors
+  // the /booking-confirmation page's layout.
+  nights?: number;
+  adults?: number;
+  children?: number;
+  locationArea?: string;
+  city?: string;
+  propertyImageUrl?: string;
+  paymentMethod?: string;
 };
 
-type Rendered = { subject: string; body: string };
+type Rendered = { subject: string; body: string; html?: string };
 
 export const TEMPLATE_LABELS: Record<TemplateKey, string> = {
   BOOKING_CONFIRMED: "Booking confirmed",
@@ -58,6 +68,7 @@ export function renderTemplate(
       return {
         subject: `Your stay at ${ctx.propertyName} is confirmed`,
         body: `Hi ${ctx.guestName}, you're booked.\n\n${ctx.propertyName}\n${stay}\nBooking ${ctx.bookingCode}\n\nThe address and access details reach you three days before you travel. Anything you need before then - an early check-in, a question about the area - just reply to this message.\n\n- Lime Kraft Home Stays`,
+        html: renderBookingConfirmedHtml(ctx),
       };
     case "PAYMENT_RECEIVED":
       return {
@@ -98,4 +109,143 @@ export function renderTemplate(
         body: `Hi ${ctx.guestName}, thank you for staying with us. If you have two minutes, we'd genuinely like to know how it went - the good and the parts we got wrong. We read every one, and it's how these homes get better.`,
       };
   }
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/**
+ * HTML body for BOOKING_CONFIRMED, mirroring the /booking-confirmation page's
+ * layout and brand tokens (colors from globals.css, logo, detail grid) since
+ * that's the guest's next reference point after this email. Built with
+ * inline styles and table layout rather than the site's Tailwind classes -
+ * most email clients strip <style> classes and don't run a CSS pipeline.
+ */
+function renderBookingConfirmedHtml(ctx: TemplateContext): string {
+  const stay = `${formatDateLong(ctx.checkIn)} – ${formatDateLong(ctx.checkOut)}`;
+  const firstName = escapeHtml(ctx.guestName.split(" ")[0] ?? ctx.guestName);
+  const propertyName = escapeHtml(ctx.propertyName);
+  const location = [ctx.locationArea, ctx.city]
+    .filter((part): part is string => Boolean(part))
+    .map(escapeHtml)
+    .join(", ");
+  const bookingCode = escapeHtml(ctx.bookingCode);
+  const guestsLine = `${ctx.adults ?? 1} ${(ctx.adults ?? 1) === 1 ? "adult" : "adults"}${
+    ctx.children ? `, ${ctx.children} ${ctx.children === 1 ? "child" : "children"}` : ""
+  }`;
+  const bookingUrl = absoluteUrl(`/booking-confirmation/${ctx.bookingCode}`);
+  const logoUrl = absoluteUrl("/lkhs-dark.svg");
+
+  // Matches the CSS custom properties in src/app/globals.css.
+  const c = {
+    blue: "#0b2f6b",
+    ivory: "#f7f9fc",
+    ink: "#0e1420",
+    border: "#e3e8f1",
+    muted: "#f4f7fc",
+    mutedFg: "#5b6b82",
+  };
+  // Single-quoted: this string is interpolated inside double-quoted style="" attributes.
+  const font = `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif`;
+
+  const detail = (label: string, value: string, sub?: string) => `
+    <td style="padding:0 12px 20px 0;vertical-align:top;width:50%;">
+      <p style="margin:0;font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:${c.mutedFg};">${label}</p>
+      <p style="margin:4px 0 0;font-size:14px;font-weight:500;color:${c.ink};">${value}</p>
+      ${sub ? `<p style="margin:2px 0 0;font-size:12px;color:${c.mutedFg};">${sub}</p>` : ""}
+    </td>`;
+
+  return `<!doctype html>
+<html>
+  <body style="margin:0;padding:0;background-color:${c.muted};font-family:${font};">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${c.muted};padding:32px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid ${c.border};">
+            <tr>
+              <td align="center" style="padding:28px 32px;border-bottom:1px solid ${c.border};">
+                <img src="${logoUrl}" alt="Lime Kraft Home Stay" height="32" style="height:32px;width:auto;display:block;border:0;" />
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding:40px 32px 24px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                  <tr>
+                    <td width="56" height="56" align="center" valign="middle" style="background-color:${c.blue};border-radius:999px;font-size:24px;line-height:56px;color:${c.ivory};font-weight:700;">&#10003;</td>
+                  </tr>
+                </table>
+                <h1 style="margin:20px 0 0;font-size:28px;line-height:1.25;font-weight:500;color:${c.ink};letter-spacing:-0.02em;font-family:${font};">Your stay is confirmed.</h1>
+                <p style="margin:10px 0 0;font-size:15px;color:${c.mutedFg};">Thanks, ${firstName}. Everything&rsquo;s set - here are the details.</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0 32px 8px;">
+                ${
+                  ctx.propertyImageUrl
+                    ? `<img src="${escapeHtml(ctx.propertyImageUrl)}" alt="${propertyName}" width="536" style="width:100%;max-width:536px;height:auto;border-radius:10px;display:block;margin-bottom:20px;border:0;" />`
+                    : ""
+                }
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="vertical-align:top;">
+                      <p style="margin:0;font-size:19px;font-weight:500;color:${c.ink};">${propertyName}</p>
+                      ${location ? `<p style="margin:4px 0 0;font-size:13px;color:${c.mutedFg};">${location}</p>` : ""}
+                    </td>
+                    <td align="right" style="vertical-align:top;">
+                      <table role="presentation" cellpadding="0" cellspacing="0" style="background-color:${c.muted};border-radius:8px;">
+                        <tr>
+                          <td style="padding:8px 14px;text-align:right;">
+                            <p style="margin:0;font-size:9px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:${c.mutedFg};">Booking ID</p>
+                            <p style="margin:2px 0 0;font-size:13px;font-weight:500;font-family:'SFMono-Regular',Consolas,Menlo,monospace;color:${c.ink};">${bookingCode}</p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;border-top:1px solid ${c.border};padding-top:20px;">
+                  <tr>
+                    ${detail("Dates", stay, `${ctx.nights ?? ""} ${ctx.nights === 1 ? "night" : "nights"}`.trim())}
+                    ${detail("Guests", guestsLine)}
+                  </tr>
+                  <tr>
+                    ${detail("Payment", ctx.total ? formatINR(ctx.total) : "Pending", ctx.paymentMethod ? escapeHtml(ctx.paymentMethod) : undefined)}
+                    ${detail("Check-in", `From 2:00 PM on ${formatDateLong(ctx.checkIn)}`, "Checkout by 11:00 AM")}
+                  </tr>
+                </table>
+
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;background-color:${c.muted};border-radius:8px;">
+                  <tr>
+                    <td style="padding:14px 16px;font-size:13px;line-height:1.5;color:${c.mutedFg};">
+                      The address and access details reach you three days before you travel. Anything you need before then - an early check-in, a question about the area - just reply to this email.
+                    </td>
+                  </tr>
+                </table>
+
+                <table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0 8px;">
+                  <tr>
+                    <td style="border-radius:8px;background-color:${c.blue};">
+                      <a href="${bookingUrl}" style="display:inline-block;padding:12px 24px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;font-family:${font};">View my booking</a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px 32px 32px;border-top:1px solid ${c.border};">
+                <p style="margin:0;font-size:13px;color:${c.mutedFg};">- Lime Kraft Home Stays</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
 }

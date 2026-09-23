@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  ChevronRight, CreditCard, Heart, Luggage, MessageSquare, UserRound,
+  ChevronRight, Heart, LogOut, Luggage, MessageSquare, UserRound,
 } from "lucide-react";
 import { SiteHeader } from "@/components/site/site-header";
 import { Button } from "@/components/ui/button";
@@ -18,8 +18,7 @@ export const metadata: Metadata = {
 const LINKS = [
   { href: "/account/trips", label: "My trips", description: "Upcoming, past and cancelled stays", icon: Luggage },
   { href: "/account/saved", label: "Saved stays", description: "Homes you've kept for later", icon: Heart },
-  { href: "/account", label: "Profile", description: "Your details and preferences", icon: UserRound },
-  { href: "/account", label: "Payments", description: "Cards and payment history", icon: CreditCard },
+  { href: "/account/profile", label: "Profile", description: "Your details and preferences", icon: UserRound },
   { href: "/contact", label: "Messages", description: "Talk to the Lime Kraft team", icon: MessageSquare },
 ];
 
@@ -80,6 +79,16 @@ export default async function AccountPage() {
               </li>
             ))}
           </ul>
+
+          {session && (
+            <Link
+              href="/api/auth/signout"
+              className="mt-6 flex items-center gap-4 rounded-xl border border-border bg-card px-5 py-4 transition-colors hover:bg-muted/40"
+            >
+              <LogOut className="size-5 shrink-0 text-brand-mist" />
+              <span className="text-sm font-medium text-foreground">Log out</span>
+            </Link>
+          )}
         </div>
       </main>
     </>

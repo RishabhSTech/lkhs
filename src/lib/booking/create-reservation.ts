@@ -337,7 +337,19 @@ async function notifyChannelsOfAvailabilityChange(propertyId: string) {
 export async function confirmReservation(reservationId: string) {
   const reservation = await db.reservation.findUnique({
     where: { id: reservationId },
-    include: { property: { select: { id: true, name: true } }, reservationGuests: { where: { isPrimary: true } } },
+    include: {
+      property: {
+        select: {
+          id: true,
+          name: true,
+          locationArea: true,
+          city: true,
+          images: { orderBy: { sortOrder: "asc" }, take: 1 },
+        },
+      },
+      reservationGuests: { where: { isPrimary: true } },
+      payments: true,
+    },
   });
   if (!reservation || reservation.status !== "PENDING") return;
 
@@ -372,6 +384,13 @@ export async function confirmReservation(reservationId: string) {
     propertyName: reservation.property.name,
     checkIn: reservation.checkIn,
     checkOut: reservation.checkOut,
+    nights: reservation.nights,
+    adults: reservation.adults,
+    children: reservation.children,
+    locationArea: reservation.property.locationArea,
+    city: reservation.property.city,
+    propertyImageUrl: reservation.property.images[0]?.url,
+    paymentMethod: reservation.payments[0]?.method,
   });
 }
 
@@ -407,6 +426,13 @@ async function notifyGuestBookingConfirmed(args: {
   propertyName: string;
   checkIn: Date;
   checkOut: Date;
+  nights: number;
+  adults: number;
+  children: number;
+  locationArea: string;
+  city: string;
+  propertyImageUrl?: string;
+  paymentMethod?: string;
 }) {
   const rendered = renderTemplate("BOOKING_CONFIRMED", {
     guestName: args.guest.name,
@@ -415,6 +441,13 @@ async function notifyGuestBookingConfirmed(args: {
     checkOut: args.checkOut,
     bookingCode: args.code,
     total: args.total,
+    nights: args.nights,
+    adults: args.adults,
+    children: args.children,
+    locationArea: args.locationArea,
+    city: args.city,
+    propertyImageUrl: args.propertyImageUrl,
+    paymentMethod: args.paymentMethod,
   });
 
   const notifier = getNotificationProvider();
@@ -425,6 +458,7 @@ async function notifyGuestBookingConfirmed(args: {
       to: destination,
       subject: rendered.subject,
       body: rendered.body,
+      html: args.guest.email ? rendered.html : undefined,
       templateKey: "BOOKING_CONFIRMED",
     });
 
