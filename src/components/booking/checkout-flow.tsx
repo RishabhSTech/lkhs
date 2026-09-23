@@ -4,9 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  AlertCircle, ArrowLeft, Building2, Check, CreditCard, Loader2, Smartphone,
-} from "lucide-react";
+import { AlertCircle, ArrowLeft, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DateRangePicker } from "@/components/property/date-range-picker";
@@ -26,39 +24,14 @@ type PropertySummary = {
   basePrice: number;
 };
 
-const STEPS = ["Dates & guests", "Your details", "Payment"] as const;
-
-declare global {
-  interface Window {
-    Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
-  }
-}
-
-function loadRazorpayScript(): Promise<boolean> {
-  if (window.Razorpay) return Promise.resolve(true);
-  return new Promise((resolve) => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
-  });
-}
-
-const PAYMENT_METHODS = [
-  { value: "UPI", label: "UPI", hint: "GPay, PhonePe, Paytm", icon: Smartphone },
-  { value: "CARD", label: "Card", hint: "Credit or debit", icon: CreditCard },
-  { value: "NETBANKING", label: "Net banking", hint: "All major banks", icon: Building2 },
-] as const;
+const STEPS = ["Dates & guests", "Your details"] as const;
 
 export function CheckoutFlow({
   property,
   initial,
-  isMockPayment,
 }: {
   property: PropertySummary;
   initial: { checkIn: string; checkOut: string; guests: number };
-  isMockPayment: boolean;
 }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -68,8 +41,6 @@ export function CheckoutFlow({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [paymentMethod, setPaymentMethod] =
-    useState<(typeof PAYMENT_METHODS)[number]["value"]>("UPI");
 
   const [quote, setQuote] = useState<Quote | null>(null);
   const [available, setAvailable] = useState<boolean | null>(null);
@@ -122,92 +93,25 @@ export function CheckoutFlow({
           name,
           email,
           phone,
-          paymentMethod,
         }),
       });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(
           data.error ??
-            "We couldn't complete that booking. Nothing has been charged - try again, or message us and we'll hold the dates.",
+            "We couldn't send that booking request. Try again, or message us and we'll hold the dates.",
         );
       }
 
-      if (data.status === "CONFIRMED" || !data.clientCheckout) {
-        router.push(`/booking-confirmation/${data.code}`);
-        return;
-      }
-
-      await openRazorpayCheckout(data);
+      router.push(`/booking-confirmation/${data.code}`);
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "We couldn't complete that booking. Nothing has been charged - try again, or message us and we'll hold the dates.",
+          : "We couldn't send that booking request. Try again, or message us and we'll hold the dates.",
       );
       setSubmitting(false);
     }
-  }
-
-  async function openRazorpayCheckout(booking: {
-    id: string;
-    code: string;
-    clientCheckout: { keyId: string; orderId: string; amountPaise: number; currency: string };
-  }) {
-    const loaded = await loadRazorpayScript();
-    if (!loaded || !window.Razorpay) {
-      setError(
-        "The payment window wouldn't load. Check your connection and try again - nothing has been charged.",
-      );
-      setSubmitting(false);
-      return;
-    }
-
-    const { clientCheckout } = booking;
-    const razorpay = new window.Razorpay({
-      key: clientCheckout.keyId,
-      order_id: clientCheckout.orderId,
-      amount: clientCheckout.amountPaise,
-      currency: clientCheckout.currency,
-      name: "Lime Kraft Home Stays",
-      description: `Booking ${booking.code}`,
-      prefill: { name, email: email || undefined, contact: phone || undefined },
-      handler: async (response: {
-        razorpay_order_id: string;
-        razorpay_payment_id: string;
-        razorpay_signature: string;
-      }) => {
-        try {
-          const confirmRes = await fetch("/api/bookings/confirm", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ reservationId: booking.id, ...response }),
-          });
-          const confirmData = await confirmRes.json();
-          if (!confirmRes.ok) {
-            throw new Error(
-              confirmData.error ??
-                `We couldn't confirm that payment. Don't pay again - message us with booking ${booking.code} and we'll finish it by hand.`,
-            );
-          }
-          router.push(`/booking-confirmation/${booking.code}`);
-        } catch (err) {
-          setError(
-            err instanceof Error
-              ? err.message
-              : `We couldn't confirm that payment. Don't pay again - message us with booking ${booking.code} and we'll finish it by hand.`,
-          );
-          setSubmitting(false);
-        }
-      },
-      modal: {
-        ondismiss: () => {
-          setError("Payment was cancelled. Your dates are held for 20 minutes - try again anytime before then.");
-          setSubmitting(false);
-        },
-      },
-    });
-    razorpay.open();
   }
 
   return (
@@ -222,7 +126,7 @@ export function CheckoutFlow({
       </button>
 
       <h1 className="mt-5 font-heading text-3xl leading-tight text-foreground sm:text-4xl">
-        Complete your booking
+        Request your booking
       </h1>
 
       <ol className="mt-6 flex items-center gap-2" aria-label="Booking progress">
@@ -351,67 +255,10 @@ export function CheckoutFlow({
                     </p>
                   </div>
 
-                  <Button
-                    size="lg"
-                    className="mt-6"
-                    disabled={!detailsValid}
-                    onClick={() => setStep(2)}
-                  >
-                    Continue to payment
-                  </Button>
-                </StepCard>
-              )}
-
-              {step === 2 && (
-                <StepCard title="How would you like to pay?">
-                  <div className="grid gap-3">
-                    {PAYMENT_METHODS.map((method) => (
-                      <label
-                        key={method.value}
-                        className={cn(
-                          "flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors",
-                          paymentMethod === method.value
-                            ? "border-primary bg-primary/5"
-                            : "border-border bg-card hover:border-ring",
-                        )}
-                      >
-                        <input
-                          type="radio"
-                          name="payment"
-                          value={method.value}
-                          checked={paymentMethod === method.value}
-                          onChange={() => setPaymentMethod(method.value)}
-                          className="sr-only"
-                        />
-                        <method.icon className="size-5 text-brand-mist" />
-                        <span className="flex-1">
-                          <span className="block text-sm font-medium text-foreground">
-                            {method.label}
-                          </span>
-                          <span className="block text-xs text-muted-foreground">
-                            {method.hint}
-                          </span>
-                        </span>
-                        <span
-                          className={cn(
-                            "grid size-4 place-items-center rounded-full border-2 transition-colors",
-                            paymentMethod === method.value
-                              ? "border-primary"
-                              : "border-border",
-                          )}
-                        >
-                          {paymentMethod === method.value && (
-                            <span className="size-2 rounded-full bg-primary" />
-                          )}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-
                   <p className="mt-4 rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
-                    {isMockPayment
-                      ? "Demo environment - no payment gateway is connected, so no money moves. The booking is created for real and appears in the Lime Kraft dashboard."
-                      : "You'll be asked to complete payment via Razorpay next. Your dates are held for 20 minutes while you do."}
+                    We don&apos;t take payment online yet - send your request and
+                    our team will reach out to confirm your stay and share
+                    payment details. Nothing is charged now.
                   </p>
 
                   {error && <Alert>{error}</Alert>}
@@ -419,13 +266,11 @@ export function CheckoutFlow({
                   <Button
                     size="lg"
                     className="mt-6 w-full sm:w-auto"
-                    disabled={submitting || !datesValid}
+                    disabled={submitting || !detailsValid || !datesValid}
                     onClick={submit}
                   >
                     {submitting && <Loader2 className="animate-spin" />}
-                    {quote
-                      ? `Pay ${formatINR(quote.total)} and confirm`
-                      : "Confirm booking"}
+                    Send booking request
                   </Button>
                 </StepCard>
               )}

@@ -137,6 +137,6 @@ describe("createReservation - inventory locking", () => {
       guest: { name: `Guest ${marker} back-to-back-2`, email: `${marker}-btb2@example.test` },
     });
 
-    expect(second.status).toBe("CONFIRMED");
+    expect(second.status).toBe("PENDING");
   });
 });

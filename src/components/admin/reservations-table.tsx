@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { BookingSource, ReservationStatus } from "@prisma/client";
+import { Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
@@ -65,6 +68,31 @@ export function ReservationsTable({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [pendingAction, setPendingAction] = useState<"confirm" | "cancel" | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  async function runReservationAction(id: string, action: "confirm" | "cancel") {
+    if (action === "cancel") {
+      const ok = window.confirm(
+        "Cancel this booking? The guest is emailed and the dates are freed up.",
+      );
+      if (!ok) return;
+    }
+    setPendingAction(action);
+    setActionError(null);
+    try {
+      const res = await fetch(`/api/admin/reservations/${id}/${action}`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? `Couldn't ${action} that booking.`);
+      }
+      router.refresh();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : `Couldn't ${action} that booking.`);
+    } finally {
+      setPendingAction(null);
+    }
+  }
 
   function setParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -246,14 +274,49 @@ export function ReservationsTable({
               </SheetHeader>
 
               <div className="overflow-y-auto px-4 pb-6">
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Badge className={sourceBadgeClass(selected.source)}>
                     {SOURCE_LABELS[selected.source]}
                   </Badge>
                   <Badge className={statusBadgeClass(selected.status)}>
                     {STATUS_LABELS[selected.status]}
                   </Badge>
+                  {(selected.status === "PENDING" || selected.status === "CONFIRMED") && (
+                    <span className="ml-auto flex gap-2">
+                      {selected.status === "PENDING" && (
+                        <Button
+                          size="sm"
+                          disabled={pendingAction !== null}
+                          onClick={() => runReservationAction(selected.id, "confirm")}
+                        >
+                          {pendingAction === "confirm" && <Loader2 className="animate-spin" />}
+                          Confirm booking
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        disabled={pendingAction !== null}
+                        onClick={() => runReservationAction(selected.id, "cancel")}
+                      >
+                        {pendingAction === "cancel" && <Loader2 className="animate-spin" />}
+                        Cancel booking
+                      </Button>
+                    </span>
+                  )}
                 </div>
+                {selected.status === "PENDING" && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    This is a booking request awaiting payment. Confirm it once
+                    you&apos;ve reached the guest and arranged payment - that
+                    posts revenue and sends their confirmation email.
+                  </p>
+                )}
+                {actionError && (
+                  <p className="mt-2 text-xs text-destructive" role="alert">
+                    {actionError}
+                  </p>
+                )}
 
                 <Tabs defaultValue="details" className="mt-4">
                   <TabsList className="w-full">

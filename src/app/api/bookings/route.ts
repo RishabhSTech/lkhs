@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
 import { parseISODate, todayUTC } from "@/lib/dates";
 import {
   InventoryConflictError,
-  PaymentIntentError,
   createReservation,
 } from "@/lib/booking/create-reservation";
 import { getSession } from "@/lib/auth/session";
@@ -18,7 +17,6 @@ const schema = z.object({
   name: z.string().min(2, "Please enter your full name."),
   email: z.email("Enter a valid email address."),
   phone: z.string().min(8, "Enter a valid mobile number.").optional().or(z.literal("")),
-  paymentMethod: z.enum(["UPI", "CARD", "NETBANKING", "OTHER"]).default("UPI"),
 });
 
 export async function POST(request: Request) {
@@ -67,7 +65,7 @@ export async function POST(request: Request) {
   const session = await getSession();
 
   try {
-    const { reservation, status, clientCheckout } = await createReservation({
+    const { reservation, status } = await createReservation({
       propertyId: property.id,
       checkIn,
       checkOut,
@@ -78,7 +76,6 @@ export async function POST(request: Request) {
         phone: data.phone || null,
       },
       source: "DIRECT",
-      paymentMethod: data.paymentMethod,
       userId: session?.userId ?? null,
     });
 
@@ -86,18 +83,14 @@ export async function POST(request: Request) {
       code: reservation.code,
       id: reservation.id,
       status,
-      clientCheckout: clientCheckout ?? null,
     });
   } catch (error) {
     if (error instanceof InventoryConflictError) {
       return NextResponse.json({ error: error.message }, { status: 409 });
     }
-    if (error instanceof PaymentIntentError) {
-      return NextResponse.json({ error: error.message }, { status: 402 });
-    }
     console.error("Booking failed", error);
     return NextResponse.json(
-      { error: "We couldn't complete that booking. Nothing has been charged - try again, or message us and we'll hold the dates." },
+      { error: "We couldn't send that booking request. Try again, or message us and we'll hold the dates." },
       { status: 500 },
     );
   }

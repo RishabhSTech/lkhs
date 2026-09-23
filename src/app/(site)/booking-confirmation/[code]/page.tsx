@@ -42,7 +42,10 @@ export default async function BookingConfirmationPage({
       <SiteHeader />
       <main className="flex-1">
         <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 lg:py-16">
-          <ConfirmationHero guestName={reservation.guest.name} />
+          <ConfirmationHero
+            guestName={reservation.guest.name}
+            status={reservation.status}
+          />
 
           <div className="mt-8 overflow-hidden rounded-xl border border-border bg-card">
             {reservation.property.images[0] && (
@@ -95,12 +98,14 @@ export default async function BookingConfirmationPage({
                   {reservation.children > 0 && `, ${reservation.children} children`}
                 </Detail>
 
-                <Detail icon={Receipt} label="Payment">
+                <Detail icon={Receipt} label="Total">
                   {formatINR(Number(reservation.total))}
                   <span className="mt-0.5 block text-xs text-muted-foreground">
                     {payment
                       ? `${payment.method} · ${payment.status.toLowerCase()}`
-                      : "Pending"}
+                      : reservation.status === "PENDING"
+                        ? "Pay when our team connects with you"
+                        : "Arranged with our team"}
                   </span>
                 </Detail>
 
@@ -113,10 +118,22 @@ export default async function BookingConfirmationPage({
               </dl>
 
               <div className="mt-6 rounded-lg bg-muted/40 p-4 text-sm leading-relaxed text-muted-foreground">
-                We&apos;ve sent your confirmation
-                {reservation.guest.email ? ` to ${reservation.guest.email}` : ""}.
-                Access instructions and the exact address arrive three days before
-                you travel.
+                {reservation.status === "PENDING" ? (
+                  <>
+                    We&apos;ve sent a copy of this request
+                    {reservation.guest.email ? ` to ${reservation.guest.email}` : ""}.
+                    Our team will reach out to confirm your stay and share
+                    payment details - access instructions and the exact
+                    address follow once that&apos;s settled.
+                  </>
+                ) : (
+                  <>
+                    We&apos;ve sent your confirmation
+                    {reservation.guest.email ? ` to ${reservation.guest.email}` : ""}.
+                    Access instructions and the exact address arrive three
+                    days before you travel.
+                  </>
+                )}
               </div>
 
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">

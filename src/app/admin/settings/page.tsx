@@ -7,7 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getCurrentAdminUser } from "@/lib/auth/current-user";
 import { db } from "@/lib/db";
 import { formatDateLong } from "@/lib/format";
-import { PAYMENT_PROVIDER_IS_MOCK } from "@/lib/payments/provider";
 import { EMAIL_IS_LIVE } from "@/lib/notifications/provider";
 
 export const dynamic = "force-dynamic";
@@ -43,10 +42,8 @@ function buildIntegrations(mailboxStatus: string | null) {
     {
       name: "Payments",
       detail: "Razorpay",
-      status: PAYMENT_PROVIDER_IS_MOCK ? "Not connected" : "Connected",
-      note: PAYMENT_PROVIDER_IS_MOCK
-        ? "Bookings settle through a mock provider."
-        : "Bookings settle through Razorpay Checkout + webhook.",
+      status: "Not in use",
+      note: "No gateway is live yet - guests send a booking request and the team arranges payment directly.",
     },
     {
       name: "Email",

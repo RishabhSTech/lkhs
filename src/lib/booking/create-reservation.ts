@@ -1,24 +1,16 @@
-import { Prisma, type BookingSource, type PaymentMethodType } from "@prisma/client";
+import { Prisma, type BookingSource } from "@prisma/client";
 import { db } from "@/lib/db";
 import { eachNight, toUTCDate } from "@/lib/dates";
 import { buildQuote } from "@/lib/pricing/engine";
-import { getPaymentProvider, type PaymentIntentResult } from "@/lib/payments/provider";
 import { getNotificationProvider } from "@/lib/notifications/provider";
 import { renderTemplate } from "@/lib/notifications/templates";
 import { alertTeam } from "@/lib/notifications/alert";
-import { enqueueChannelSync, enqueueReservationExpiry } from "@/lib/queue";
+import { enqueueChannelSync } from "@/lib/queue";
 
 export class InventoryConflictError extends Error {
   constructor() {
     super("Those dates were just taken. Please pick different dates.");
     this.name = "InventoryConflictError";
-  }
-}
-
-export class PaymentIntentError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "PaymentIntentError";
   }
 }
 
@@ -31,7 +23,6 @@ export type CreateReservationInput = {
   children?: number;
   guest: { name: string; email?: string | null; phone?: string | null };
   source?: BookingSource;
-  paymentMethod?: PaymentMethodType;
   userId?: string | null;
 };
 
@@ -46,7 +37,6 @@ const OTA_FEE_RATES: Partial<Record<BookingSource, number>> = {
   BOOKING_COM: 0.15,
   AGODA: 0.16,
 };
-const PAYMENT_FEE_RATE = 0.02;
 
 /**
  * The one path that creates a booking. Availability check, inventory lock
@@ -54,11 +44,11 @@ const PAYMENT_FEE_RATE = 0.02;
  * constraint on (unitId, date) is what actually guarantees no double-booking
  * under concurrency.
  *
- * The reservation always starts PENDING, holding the dates. Revenue is only
- * posted once payment actually settles (see confirmReservation): for the
- * mock provider that happens synchronously right here; for a real provider
- * (Razorpay) it happens later, from the checkout-confirm route or webhook,
- * and a queued job releases the hold if payment never completes.
+ * There's no payment gateway wired up right now, so this only ever files a
+ * booking *request*: the reservation starts (and stays) PENDING, holding the
+ * dates, and the guest is told our team will reach out to arrange payment.
+ * Revenue is posted later, once someone on the team confirms the reservation
+ * (see confirmReservation) after that payment is actually in hand.
  */
 export async function createReservation(input: CreateReservationInput) {
   const checkIn = toUTCDate(input.checkIn);
@@ -93,7 +83,6 @@ export async function createReservation(input: CreateReservationInput) {
   });
 
   const source = input.source ?? "DIRECT";
-  const method = input.paymentMethod ?? "UPI";
   const code = generateCode();
 
   const reservation = await db
@@ -154,54 +143,29 @@ export async function createReservation(input: CreateReservationInput) {
 
   await notifyChannelsOfAvailabilityChange(property.id);
 
-  const provider = getPaymentProvider();
-  let intent: PaymentIntentResult;
-  try {
-    intent = await provider.createIntent({
-      reservationCode: reservation.code,
-      amount: quote.total,
-      currency: "INR",
-      method,
-      customer: input.guest,
-    });
-  } catch (error) {
-    await releasePendingReservation(reservation.id);
-    throw new PaymentIntentError(
-      error instanceof Error ? error.message : "We couldn't start the payment. Please try again.",
-    );
-  }
-
-  if (intent.status === "FAILED") {
-    await releasePendingReservation(reservation.id);
-    throw new PaymentIntentError(
-      intent.failureReason ?? "We couldn't start the payment. Please try again.",
-    );
-  }
-
-  await db.reservationPayment.create({
-    data: {
-      reservationId: reservation.id,
-      provider: provider.name,
-      method,
-      amount: new Prisma.Decimal(quote.total),
-      status: intent.status === "SUCCEEDED" ? "SUCCEEDED" : "PENDING",
-      providerRef: intent.providerRef,
+  await notifyGuestBookingRequested({
+    reservationId: reservation.id,
+    code: reservation.code,
+    total: Number(reservation.total),
+    guest: {
+      name: input.guest.name,
+      email: input.guest.email ?? null,
+      phone: input.guest.phone ?? null,
     },
+    propertyName: property.name,
+    checkIn: reservation.checkIn,
+    checkOut: reservation.checkOut,
+    nights: reservation.nights,
+    adults: reservation.adults,
+    children: reservation.children,
+    locationArea: property.locationArea,
+    city: property.city,
   });
-
-  if (intent.status === "SUCCEEDED") {
-    await confirmReservation(reservation.id);
-  } else {
-    // Payment settles asynchronously (real gateway) - release the hold if the
-    // guest never completes checkout.
-    await enqueueReservationExpiry({ reservationId: reservation.id });
-  }
 
   return {
     reservation,
     quote,
-    status: intent.status === "SUCCEEDED" ? ("CONFIRMED" as const) : ("PENDING" as const),
-    clientCheckout: intent.clientCheckout,
+    status: "PENDING" as const,
   };
 }
 
@@ -267,7 +231,9 @@ async function postBookingFinancials(
       amount: new Prisma.Decimal(args.total),
       date: args.date,
       status: "PAID",
-      paymentMethod: "UPI",
+      // Collected offline by the team, not through a gateway, so the actual
+      // method isn't known here.
+      paymentMethod: "OTHER",
       description: `Booking revenue · ${args.source}`,
     },
   });
@@ -290,22 +256,6 @@ async function postBookingFinancials(
       },
     });
   }
-
-  const paymentFeeCategory = await tx.transactionCategory.findFirstOrThrow({
-    where: { group: "PAYMENT_FEE" },
-  });
-  await tx.transaction.create({
-    data: {
-      propertyId: args.propertyId,
-      categoryId: paymentFeeCategory.id,
-      reservationId: args.reservationId,
-      type: "PAYMENT_FEE",
-      amount: new Prisma.Decimal(Math.round(args.total * PAYMENT_FEE_RATE)),
-      date: args.date,
-      status: "PAID",
-      description: "Payment gateway fee",
-    },
-  });
 }
 
 /** A booking (or its cancellation) changes which nights are free, so every
@@ -418,6 +368,58 @@ export async function releasePendingReservation(reservationId: string): Promise<
   return true;
 }
 
+/**
+ * Admin-triggered cancellation - unlike releasePendingReservation (which only
+ * ever fires against a PENDING hold), this also covers walking back a
+ * CONFIRMED booking the guest can no longer take. Either way the inventory
+ * hold is released and the guest is told. It does NOT touch any revenue
+ * already posted for a confirmed booking - reversing that is a finance-team
+ * call, made through the normal transaction tools, not an automatic one.
+ * Returns false if there was nothing to cancel (already cancelled, or a
+ * historical COMPLETED/NO_SHOW record).
+ */
+export async function cancelReservation(reservationId: string): Promise<boolean> {
+  const reservation = await db.reservation.findUnique({
+    where: { id: reservationId },
+    include: {
+      property: { select: { id: true, name: true } },
+      reservationGuests: { where: { isPrimary: true } },
+    },
+  });
+  if (!reservation || (reservation.status !== "PENDING" && reservation.status !== "CONFIRMED")) {
+    return false;
+  }
+  const wasConfirmed = reservation.status === "CONFIRMED";
+
+  await db.$transaction([
+    db.inventoryNight.deleteMany({ where: { reservationId: reservation.id } }),
+    db.reservation.update({ where: { id: reservation.id }, data: { status: "CANCELLED" } }),
+    db.reservationPayment.updateMany({
+      where: { reservationId: reservation.id, status: "PENDING" },
+      data: { status: "FAILED" },
+    }),
+  ]);
+
+  await notifyChannelsOfAvailabilityChange(reservation.propertyId);
+
+  const primaryGuest = reservation.reservationGuests[0];
+  await notifyGuestBookingCancelled({
+    reservationId: reservation.id,
+    code: reservation.code,
+    guest: {
+      name: primaryGuest?.name ?? "Guest",
+      email: primaryGuest?.email ?? null,
+      phone: primaryGuest?.phone ?? null,
+    },
+    propertyName: reservation.property.name,
+    checkIn: reservation.checkIn,
+    checkOut: reservation.checkOut,
+    wasConfirmed,
+  });
+
+  return true;
+}
+
 async function notifyGuestBookingConfirmed(args: {
   reservationId: string;
   code: string;
@@ -481,6 +483,125 @@ async function notifyGuestBookingConfirmed(args: {
     title: "New booking confirmed",
     body: `${args.guest.name} booked ${args.propertyName} · ${args.code}`,
     severity: "INFO",
+    link: `/admin/reservations?code=${args.code}`,
+  });
+}
+
+/** Sent right after a guest submits a booking request - there's no payment
+ * gateway wired up, so this is what stands in for a confirmation until
+ * someone on the team reaches out and confirmReservation() finalizes it. */
+async function notifyGuestBookingRequested(args: {
+  reservationId: string;
+  code: string;
+  total: number;
+  guest: { name: string; email?: string | null; phone?: string | null };
+  propertyName: string;
+  checkIn: Date;
+  checkOut: Date;
+  nights: number;
+  adults: number;
+  children: number;
+  locationArea: string;
+  city: string;
+}) {
+  const rendered = renderTemplate("BOOKING_REQUESTED", {
+    guestName: args.guest.name,
+    propertyName: args.propertyName,
+    checkIn: args.checkIn,
+    checkOut: args.checkOut,
+    bookingCode: args.code,
+    total: args.total,
+    nights: args.nights,
+    adults: args.adults,
+    children: args.children,
+    locationArea: args.locationArea,
+    city: args.city,
+  });
+
+  const notifier = getNotificationProvider();
+  const destination = args.guest.email ?? args.guest.phone;
+  if (destination) {
+    const result = await notifier.send({
+      channel: args.guest.email ? "EMAIL" : "WHATSAPP",
+      to: destination,
+      subject: rendered.subject,
+      body: rendered.body,
+      html: args.guest.email ? rendered.html : undefined,
+      templateKey: "BOOKING_REQUESTED",
+    });
+
+    await db.message.create({
+      data: {
+        reservationId: args.reservationId,
+        channel: args.guest.email ? "EMAIL" : "WHATSAPP",
+        direction: "OUTBOUND",
+        templateKey: "BOOKING_REQUESTED",
+        subject: rendered.subject,
+        body: rendered.body,
+        status: result.status === "SENT" ? "SENT" : "FAILED",
+        sentAt: new Date(),
+      },
+    });
+  }
+
+  await alertTeam({
+    type: "NEW_BOOKING",
+    title: "New booking request",
+    body: `${args.guest.name} requested ${args.propertyName} · ${args.code} - reach out to arrange payment.`,
+    severity: "INFO",
+    link: `/admin/reservations?code=${args.code}`,
+  });
+}
+
+async function notifyGuestBookingCancelled(args: {
+  reservationId: string;
+  code: string;
+  guest: { name: string; email?: string | null; phone?: string | null };
+  propertyName: string;
+  checkIn: Date;
+  checkOut: Date;
+  wasConfirmed: boolean;
+}) {
+  const rendered = renderTemplate("BOOKING_CANCELLED", {
+    guestName: args.guest.name,
+    propertyName: args.propertyName,
+    checkIn: args.checkIn,
+    checkOut: args.checkOut,
+    bookingCode: args.code,
+  });
+
+  const notifier = getNotificationProvider();
+  const destination = args.guest.email ?? args.guest.phone;
+  if (destination) {
+    const result = await notifier.send({
+      channel: args.guest.email ? "EMAIL" : "WHATSAPP",
+      to: destination,
+      subject: rendered.subject,
+      body: rendered.body,
+      templateKey: "BOOKING_CANCELLED",
+    });
+
+    await db.message.create({
+      data: {
+        reservationId: args.reservationId,
+        channel: args.guest.email ? "EMAIL" : "WHATSAPP",
+        direction: "OUTBOUND",
+        templateKey: "BOOKING_CANCELLED",
+        subject: rendered.subject,
+        body: rendered.body,
+        status: result.status === "SENT" ? "SENT" : "FAILED",
+        sentAt: new Date(),
+      },
+    });
+  }
+
+  await alertTeam({
+    type: "NEW_BOOKING",
+    title: "Booking cancelled",
+    body: `${args.code} for ${args.propertyName} was cancelled${
+      args.wasConfirmed ? " (was confirmed - check whether a refund is owed)" : ""
+    }.`,
+    severity: "WARNING",
     link: `/admin/reservations?code=${args.code}`,
   });
 }
