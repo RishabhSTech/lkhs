@@ -170,19 +170,22 @@
   body {
     overflow-x: clip;
   }
-  /* Headings: tight tracking and medium weight is what reads "designed"
-     rather than "default". Tracking scales with size. */
+  /* Headings: tight tracking and a heavier weight is what reads "designed"
+     rather than "default" - semibold carries enough ink to anchor a page at
+     a glance, where the old medium weight read as an afterthought next to
+     the body copy around it. Tracking scales with size. */
   h1,
   h2,
   h3,
   h4,
   .font-heading {
     font-family: var(--font-heading);
-    font-weight: 500;
+    font-weight: 600;
     letter-spacing: -0.028em;
     line-height: 1.08;
   }
   h1 {
+    font-weight: 700;
     letter-spacing: -0.038em;
   }
   /* Display serif. Marketing voice only, never the admin. Serifs need far
@@ -195,7 +198,7 @@
      Let `font-optical-sizing: auto` drive opsz from font-size instead. */
   .font-display {
     font-family: var(--font-display);
-    font-weight: 400;
+    font-weight: 500;
     font-optical-sizing: auto;
     letter-spacing: -0.021em;
     line-height: 1.04;
@@ -204,7 +207,7 @@
      negative tracking closes the counters and it turns to mud. */
   .font-display-sm {
     font-family: var(--font-display);
-    font-weight: 400;
+    font-weight: 500;
     font-optical-sizing: auto;
     letter-spacing: -0.006em;
     line-height: 1.2;

@@ -55,14 +55,14 @@ export function SiteHeader({ transparent = false }: { transparent?: boolean }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  "rounded-md px-3 py-2 text-sm transition-colors",
                   solid
                     ? active
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
+                      ? "font-semibold text-foreground"
+                      : "font-medium text-muted-foreground hover:text-foreground"
                     : active
-                      ? "text-white"
-                      : "text-white/75 hover:text-white",
+                      ? "font-semibold text-white"
+                      : "font-medium text-white/75 hover:text-white",
                 )}
               >
                 {item.label}
