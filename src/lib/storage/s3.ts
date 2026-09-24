@@ -11,8 +11,16 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 let presignClient: S3Client | null = null;
 
+/** Platforms don't always agree on what "unset" means - some omit the key
+ * entirely, others ship it as an empty string - so treat both as absent
+ * rather than using `??`, which only falls back on null/undefined. */
+function env(key: string) {
+  const value = process.env[key];
+  return value ? value : undefined;
+}
+
 function isConfigured() {
-  return Boolean(process.env.S3_ENDPOINT && process.env.S3_ACCESS_KEY);
+  return Boolean(env("S3_ENDPOINT") && env("S3_ACCESS_KEY"));
 }
 
 /**
@@ -24,7 +32,7 @@ function isConfigured() {
  * bucket, where the endpoint already is the public one).
  */
 function signingEndpoint() {
-  return process.env.S3_PUBLIC_ENDPOINT ?? process.env.S3_ENDPOINT;
+  return env("S3_PUBLIC_ENDPOINT") ?? env("S3_ENDPOINT");
 }
 
 /**
@@ -37,7 +45,7 @@ function signingEndpoint() {
  * different host and path (`<ref>.supabase.co/storage/v1/object/public`).
  */
 function publicUrlBase() {
-  return process.env.S3_PUBLIC_URL_BASE ?? signingEndpoint();
+  return env("S3_PUBLIC_URL_BASE") ?? signingEndpoint();
 }
 
 function getPresignClient() {
@@ -45,7 +53,7 @@ function getPresignClient() {
 
   presignClient ??= new S3Client({
     endpoint: signingEndpoint(),
-    region: process.env.S3_REGION ?? "us-east-1",
+    region: env("S3_REGION") ?? "us-east-1",
     forcePathStyle: true, // MinIO and Supabase Storage both require path-style addressing
     credentials: {
       accessKeyId: process.env.S3_ACCESS_KEY!,
