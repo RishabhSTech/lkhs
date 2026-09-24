@@ -12,8 +12,11 @@ import { PhotoManager } from "@/components/admin/photo-manager";
 import { BasePricingEditor } from "@/components/admin/base-pricing-editor";
 import { PricingRuleEditor } from "@/components/admin/pricing-rule-editor";
 import { DailyRateEditor } from "@/components/admin/daily-rate-editor";
+import { ReviewRow } from "@/components/admin/review-row";
+import { ReviewImportForm } from "@/components/admin/review-import-form";
 import { db } from "@/lib/db";
 import { buildPL, PL_TRANSACTION_SELECT } from "@/lib/finance/calculations";
+import { buildAdminReviewRows } from "@/lib/admin/review-rows";
 import { SOURCE_LABELS, STATUS_LABELS, sourceBadgeClass, statusBadgeClass } from "@/lib/admin/sources";
 import { addMonths, todayUTC } from "@/lib/dates";
 import { formatDateRange, formatINR, formatINRCompact } from "@/lib/format";
@@ -39,7 +42,14 @@ export default async function AdminPropertyPage({
       pricingRules: { orderBy: { priority: "desc" } },
       dailyRates: { where: { date: { gte: today, lte: pricingHorizon } }, orderBy: { date: "asc" } },
       transactions: { select: PL_TRANSACTION_SELECT },
-      reviews: { include: { guest: { select: { name: true } } }, take: 5, orderBy: { createdAt: "desc" } },
+      reviews: {
+        include: {
+          guest: { select: { name: true } },
+          reservation: { select: { code: true, checkIn: true, checkOut: true } },
+        },
+        take: 100,
+        orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
+      },
       channelProperties: { include: { channel: true } },
       reservations: {
         include: { guest: { select: { name: true } } },
@@ -56,6 +66,19 @@ export default async function AdminPropertyPage({
   if (!property) notFound();
 
   const pl = buildPL(property.transactions);
+
+  const reviewRows = buildAdminReviewRows(
+    property.reviews.map((review) => ({
+      ...review,
+      property: { id: property.id, name: property.name, slug: property.slug },
+    })),
+  );
+  const publishedRatings = property.reviews
+    .filter((r) => r.status === "PUBLISHED")
+    .map((r) => r.rating);
+  const averageRating = publishedRatings.length
+    ? publishedRatings.reduce((sum, r) => sum + r, 0) / publishedRatings.length
+    : null;
 
   const amenityCatalog = await db.amenity.findMany({
     orderBy: [{ category: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
@@ -136,6 +159,7 @@ export default async function AdminPropertyPage({
           <TabsTrigger value="rooms">Rooms</TabsTrigger>
           <TabsTrigger value="pricing">Pricing</TabsTrigger>
           <TabsTrigger value="channels">Channels</TabsTrigger>
+          <TabsTrigger value="reviews">Reviews</TabsTrigger>
           <TabsTrigger value="bookings">Bookings</TabsTrigger>
           <TabsTrigger value="ops">Operations</TabsTrigger>
         </TabsList>
@@ -267,6 +291,33 @@ export default async function AdminPropertyPage({
                 </li>
               ))}
             </ul>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="reviews" className="mt-5">
+          <Card
+            title="Reviews"
+            description={
+              averageRating
+                ? `${averageRating.toFixed(2)} average across ${publishedRatings.length} published review${publishedRatings.length === 1 ? "" : "s"}`
+                : "No published reviews yet."
+            }
+          >
+            <div className="mb-4 flex justify-end">
+              <ReviewImportForm properties={[{ id: property.id, name: property.name }]} />
+            </div>
+            {reviewRows.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Nothing here yet. Guest reviews appear automatically once a stay is over; anything from the
+                channels can be added by hand above.
+              </p>
+            ) : (
+              <ul className="-mx-5 divide-y divide-border">
+                {reviewRows.map((review) => (
+                  <ReviewRow key={review.id} review={review} />
+                ))}
+              </ul>
+            )}
           </Card>
         </TabsContent>
 

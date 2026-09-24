@@ -4,14 +4,11 @@ import { Home, MessageSquare, Star, TrendingUp } from "lucide-react";
 import { AdminPage, PageHeader } from "@/components/admin/page-header";
 import { KpiCard } from "@/components/admin/kpi-card";
 import { Panel } from "@/components/admin/panel";
-import { ReviewRow, type AdminReview } from "@/components/admin/review-row";
+import { ReviewRow } from "@/components/admin/review-row";
 import { ReviewImportForm } from "@/components/admin/review-import-form";
 import { db } from "@/lib/db";
-import { nightsBetween, summariseReviews } from "@/lib/property/reviews";
-import {
-  REVIEW_TOPIC_BY_CODE,
-  topicsForReview,
-} from "@/lib/property/review-topics";
+import { summariseReviews } from "@/lib/property/reviews";
+import { buildAdminReviewRows } from "@/lib/admin/review-rows";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -71,41 +68,7 @@ export default async function AdminReviewsPage({
   });
   const replied = reviews.filter((r) => r.response).length;
 
-  const rows: AdminReview[] = reviews.map((review) => ({
-    id: review.id,
-    propertyId: review.property.id,
-    propertyName: review.property.name,
-    propertySlug: review.property.slug,
-    author: review.guest?.name ?? review.authorName ?? "Lime Kraft guest",
-    isGuestReview: review.guestId !== null,
-    bookingCode: review.reservation?.code ?? null,
-    rating: review.rating,
-    title: review.title,
-    body: review.body,
-    nights: review.reservation
-      ? nightsBetween(review.reservation.checkIn, review.reservation.checkOut)
-      : review.nightsStayed,
-    stayedOn: (
-      review.stayedOn ??
-      review.reservation?.checkOut ??
-      review.createdAt
-    ).toISOString(),
-    tripType: review.tripType,
-    source: review.source,
-    status: review.status,
-    isFeatured: review.isFeatured,
-    featuredOnHome: review.featuredOnHome,
-    response: review.response,
-    topics: topicsForReview(review).map((code) => {
-      const topic = REVIEW_TOPIC_BY_CODE.get(code)!;
-      return {
-        code,
-        label: topic.label,
-        emoji: topic.emoji,
-        inferred: (review.topics ?? []).length === 0,
-      };
-    }),
-  }));
+  const rows = buildAdminReviewRows(reviews);
 
   function href(next: { status?: string; property?: string }) {
     const search = new URLSearchParams();
