@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { BadgeCheck, Star } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { PublicReview } from "@/lib/property/review-display";
 import {
@@ -12,6 +12,7 @@ import {
   formatStayLength,
   initialsOf,
 } from "@/lib/property/reviews";
+import { SourceMark } from "@/components/property/reviews/source-badge";
 
 export function Stars({
   rating,
@@ -83,6 +84,9 @@ export function ReviewCard({
             <AvatarImage src={review.avatarUrl} alt="" />
           )}
           <AvatarFallback>{initialsOf(review.name)}</AvatarFallback>
+          <AvatarBadge className="bg-transparent p-0 group-data-[size=lg]/avatar:size-5">
+            <SourceMark source={review.source} className="size-full" />
+          </AvatarBadge>
         </Avatar>
         <div className="min-w-0">
           <p className="truncate font-medium text-foreground">{review.name}</p>

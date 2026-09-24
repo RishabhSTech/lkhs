@@ -145,6 +145,42 @@ const FAQS: Faq[] = [
   },
 ];
 
+const HOME_REVIEW_COUNT = 9;
+
+/**
+ * Reviews an admin has explicitly marked "feature on homepage" come first;
+ * if there aren't nine of those yet, the rail fills out with the most recent
+ * 4-star+ published reviews, so a freshly launched site still shows a full
+ * rail rather than an empty one while curation catches up.
+ */
+async function getHomeReviews() {
+  const include = {
+    guest: { select: { name: true } },
+    property: { select: { name: true, slug: true } },
+  } as const;
+
+  const featured = await db.review.findMany({
+    where: { status: "PUBLISHED", featuredOnHome: true },
+    include,
+    orderBy: { createdAt: "desc" },
+    take: HOME_REVIEW_COUNT,
+  });
+  if (featured.length >= HOME_REVIEW_COUNT) return featured;
+
+  const fill = await db.review.findMany({
+    where: {
+      status: "PUBLISHED",
+      rating: { gte: 4 },
+      id: { notIn: featured.map((r) => r.id) },
+    },
+    include,
+    orderBy: { createdAt: "desc" },
+    take: HOME_REVIEW_COUNT - featured.length,
+  });
+
+  return [...featured, ...fill];
+}
+
 export default async function HomePage() {
   const [
     featured, cities, areasByCity, collectionTargets, reviews, ratingAgg,
@@ -155,18 +191,7 @@ export default async function HomePage() {
       getCities(),
       getAreasByCity(),
       getCollectionTargets(),
-      db.review.findMany({
-        // Only published reviews belong on a public page - the model now has
-        // pending and hidden states that this query predated. The rail can
-        // carry far more than the old three-up grid could.
-        where: { rating: { gte: 4 }, status: "PUBLISHED" },
-        include: {
-          guest: { select: { name: true } },
-          property: { select: { name: true, slug: true } },
-        },
-        orderBy: { createdAt: "desc" },
-        take: 9,
-      }),
+      getHomeReviews(),
       db.review.aggregate({
         where: { status: "PUBLISHED" },
         _avg: { rating: true },
@@ -213,6 +238,8 @@ export default async function HomePage() {
     // Imported reviews carry no guest record and use the display name captured
     // at import instead.
     author: review.guest?.name ?? review.authorName ?? "Verified guest",
+    avatarUrl: review.authorAvatarUrl,
+    source: review.source,
     propertyName: review.property.name,
     propertySlug: review.property.slug,
   }));

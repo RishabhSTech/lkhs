@@ -18,7 +18,6 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/properties", label: "Properties", icon: Building2 },
   { href: "/admin/guests", label: "Guests", icon: Users },
   { href: "/admin/reviews", label: "Reviews", icon: Star },
-  { href: "/admin/reviews", label: "Reviews", icon: Star },
   { href: "/admin/pricing", label: "Pricing", icon: Sparkles },
   { href: "/admin/channels", label: "Channels", icon: Plug },
   {

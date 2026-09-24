@@ -26,13 +26,15 @@ const createSchema = z.object({
     .enum(["SOLO", "COUPLE", "FAMILY", "FRIENDS", "BUSINESS", "GROUP"])
     .nullish(),
   source: z
-    .enum(["DIRECT", "AIRBNB", "BOOKING_COM", "AGODA", "GOOGLE", "OTHER"])
+    .enum(["DIRECT", "AIRBNB", "BOOKING_COM", "AGODA", "MAKEMYTRIP", "VRBO", "GOOGLE", "OTHER"])
     .default("OTHER"),
   status: z.enum(["PENDING", "PUBLISHED", "HIDDEN"]).default("PUBLISHED"),
   authorName: z.string().min(1).max(80),
   authorLocation: z.string().max(80).nullish(),
+  authorAvatarUrl: z.string().url().max(2000).nullish(),
   authorSince: z.number().int().min(2000).max(2100).nullish(),
   isFeatured: z.boolean().default(false),
+  featuredOnHome: z.boolean().default(false),
 });
 
 const updateSchema = z.object({
@@ -40,6 +42,7 @@ const updateSchema = z.object({
   status: z.enum(["PENDING", "PUBLISHED", "HIDDEN"]).optional(),
   response: z.string().max(1000).nullish(),
   isFeatured: z.boolean().optional(),
+  featuredOnHome: z.boolean().optional(),
 });
 
 async function revalidateListing(propertyId: string) {
@@ -97,8 +100,10 @@ export async function POST(request: Request) {
       source: data.source,
       status: data.status,
       isFeatured: data.isFeatured,
+      featuredOnHome: data.featuredOnHome,
       authorName: data.authorName.trim(),
       authorLocation: data.authorLocation?.trim() || null,
+      authorAvatarUrl: data.authorAvatarUrl?.trim() || null,
       authorSince: data.authorSince ?? null,
     },
   });
@@ -116,6 +121,7 @@ export async function POST(request: Request) {
   });
 
   revalidatePath(`/stays/${property.slug}`);
+  if (data.featuredOnHome) revalidatePath("/");
 
   return NextResponse.json({ id: review.id });
 }
@@ -145,6 +151,9 @@ export async function PATCH(request: Request) {
     data: {
       ...(data.status ? { status: data.status } : {}),
       ...(data.isFeatured !== undefined ? { isFeatured: data.isFeatured } : {}),
+      ...(data.featuredOnHome !== undefined
+        ? { featuredOnHome: data.featuredOnHome }
+        : {}),
       ...(data.response !== undefined
         ? { response, respondedAt: response ? new Date() : null }
         : {}),
@@ -155,17 +164,27 @@ export async function PATCH(request: Request) {
     data: {
       userId: user.id,
       userName: user.name,
-      action: data.response !== undefined ? "REVIEW_REPLIED" : "REVIEW_MODERATED",
+      action:
+        data.response !== undefined
+          ? "REVIEW_REPLIED"
+          : data.featuredOnHome !== undefined
+            ? "REVIEW_HOME_FEATURE_TOGGLED"
+            : "REVIEW_MODERATED",
       entityType: "Review",
       entityId: review.id,
       summary:
         data.response !== undefined
           ? "Replied to a guest review"
-          : `Review set to ${review.status.toLowerCase()}`,
+          : data.featuredOnHome !== undefined
+            ? `${data.featuredOnHome ? "Featured" : "Unfeatured"} on the homepage`
+            : `Review set to ${review.status.toLowerCase()}`,
     },
   });
 
   await revalidateListing(existing.propertyId);
+  // A status change or a homepage-feature toggle can both change what the
+  // homepage rail shows, not just this review's own listing page.
+  if (data.featuredOnHome !== undefined || data.status) revalidatePath("/");
 
   return NextResponse.json({ id: review.id, status: review.status });
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReviewStatus } from "@prisma/client";
-import { MessageSquare, Star, TrendingUp } from "lucide-react";
+import { Home, MessageSquare, Star, TrendingUp } from "lucide-react";
 import { AdminPage, PageHeader } from "@/components/admin/page-header";
 import { KpiCard } from "@/components/admin/kpi-card";
 import { Panel } from "@/components/admin/panel";
@@ -66,6 +66,9 @@ export default async function AdminReviewsPage({
 
   const summary = summariseReviews(allScores);
   const pendingCount = await db.review.count({ where: { status: "PENDING" } });
+  const featuredOnHomeCount = await db.review.count({
+    where: { featuredOnHome: true },
+  });
   const replied = reviews.filter((r) => r.response).length;
 
   const rows: AdminReview[] = reviews.map((review) => ({
@@ -91,6 +94,7 @@ export default async function AdminReviewsPage({
     source: review.source,
     status: review.status,
     isFeatured: review.isFeatured,
+    featuredOnHome: review.featuredOnHome,
     response: review.response,
     topics: topicsForReview(review).map((code) => {
       const topic = REVIEW_TOPIC_BY_CODE.get(code)!;
@@ -122,7 +126,7 @@ export default async function AdminReviewsPage({
         actions={<ReviewImportForm properties={properties} />}
       />
 
-      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
         <KpiCard
           label="Average rating"
           value={summary.average ? summary.average.toFixed(2) : "-"}
@@ -148,6 +152,12 @@ export default async function AdminReviewsPage({
           value={`${replied}/${rows.length}`}
           hint="Of the reviews shown"
           icon={MessageSquare}
+        />
+        <KpiCard
+          label="On homepage"
+          value={String(featuredOnHomeCount)}
+          hint="Featured in the rail"
+          icon={Home}
         />
       </div>
 

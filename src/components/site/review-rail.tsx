@@ -5,6 +5,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Quote, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Spotlight } from "@/components/site/spotlight";
+import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SourceMark } from "@/components/property/reviews/source-badge";
+import { initialsOf } from "@/lib/property/reviews";
+import type { ReviewSource } from "@prisma/client";
 
 export type RailReview = {
   id: string;
@@ -12,6 +16,8 @@ export type RailReview = {
   body: string;
   rating: number;
   author: string;
+  avatarUrl: string | null;
+  source: ReviewSource;
   propertyName: string;
   propertySlug: string;
 };
@@ -123,17 +129,27 @@ export function ReviewRail({ reviews }: { reviews: RailReview[] }) {
                 </span>
               </blockquote>
 
-              <figcaption className="mt-6 border-t border-border pt-4 text-xs text-muted-foreground">
-                <span className="font-medium text-foreground">
-                  {review.author}
+              <figcaption className="mt-6 flex items-center gap-3 border-t border-border pt-4 text-xs text-muted-foreground">
+                <Avatar>
+                  {review.avatarUrl && (
+                    <AvatarImage src={review.avatarUrl} alt="" />
+                  )}
+                  <AvatarFallback>{initialsOf(review.author)}</AvatarFallback>
+                  <AvatarBadge className="bg-transparent p-0 group-data-[size=default]/avatar:size-4">
+                    <SourceMark source={review.source} className="size-full" />
+                  </AvatarBadge>
+                </Avatar>
+                <span>
+                  <span className="block font-medium text-foreground">
+                    {review.author}
+                  </span>
+                  <Link
+                    href={`/stays/${review.propertySlug}`}
+                    className="transition-colors hover:text-brand-azure hover:underline"
+                  >
+                    {review.propertyName}
+                  </Link>
                 </span>
-                {" · "}
-                <Link
-                  href={`/stays/${review.propertySlug}`}
-                  className="transition-colors hover:text-brand-azure hover:underline"
-                >
-                  {review.propertyName}
-                </Link>
               </figcaption>
             </figure>
           </Spotlight>

@@ -143,6 +143,8 @@ enum ReviewSource {
   AIRBNB
   BOOKING_COM
   AGODA
+  MAKEMYTRIP
+  VRBO
   GOOGLE
   OTHER
 }
@@ -190,7 +192,12 @@ model Review {
 
   status     ReviewStatus @default(PUBLISHED)
   source     ReviewSource @default(DIRECT)
+  // Pins the review to the top of its own property page.
   isFeatured Boolean      @default(false)
+  // Separate from `isFeatured`: puts the review in the homepage rail. A
+  // review can be pinned on its listing without appearing site-wide, or
+  // vice versa.
+  featuredOnHome Boolean  @default(false)
 
   // Display identity for imported / admin-entered reviews. When `guestId` is
   // set the guest record wins and these stay null.

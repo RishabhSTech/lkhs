@@ -7,6 +7,7 @@ import {
   BadgeCheck,
   Eye,
   EyeOff,
+  Home,
   Loader2,
   MessageSquareReply,
   Star,
@@ -16,8 +17,8 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { SourceBadge } from "@/components/property/reviews/source-badge";
 import {
-  REVIEW_SOURCE_LABELS,
   TRIP_TYPE_LABELS,
   formatReviewMonth,
   formatStayLength,
@@ -42,6 +43,7 @@ export type AdminReview = {
   source: ReviewSource;
   status: ReviewStatus;
   isFeatured: boolean;
+  featuredOnHome: boolean;
   response: string | null;
   topics: { code: string; label: string; emoji: string; inferred: boolean }[];
 };
@@ -142,15 +144,19 @@ export function ReviewRow({ review }: { review: AdminReview }) {
             <Star className="size-3.5 fill-brand-gold text-brand-gold" />
             {review.rating}
           </span>
-          <Badge className="border-border bg-muted text-muted-foreground">
-            {REVIEW_SOURCE_LABELS[review.source]}
-          </Badge>
+          <SourceBadge source={review.source} />
           <Badge className={STATUS_STYLES[review.status]}>
             {review.status.toLowerCase()}
           </Badge>
           {review.isFeatured && (
             <Badge className="border-chart-3/25 bg-chart-3/10 text-chart-3">
-              featured
+              pinned
+            </Badge>
+          )}
+          {review.featuredOnHome && (
+            <Badge className="border-brand-azure/25 bg-brand-azure/10 text-brand-azure">
+              <Home className="size-3" />
+              on homepage
             </Badge>
           )}
         </div>
@@ -265,6 +271,23 @@ export function ReviewRow({ review }: { review: AdminReview }) {
         >
           <Star />
           {review.isFeatured ? "Unpin" : "Pin"}
+        </Button>
+
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={working}
+          onClick={() =>
+            patch(
+              { featuredOnHome: !review.featuredOnHome },
+              review.featuredOnHome
+                ? "Removed from the homepage"
+                : "Now showing on the homepage",
+            )
+          }
+        >
+          <Home />
+          {review.featuredOnHome ? "Remove from homepage" : "Feature on homepage"}
         </Button>
 
         {!replying && (

@@ -29,13 +29,67 @@ export const TRIP_TYPE_LABELS: Record<TripType, string> = {
   GROUP: "Group trip",
 };
 
+/**
+ * One entry per place a review can come from: its display name, its real
+ * logo (Airbnb's Bélo, Booking.com's mark, Google's "G", Agoda's five dots,
+ * MakeMyTrip's ribbon, Vrbo's wordmark - swap the file under public/ota/ if
+ * a brand ever updates theirs), and the brand-colour gradient used as a
+ * light accent. This is what turns a list of reviews into a collage of the
+ * sites they were collected from.
+ */
+export const OTA_SOURCE_META: Record<
+  ReviewSource,
+  { label: string; logo: string; gradient: string }
+> = {
+  DIRECT: {
+    label: "Lime Kraft",
+    logo: "/favico.png",
+    gradient: "linear-gradient(135deg, #2563eb, #d99a1f)",
+  },
+  AIRBNB: {
+    label: "Airbnb",
+    logo: "/ota/airbnb.svg",
+    gradient: "linear-gradient(135deg, #FF385C, #BD1E59)",
+  },
+  BOOKING_COM: {
+    label: "Booking.com",
+    logo: "/ota/booking-com.svg",
+    gradient: "linear-gradient(135deg, #003580, #009fe3)",
+  },
+  AGODA: {
+    label: "Agoda",
+    logo: "/ota/agoda.svg",
+    gradient: "linear-gradient(135deg, #7A0C2E, #FF4B4B)",
+  },
+  MAKEMYTRIP: {
+    label: "MakeMyTrip",
+    logo: "/ota/makemytrip.svg",
+    gradient: "linear-gradient(135deg, #E9432D, #00A0DC)",
+  },
+  VRBO: {
+    label: "Vrbo",
+    logo: "/ota/vrbo.svg",
+    gradient: "linear-gradient(135deg, #003B5C, #00A3E0)",
+  },
+  GOOGLE: {
+    label: "Google",
+    logo: "/ota/google.svg",
+    gradient: "linear-gradient(135deg, #4285F4, #34A853 35%, #FBBC05 65%, #EA4335)",
+  },
+  OTHER: {
+    label: "Other",
+    logo: "/ota/other.svg",
+    gradient: "linear-gradient(135deg, #8aa2c4, #64748b)",
+  },
+};
+
 export const REVIEW_SOURCE_LABELS: Record<ReviewSource, string> = {
+  ...(Object.fromEntries(
+    Object.entries(OTA_SOURCE_META).map(([source, meta]) => [source, meta.label]),
+  ) as Record<ReviewSource, string>),
+  // Reads better than the badge's "Lime Kraft" when it stands in for a
+  // location line on a guest's own review (see ReviewCard).
   DIRECT: "Booked direct",
-  AIRBNB: "Airbnb",
-  BOOKING_COM: "Booking.com",
-  AGODA: "Agoda",
-  GOOGLE: "Google",
-  OTHER: "Other",
 };
 
 /** The minimum a review needs to carry for the maths below. */

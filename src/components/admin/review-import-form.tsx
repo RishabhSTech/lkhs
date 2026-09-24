@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { AlertCircle, Loader2, Plus } from "lucide-react";
+import { useRef, useState } from "react";
+import { AlertCircle, Check, Loader2, Plus, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,11 +21,13 @@ import {
   TopicPicker,
 } from "@/components/property/reviews/topic-picker";
 import {
+  OTA_SOURCE_META,
   REVIEW_CATEGORIES,
-  REVIEW_SOURCE_LABELS,
   TRIP_TYPE_LABELS,
   type ReviewCategoryKey,
 } from "@/lib/property/reviews";
+import { cn } from "@/lib/utils";
+import type { ReviewSource } from "@prisma/client";
 
 const selectClass =
   "h-10 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring";
@@ -56,10 +58,45 @@ export function ReviewImportForm({
   const [stayedOn, setStayedOn] = useState("");
   const [tripType, setTripType] = useState("");
   const [topics, setTopics] = useState<string[]>([]);
-  const [source, setSource] = useState("AIRBNB");
+  const [source, setSource] = useState<ReviewSource>("AIRBNB");
   const [status, setStatus] = useState("PUBLISHED");
+  const [featuredOnHome, setFeaturedOnHome] = useState(false);
+  const [authorAvatarUrl, setAuthorAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const avatarInput = useRef<HTMLInputElement>(null);
+
+  async function uploadAvatar(file: File) {
+    setUploadingAvatar(true);
+    try {
+      const presign = await fetch("/api/admin/uploads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          folder: "reviews",
+          filename: file.name,
+          contentType: file.type,
+        }),
+      });
+      const presignData = await presign.json();
+      if (!presign.ok) throw new Error(presignData.error ?? "Could not start the upload.");
+
+      const putRes = await fetch(presignData.uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!putRes.ok) throw new Error("Upload to storage failed.");
+
+      setAuthorAvatarUrl(presignData.publicUrl);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not upload the photo.");
+    } finally {
+      setUploadingAvatar(false);
+      if (avatarInput.current) avatarInput.current.value = "";
+    }
+  }
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -79,6 +116,7 @@ export function ReviewImportForm({
           ...categories,
           authorName: authorName.trim(),
           authorLocation: authorLocation.trim() || null,
+          authorAvatarUrl,
           authorSince: authorSince ? Number(authorSince) : null,
           title: title.trim() || null,
           body: body.trim(),
@@ -88,6 +126,7 @@ export function ReviewImportForm({
           topics,
           source,
           status,
+          featuredOnHome,
         }),
       });
       const data = await res.json();
@@ -100,6 +139,8 @@ export function ReviewImportForm({
       setBody("");
       setCategories({});
       setTopics([]);
+      setAuthorAvatarUrl(null);
+      setFeaturedOnHome(false);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save the review.");
@@ -168,6 +209,93 @@ export function ReviewImportForm({
             ))}
           </div>
 
+          <div>
+            <Label className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              Where was this posted?
+            </Label>
+            <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
+              {(Object.entries(OTA_SOURCE_META) as [ReviewSource, (typeof OTA_SOURCE_META)[ReviewSource]][]).map(
+                ([value, meta]) => {
+                  const selected = source === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setSource(value)}
+                      aria-pressed={selected}
+                      title={meta.label}
+                      className={cn(
+                        "relative flex flex-col items-center gap-1.5 rounded-xl border-2 p-2 text-center transition-all",
+                        selected
+                          ? "border-foreground shadow-sm"
+                          : "border-transparent hover:border-border",
+                      )}
+                    >
+                      <span className="flex size-9 items-center justify-center overflow-hidden rounded-full bg-white ring-1 ring-black/10">
+                        <img src={meta.logo} alt="" className="h-[70%] w-[70%] object-contain" />
+                      </span>
+                      <span className="line-clamp-1 text-[0.625rem] font-medium text-muted-foreground">
+                        {meta.label}
+                      </span>
+                      {selected && (
+                        <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-foreground text-background">
+                          <Check className="size-2.5" />
+                        </span>
+                      )}
+                    </button>
+                  );
+                },
+              )}
+            </div>
+          </div>
+
+          <div>
+            <Label className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              Reviewer photo
+            </Label>
+            <div className="flex items-center gap-3">
+              {authorAvatarUrl ? (
+                <div className="relative">
+                  <img
+                    src={authorAvatarUrl}
+                    alt=""
+                    className="size-14 rounded-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setAuthorAvatarUrl(null)}
+                    aria-label="Remove photo"
+                    className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-foreground text-background"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex size-14 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-full border border-dashed border-border text-muted-foreground transition-colors hover:border-brand-mist hover:text-brand-mist">
+                  {uploadingAvatar ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Upload className="size-4" />
+                  )}
+                  <input
+                    ref={avatarInput}
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    disabled={uploadingAvatar}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) uploadAvatar(file);
+                    }}
+                  />
+                </label>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Optional. Falls back to initials when left blank.
+              </p>
+            </div>
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Reviewer name" required>
               <Input
@@ -225,19 +353,6 @@ export function ReviewImportForm({
                 ))}
               </select>
             </Field>
-            <Field label="Source">
-              <select
-                value={source}
-                onChange={(e) => setSource(e.target.value)}
-                className={selectClass}
-              >
-                {Object.entries(REVIEW_SOURCE_LABELS).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </Field>
             <Field label="Status">
               <select
                 value={status}
@@ -248,6 +363,17 @@ export function ReviewImportForm({
                 <option value="PENDING">Pending</option>
                 <option value="HIDDEN">Hidden</option>
               </select>
+            </Field>
+            <Field label="Homepage">
+              <label className="flex h-10 items-center gap-2 text-sm text-foreground">
+                <input
+                  type="checkbox"
+                  checked={featuredOnHome}
+                  onChange={(e) => setFeaturedOnHome(e.target.checked)}
+                  className="size-4 rounded border-border accent-brand-azure"
+                />
+                Feature in the homepage rail
+              </label>
             </Field>
           </div>
 

@@ -4,7 +4,7 @@ import { getCurrentAdminUser } from "@/lib/auth/current-user";
 import { createUploadUrl, isStorageConfigured } from "@/lib/storage/s3";
 
 const schema = z.object({
-  folder: z.enum(["properties", "receipts"]),
+  folder: z.enum(["properties", "receipts", "reviews"]),
   filename: z.string().min(1),
   contentType: z.string().min(1),
 });

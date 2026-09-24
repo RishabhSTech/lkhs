@@ -215,6 +215,8 @@ export default async function PreviewHomePage() {
     body: review.body,
     rating: review.rating,
     author: review.guest?.name ?? review.authorName ?? "Verified guest",
+    avatarUrl: review.authorAvatarUrl,
+    source: review.source,
     propertyName: review.property.name,
     propertySlug: review.property.slug,
   }));
