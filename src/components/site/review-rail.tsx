@@ -124,7 +124,7 @@ export function ReviewRail({ reviews }: { reviews: RailReview[] }) {
                     {review.title}
                   </span>
                 )}
-                <span className="mt-2 line-clamp-4 block text-sm leading-relaxed text-muted-foreground">
+                <span className="mt-2 line-clamp-4 text-sm leading-relaxed text-muted-foreground">
                   {review.body}
                 </span>
                 {review.body.length > 180 && (
