@@ -68,10 +68,13 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
   const { order } = parsed.data;
   const sortOrderCases = Prisma.join(
-    order.map((imageId, index) => Prisma.sql`WHEN ${imageId} THEN ${index}`),
+    order.map((imageId, index) => Prisma.sql`WHEN ${imageId} THEN ${index}::integer`),
     " ",
   );
 
+  // Every parameter arrives untyped, so without an explicit cast Postgres
+  // can't tell the THEN branches are meant to be integers and defaults to
+  // text, which then fails to assign into the integer column.
   await db.$executeRaw`
     UPDATE "PropertyImage"
     SET "sortOrder" = CASE "id" ${sortOrderCases} END,
