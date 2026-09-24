@@ -2,11 +2,15 @@
 // so they can be imported from both server components (via session.ts) and
 // src/proxy.ts, which runs before a request resolves and should not assume
 // the same module graph as the rendered app.
-import { jwtVerify } from "jose";
+import { SignJWT, jwtVerify } from "jose";
 import type { RoleName } from "@prisma/client";
 
 export const SESSION_COOKIE = "lk_session";
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
+// Once a session's remaining life drops below this, proxy.ts re-signs it -
+// sliding expiration so an actively-browsing user is never cut off by the
+// fixed 30-day timer set at login (there was previously no renewal at all).
+export const SESSION_RENEWAL_THRESHOLD_SECONDS = SESSION_TTL_SECONDS / 2;
 
 export function secretKey() {
   const secret = process.env.AUTH_SECRET;
@@ -20,6 +24,8 @@ export type SessionPayload = {
   name: string;
   email?: string | null;
   phone?: string | null;
+  exp?: number;
+  iat?: number;
 };
 
 export async function verifySessionToken(
@@ -31,6 +37,30 @@ export async function verifySessionToken(
   } catch {
     return null;
   }
+}
+
+export async function signSessionToken(payload: SessionPayload) {
+  return new SignJWT({
+    userId: payload.userId,
+    role: payload.role,
+    name: payload.name,
+    email: payload.email,
+    phone: payload.phone,
+  })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime(`${SESSION_TTL_SECONDS}s`)
+    .sign(secretKey());
+}
+
+export function sessionCookieOptions() {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: SESSION_TTL_SECONDS,
+  };
 }
 
 export function redirectPathForRole(role: RoleName) {

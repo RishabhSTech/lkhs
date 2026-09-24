@@ -33,13 +33,15 @@ export default async function StakeholderLayout({
                 Demo
               </Badge>
             )}
-            <Link
-              href="/api/auth/signout"
-              aria-label="Sign out"
-              className="text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <LogOut className="size-4" />
-            </Link>
+            <form action="/api/auth/signout" method="POST">
+              <button
+                type="submit"
+                aria-label="Sign out"
+                className="text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <LogOut className="size-4" />
+              </button>
+            </form>
           </div>
         </div>
       </header>

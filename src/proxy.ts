@@ -3,7 +3,10 @@ import type { NextRequest } from "next/server";
 import {
   ADMIN_ROLES,
   SESSION_COOKIE,
+  SESSION_RENEWAL_THRESHOLD_SECONDS,
   STAKEHOLDER_ROLES,
+  sessionCookieOptions,
+  signSessionToken,
   verifySessionToken,
 } from "@/lib/auth/session-shared";
 
@@ -29,7 +32,21 @@ export async function proxy(request: NextRequest) {
 
   const allowedRoles = isAdminPath ? ADMIN_ROLES : STAKEHOLDER_ROLES;
   if (session && allowedRoles.includes(session.role)) {
-    return NextResponse.next();
+    const response = NextResponse.next();
+
+    // Sliding expiration: sessions were previously signed once at login with
+    // a fixed 30-day expiry and never renewed, so an admin/stakeholder who
+    // stayed active past that point got silently logged out mid-session -
+    // pages already loaded kept working, but the next navigation that hit
+    // this proxy fresh would fail. Re-sign once a session is past its
+    // halfway point so an active user's cookie keeps rolling forward.
+    const remainingSeconds = (session.exp ?? 0) - Math.floor(Date.now() / 1000);
+    if (remainingSeconds < SESSION_RENEWAL_THRESHOLD_SECONDS) {
+      const refreshedToken = await signSessionToken(session);
+      response.cookies.set(SESSION_COOKIE, refreshedToken, sessionCookieOptions());
+    }
+
+    return response;
   }
 
   if (!session && DEMO_FALLBACK_ENABLED) {

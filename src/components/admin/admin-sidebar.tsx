@@ -112,13 +112,15 @@ export function AdminSidebar({
               {role.replace(/_/g, " ").toLowerCase()}
             </span>
           </span>
-          <Link
-            href="/api/auth/signout"
-            aria-label="Sign out"
-            className="text-sidebar-foreground/45 transition-colors hover:text-sidebar-foreground"
-          >
-            <LogOut className="size-3.5" />
-          </Link>
+          <form action="/api/auth/signout" method="POST">
+            <button
+              type="submit"
+              aria-label="Sign out"
+              className="text-sidebar-foreground/45 transition-colors hover:text-sidebar-foreground"
+            >
+              <LogOut className="size-3.5" />
+            </button>
+          </form>
         </div>
       </div>
     </aside>

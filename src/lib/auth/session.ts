@@ -1,10 +1,9 @@
 import "server-only";
-import { SignJWT } from "jose";
 import { cookies } from "next/headers";
 import {
   SESSION_COOKIE,
-  SESSION_TTL_SECONDS,
-  secretKey,
+  sessionCookieOptions,
+  signSessionToken,
   verifySessionToken,
   type SessionPayload,
 } from "@/lib/auth/session-shared";
@@ -18,20 +17,9 @@ export {
 } from "@/lib/auth/session-shared";
 
 export async function createSession(payload: SessionPayload) {
-  const token = await new SignJWT({ ...payload })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime(`${SESSION_TTL_SECONDS}s`)
-    .sign(secretKey());
-
+  const token = await signSessionToken(payload);
   const store = await cookies();
-  store.set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_TTL_SECONDS,
-  });
+  store.set(SESSION_COOKIE, token, sessionCookieOptions());
 }
 
 export async function getSession(): Promise<SessionPayload | null> {

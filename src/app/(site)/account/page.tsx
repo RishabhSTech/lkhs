@@ -81,13 +81,15 @@ export default async function AccountPage() {
           </ul>
 
           {session && (
-            <Link
-              href="/api/auth/signout"
-              className="mt-6 flex items-center gap-4 rounded-xl border border-border bg-card px-5 py-4 transition-colors hover:bg-muted/40"
-            >
-              <LogOut className="size-5 shrink-0 text-brand-mist" />
-              <span className="text-sm font-medium text-foreground">Log out</span>
-            </Link>
+            <form action="/api/auth/signout" method="POST" className="mt-6">
+              <button
+                type="submit"
+                className="flex w-full items-center gap-4 rounded-xl border border-border bg-card px-5 py-4 text-left transition-colors hover:bg-muted/40"
+              >
+                <LogOut className="size-5 shrink-0 text-brand-mist" />
+                <span className="text-sm font-medium text-foreground">Log out</span>
+              </button>
+            </form>
           )}
         </div>
       </main>
