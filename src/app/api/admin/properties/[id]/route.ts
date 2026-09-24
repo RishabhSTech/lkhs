@@ -16,6 +16,7 @@ const patchSchema = z.object({
   description: z.string().min(20, "Write at least a couple of sentences.").optional(),
   basePrice: z.number().positive("Base price must be greater than zero.").optional(),
   cleaningFee: z.number().min(0).optional(),
+  status: z.enum(["ACTIVE", "INACTIVE", "MAINTENANCE"]).optional(),
 });
 
 type RouteParams = { params: Promise<{ id: string }> };
@@ -29,10 +30,11 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       { status: 400 },
     );
   }
-  const { name, slug, tagline, description, basePrice, cleaningFee } = parsed.data;
+  const { name, slug, tagline, description, basePrice, cleaningFee, status } = parsed.data;
   if (
     name === undefined && slug === undefined && tagline === undefined &&
-    description === undefined && basePrice === undefined && cleaningFee === undefined
+    description === undefined && basePrice === undefined && cleaningFee === undefined &&
+    status === undefined
   ) {
     return NextResponse.json({ error: "Nothing to update." }, { status: 400 });
   }
@@ -57,6 +59,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         ...(description !== undefined && { description: sanitizeDescriptionHtml(description) }),
         ...(basePrice !== undefined && { basePrice }),
         ...(cleaningFee !== undefined && { cleaningFee }),
+        ...(status !== undefined && { status }),
       },
     });
   } catch (err) {
@@ -75,9 +78,62 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       action: "PROPERTY_DETAILS_UPDATED",
       entityType: "Property",
       entityId: property.id,
-      summary: `Details updated for ${property.name}`,
+      summary: status !== undefined
+        ? `${property.name} status changed to ${status}`
+        : `Details updated for ${property.name}`,
     },
   });
 
   return NextResponse.json({ slug: property.slug });
+}
+
+export async function DELETE(_request: Request, { params }: RouteParams) {
+  const { id: propertyId } = await params;
+  const { user } = await getCurrentAdminUser();
+
+  if (user.role !== "SUPER_ADMIN" && user.role !== "ADMIN") {
+    return NextResponse.json(
+      { error: "Only administrators can delete properties." },
+      { status: 403 },
+    );
+  }
+
+  const property = await db.property.findUnique({
+    where: { id: propertyId },
+    select: { id: true, name: true, _count: { select: { reservations: true } } },
+  });
+  if (!property) {
+    return NextResponse.json({ error: "Property not found." }, { status: 404 });
+  }
+  if (property._count.reservations > 0) {
+    return NextResponse.json(
+      { error: "Properties with reservations cannot be deleted. Set it inactive instead." },
+      { status: 409 },
+    );
+  }
+
+  try {
+    await db.property.delete({ where: { id: propertyId } });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003") {
+      return NextResponse.json(
+        { error: "This property is linked to other records and cannot be deleted. Set it inactive instead." },
+        { status: 409 },
+      );
+    }
+    throw error;
+  }
+
+  await db.auditLog.create({
+    data: {
+      userId: user.id,
+      userName: user.name,
+      action: "PROPERTY_DELETED",
+      entityType: "Property",
+      entityId: property.id,
+      summary: `${property.name} deleted`,
+    },
+  });
+
+  return NextResponse.json({ id: property.id });
 }

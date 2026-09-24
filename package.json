@@ -6,6 +6,7 @@
     "postinstall": "prisma generate",
     "dev": "next dev",
     "build": "PG_POOL_MAX=1 next build",
+    "vercel-build": "prisma migrate deploy && npm run seed:reference && PG_POOL_MAX=1 next build",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",

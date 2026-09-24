@@ -28,10 +28,12 @@ export function ExpenseForm({
   properties,
   categories,
   defaultPropertyId,
+  redirectTo = "/admin/finance/expenses",
 }: {
   properties: { id: string; name: string }[];
   categories: Category[];
   defaultPropertyId?: string;
+  redirectTo?: string;
 }) {
   const router = useRouter();
   const [propertyId, setPropertyId] = useState(
@@ -125,7 +127,7 @@ export function ExpenseForm({
           properties.find((p) => p.id === propertyId)?.name
         }`,
       });
-      router.push("/admin/finance/expenses");
+      router.push(redirectTo);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save the expense.");

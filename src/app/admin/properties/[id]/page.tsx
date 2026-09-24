@@ -14,6 +14,7 @@ import { PricingRuleEditor } from "@/components/admin/pricing-rule-editor";
 import { DailyRateEditor } from "@/components/admin/daily-rate-editor";
 import { ReviewRow } from "@/components/admin/review-row";
 import { ReviewImportForm } from "@/components/admin/review-import-form";
+import { PropertyStatusActions } from "@/components/admin/property-status-actions";
 import { db } from "@/lib/db";
 import { buildPL, PL_TRANSACTION_SELECT } from "@/lib/finance/calculations";
 import { buildAdminReviewRows } from "@/lib/admin/review-rows";
@@ -128,6 +129,11 @@ export default async function AdminPropertyPage({
               >
                 Finance
               </Button>
+              <PropertyStatusActions
+                propertyId={property.id}
+                propertyName={property.name}
+                status={property.status}
+              />
               <Button
                 render={<Link href={`/stays/${property.slug}`} target="_blank" />}
                 variant="outline"
