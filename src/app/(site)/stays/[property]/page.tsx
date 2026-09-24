@@ -66,6 +66,11 @@ export async function generateMetadata({
   return {
     title,
     description,
+    // INACTIVE means the listing is still being set up (see the admin create
+    // route) - reachable if the URL leaks early, but never indexed until it's
+    // actually live. MAINTENANCE is a complete listing just paused for
+    // bookings, so that one still gets to keep its ranking.
+    ...(property.status === "INACTIVE" ? { robots: { index: false, follow: false } } : {}),
     alternates: { canonical: `/stays/${property.slug}` },
     openGraph: {
       title,

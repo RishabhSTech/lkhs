@@ -161,6 +161,7 @@ export function lodgingJsonLd({
     longitude: number | null;
     maxGuests: number;
     bedrooms: number;
+    bathrooms: number;
     basePriceNumber: number;
     checkInFrom: string | null;
     checkOutBy: string | null;
@@ -198,11 +199,13 @@ export function lodgingJsonLd({
             latitude: property.latitude,
             longitude: property.longitude,
           },
+          hasMap: `https://www.google.com/maps?q=${property.latitude},${property.longitude}`,
         }
       : {}),
     ...(property.checkInFrom ? { checkinTime: property.checkInFrom } : {}),
     ...(property.checkOutBy ? { checkoutTime: property.checkOutBy } : {}),
     numberOfRooms: property.bedrooms,
+    numberOfBathroomsTotal: property.bathrooms,
     petsAllowed: property.amenityNames.includes("Pets allowed"),
     amenityFeature: property.amenityNames.map((name) => ({
       "@type": "LocationFeatureSpecification",
