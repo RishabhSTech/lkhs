@@ -70,6 +70,9 @@ export async function PATCH(
     if (error instanceof InventoryConflictError) {
       return NextResponse.json({ error: "Those dates are already booked for this unit." }, { status: 409 });
     }
+    if (error instanceof Error && error.message.includes("Unique constraint")) {
+      return NextResponse.json({ error: "That booking could not be updated because a unique record already exists. Try again." }, { status: 409 });
+    }
     if (error instanceof Error && (error.message.includes("cannot be edited") || error.message.includes("does not belong"))) {
       return NextResponse.json({ error: error.message }, { status: 409 });
     }

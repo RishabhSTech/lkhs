@@ -95,6 +95,9 @@ export async function POST(request: Request) {
     if (error instanceof InventoryConflictError) {
       return NextResponse.json({ error: "Those dates are already booked for this unit." }, { status: 409 });
     }
+    if (error instanceof Error && error.message.includes("Unique constraint")) {
+      return NextResponse.json({ error: "That booking could not be created because a unique record already exists. Try again." }, { status: 409 });
+    }
     console.error("Manual booking creation failed", error);
     return NextResponse.json({ error: "Could not create that booking." }, { status: 500 });
   }

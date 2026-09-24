@@ -15,6 +15,15 @@ export class InventoryConflictError extends Error {
   }
 }
 
+function isInventoryConflict(error: unknown) {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2002" &&
+    error.message.includes("unitId") &&
+    error.message.includes("date")
+  );
+}
+
 export type CreateReservationInput = {
   propertyId: string;
   unitId?: string;
@@ -157,10 +166,7 @@ export async function createReservation(input: CreateReservationInput) {
       return created;
     })
     .catch((error) => {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2002"
-      ) {
+      if (isInventoryConflict(error)) {
         throw new InventoryConflictError();
       }
       throw error;
@@ -434,7 +440,7 @@ export async function updateReservation(input: UpdateReservationInput) {
     }
     return reservation;
   }).catch((error) => {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    if (isInventoryConflict(error)) {
       throw new InventoryConflictError();
     }
     throw error;
