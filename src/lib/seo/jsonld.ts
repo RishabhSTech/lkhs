@@ -1,5 +1,6 @@
 import { SITE, absoluteUrl } from "@/lib/seo/site";
 import type { PropertyCardData } from "@/components/property/property-card";
+import { descriptionToPlainText } from "@/lib/property/rich-text";
 
 /**
  * Structured data builders. Everything here must describe what is actually on
@@ -180,7 +181,7 @@ export function lodgingJsonLd({
     "@type": "LodgingBusiness",
     "@id": absoluteUrl(`/stays/${property.slug}#lodging`),
     name: property.name,
-    description: property.description,
+    description: descriptionToPlainText(property.description),
     url: absoluteUrl(`/stays/${property.slug}`),
     image: property.images.map((image) => image.url),
     address: {

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ListingEditor } from "@/components/admin/listing-editor";
+import { PropertyDetailsEditor } from "@/components/admin/property-details-editor";
 import { PhotoManager } from "@/components/admin/photo-manager";
 import { db } from "@/lib/db";
 import { buildPL, PL_TRANSACTION_SELECT } from "@/lib/finance/calculations";
@@ -140,10 +141,16 @@ export default async function AdminPropertyPage({
             />
           </Card>
 
-          <Card title="Description">
-            <p className="text-sm leading-relaxed whitespace-pre-line text-muted-foreground">
-              {property.description}
-            </p>
+          <Card title="Details">
+            <PropertyDetailsEditor
+              propertyId={property.id}
+              initial={{
+                name: property.name,
+                slug: property.slug,
+                tagline: property.tagline ?? "",
+                description: property.description,
+              }}
+            />
           </Card>
 
           <Card title={`Amenities (${property.amenities.length})`}>

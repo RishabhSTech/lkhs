@@ -16,6 +16,7 @@ import { getPropertyBySlug, getPropertySlugs } from "@/lib/queries/properties";
 import { breadcrumbJsonLd, lodgingJsonLd } from "@/lib/seo/jsonld";
 import { COLLECTIONS, kindForType } from "@/lib/seo/collections";
 import { slugify } from "@/lib/seo/slug";
+import { descriptionToHtml, descriptionToPlainText } from "@/lib/property/rich-text";
 
 /**
  * Listings are prerendered and refreshed in the background. Nothing on this
@@ -60,7 +61,7 @@ export async function generateMetadata({
   const description =
     property.tagline
       ? `${property.tagline}. Sleeps ${property.maxGuests} in ${property.locationArea}, ${property.city}. Book direct - no channel mark-up, no booking fee.`
-      : property.description.slice(0, 155);
+      : descriptionToPlainText(property.description).slice(0, 155);
 
   return {
     title,
@@ -205,7 +206,10 @@ export default async function PropertyPage({
                   {property.tagline}
                 </p>
               )}
-              <p className="mt-3 whitespace-pre-line">{property.description}</p>
+              <div
+                className="mt-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_p+p]:mt-3 [&_ul]:list-disc [&_ul]:pl-5"
+                dangerouslySetInnerHTML={{ __html: descriptionToHtml(property.description) }}
+              />
             </Prose>
 
             <Prose title="What this place offers">
