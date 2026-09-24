@@ -9,9 +9,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ListingEditor } from "@/components/admin/listing-editor";
 import { PropertyDetailsEditor } from "@/components/admin/property-details-editor";
 import { PhotoManager } from "@/components/admin/photo-manager";
+import { BasePricingEditor } from "@/components/admin/base-pricing-editor";
+import { PricingRuleEditor } from "@/components/admin/pricing-rule-editor";
+import { DailyRateEditor } from "@/components/admin/daily-rate-editor";
 import { db } from "@/lib/db";
 import { buildPL, PL_TRANSACTION_SELECT } from "@/lib/finance/calculations";
 import { SOURCE_LABELS, STATUS_LABELS, sourceBadgeClass, statusBadgeClass } from "@/lib/admin/sources";
+import { addMonths, todayUTC } from "@/lib/dates";
 import { formatDateRange, formatINR, formatINRCompact } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +24,9 @@ export default async function AdminPropertyPage({
   params,
 }: PageProps<"/admin/properties/[id]">) {
   const { id } = await params;
+
+  const today = todayUTC();
+  const pricingHorizon = addMonths(today, 3);
 
   const property = await db.property.findUnique({
     where: { id },
@@ -30,6 +37,7 @@ export default async function AdminPropertyPage({
       thingsToKnow: { orderBy: { sortOrder: "asc" } },
       units: true,
       pricingRules: { orderBy: { priority: "desc" } },
+      dailyRates: { where: { date: { gte: today, lte: pricingHorizon } }, orderBy: { date: "asc" } },
       transactions: { select: PL_TRANSACTION_SELECT },
       reviews: { include: { guest: { select: { name: true } } }, take: 5, orderBy: { createdAt: "desc" } },
       channelProperties: { include: { channel: true } },
@@ -194,34 +202,39 @@ export default async function AdminPropertyPage({
           </Card>
         </TabsContent>
 
-        <TabsContent value="pricing" className="mt-5">
-          <Card title="Pricing rules" description={`Base rate ${formatINR(Number(property.basePrice))} per night`}>
-            <ul className="divide-y divide-border">
-              {property.pricingRules.map((rule) => (
-                <li key={rule.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">
-                      {rule.name}
-                    </p>
-                    <p className="text-xs capitalize text-muted-foreground">
-                      {rule.type.toLowerCase().replace(/_/g, " ")}
-                      {rule.minNights ? ` · ${rule.minNights}+ nights` : ""}
-                    </p>
-                  </div>
-                  <span
-                    className={
-                      Number(rule.adjustmentValue) >= 0
-                        ? "text-sm font-medium tabular-nums text-chart-1"
-                        : "text-sm font-medium tabular-nums text-chart-2"
-                    }
-                  >
-                    {Number(rule.adjustmentValue) > 0 ? "+" : ""}
-                    {Number(rule.adjustmentValue)}
-                    {rule.adjustmentType === "PERCENT" ? "%" : "₹"}
-                  </span>
-                </li>
-              ))}
-            </ul>
+        <TabsContent value="pricing" className="mt-5 space-y-5">
+          <Card title="Base pricing">
+            <BasePricingEditor
+              propertyId={property.id}
+              initial={{
+                basePrice: Number(property.basePrice),
+                cleaningFee: Number(property.cleaningFee),
+              }}
+            />
+          </Card>
+
+          <Card title="Pricing rules" description="Stacks on top of the base rate, highest priority first.">
+            <PricingRuleEditor
+              propertyId={property.id}
+              rules={property.pricingRules.map((rule) => ({
+                id: rule.id,
+                name: rule.name,
+                type: rule.type,
+                adjustmentType: rule.adjustmentType,
+                adjustmentValue: Number(rule.adjustmentValue),
+                isActive: rule.isActive,
+              }))}
+            />
+          </Card>
+
+          <Card title="Date overrides" description="Takes precedence over the base rate and any rules for that night.">
+            <DailyRateEditor
+              propertyId={property.id}
+              overrides={property.dailyRates.map((o) => ({
+                date: o.date.toISOString().slice(0, 10),
+                price: Number(o.price),
+              }))}
+            />
           </Card>
         </TabsContent>
 

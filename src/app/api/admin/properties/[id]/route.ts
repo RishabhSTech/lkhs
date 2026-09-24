@@ -14,6 +14,8 @@ const patchSchema = z.object({
     .optional(),
   tagline: z.string().max(140).nullable().optional(),
   description: z.string().min(20, "Write at least a couple of sentences.").optional(),
+  basePrice: z.number().positive("Base price must be greater than zero.").optional(),
+  cleaningFee: z.number().min(0).optional(),
 });
 
 type RouteParams = { params: Promise<{ id: string }> };
@@ -27,8 +29,11 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       { status: 400 },
     );
   }
-  const { name, slug, tagline, description } = parsed.data;
-  if (name === undefined && slug === undefined && tagline === undefined && description === undefined) {
+  const { name, slug, tagline, description, basePrice, cleaningFee } = parsed.data;
+  if (
+    name === undefined && slug === undefined && tagline === undefined &&
+    description === undefined && basePrice === undefined && cleaningFee === undefined
+  ) {
     return NextResponse.json({ error: "Nothing to update." }, { status: 400 });
   }
 
@@ -50,6 +55,8 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         ...(slug !== undefined && { slug }),
         ...(tagline !== undefined && { tagline: tagline || null }),
         ...(description !== undefined && { description: sanitizeDescriptionHtml(description) }),
+        ...(basePrice !== undefined && { basePrice }),
+        ...(cleaningFee !== undefined && { cleaningFee }),
       },
     });
   } catch (err) {
