@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentAdminUser } from "@/lib/auth/current-user";
-import { createReservation, confirmReservation, InventoryConflictError } from "@/lib/booking/create-reservation";
+import {
+  createReservation,
+  confirmReservation,
+  GuestConflictError,
+  InventoryConflictError,
+} from "@/lib/booking/create-reservation";
 
 const schema = z.object({
   propertyId: z.string().min(1),
@@ -94,6 +99,9 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof InventoryConflictError) {
       return NextResponse.json({ error: "Those dates are already booked for this unit." }, { status: 409 });
+    }
+    if (error instanceof GuestConflictError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
     }
     if (error instanceof Error && error.message.includes("Unique constraint")) {
       return NextResponse.json({ error: "That booking could not be created because a unique record already exists. Try again." }, { status: 409 });

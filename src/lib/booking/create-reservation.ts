@@ -15,6 +15,13 @@ export class InventoryConflictError extends Error {
   }
 }
 
+export class GuestConflictError extends Error {
+  constructor() {
+    super("That email and phone number belong to different guests. Use one guest's details or leave one field blank.");
+    this.name = "GuestConflictError";
+  }
+}
+
 function isInventoryConflict(error: unknown) {
   return (
     error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -219,14 +226,20 @@ async function upsertGuest(
   guest: CreateReservationInput["guest"],
   userId: string | null,
 ) {
-  const existing = await tx.guest.findFirst({
-    where: {
-      OR: [
-        guest.email ? { email: guest.email } : undefined,
-        guest.phone ? { phone: guest.phone } : undefined,
-      ].filter(Boolean) as Prisma.GuestWhereInput[],
-    },
-  });
+  const [emailGuest, phoneGuest] = await Promise.all([
+    guest.email
+      ? tx.guest.findFirst({ where: { email: guest.email } })
+      : Promise.resolve(null),
+    guest.phone
+      ? tx.guest.findFirst({ where: { phone: guest.phone } })
+      : Promise.resolve(null),
+  ]);
+
+  if (emailGuest && phoneGuest && emailGuest.id !== phoneGuest.id) {
+    throw new GuestConflictError();
+  }
+
+  const existing = emailGuest ?? phoneGuest;
 
   if (existing) {
     return tx.guest.update({
