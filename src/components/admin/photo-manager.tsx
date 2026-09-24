@@ -3,10 +3,16 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Loader2, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ImagePlus, Loader2, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 
 type PhotoRow = { id: string; url: string; alt: string | null };
+type LibraryImage = { url: string; alt: string | null; propertyName: string };
 
 export function PhotoManager({
   propertyId,
@@ -21,6 +27,64 @@ export function PhotoManager({
   const fileInput = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [library, setLibrary] = useState<LibraryImage[] | null>(null);
+  const [libraryLoading, setLibraryLoading] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [adding, setAdding] = useState(false);
+
+  const usedUrls = new Set(photos.map((p) => p.url));
+
+  async function openPicker() {
+    setDialogOpen(true);
+    if (library !== null) return;
+    setLibraryLoading(true);
+    try {
+      const res = await fetch("/api/admin/uploads/library");
+      const data = await res.json();
+      if (!res.ok) throw new Error();
+      setLibrary(data.images);
+    } catch {
+      toast.error("Could not load the photo library.");
+      setLibrary([]);
+    } finally {
+      setLibraryLoading(false);
+    }
+  }
+
+  function toggleSelected(url: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(url)) next.delete(url);
+      else next.add(url);
+      return next;
+    });
+  }
+
+  async function addSelectedFromLibrary() {
+    if (selected.size === 0) return;
+    setAdding(true);
+    try {
+      const chosen = library?.filter((img) => selected.has(img.url)) ?? [];
+      for (const img of chosen) {
+        const saveRes = await fetch(`/api/admin/properties/${propertyId}/photos`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: img.url, alt: img.alt ?? propertyName }),
+        });
+        if (!saveRes.ok) throw new Error("Couldn't add one of the selected photos.");
+      }
+      toast.success(`${chosen.length > 1 ? "Photos" : "Photo"} added`);
+      setSelected(new Set());
+      setDialogOpen(false);
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Couldn't add the selected photos.");
+    } finally {
+      setAdding(false);
+    }
+  }
 
   async function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -50,6 +114,8 @@ export function PhotoManager({
         if (!saveRes.ok) throw new Error("Uploaded, but couldn't save it to the listing.");
       }
       toast.success(`${files.length > 1 ? "Photos" : "Photo"} added`);
+      setLibrary(null);
+      setDialogOpen(false);
       router.refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed.");
@@ -146,20 +212,107 @@ export function PhotoManager({
           </div>
         ))}
 
-        <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-border text-muted-foreground transition-colors hover:border-brand-mist hover:text-brand-mist">
-          {uploading ? <Loader2 className="size-5 animate-spin" /> : <Upload className="size-5" />}
+        <button
+          type="button"
+          onClick={openPicker}
+          className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-border text-muted-foreground transition-colors hover:border-brand-mist hover:text-brand-mist"
+        >
+          <ImagePlus className="size-5" />
           <span className="text-[0.6875rem] font-medium">Add photo</span>
-          <input
-            ref={fileInput}
-            type="file"
-            accept="image/*"
-            multiple
-            className="sr-only"
-            disabled={uploading}
-            onChange={(e) => handleFiles(e.target.files)}
-          />
-        </label>
+        </button>
       </div>
+
+      <Dialog
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setSelected(new Set());
+        }}
+      >
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add photos</DialogTitle>
+            <DialogDescription>
+              Reuse a photo already uploaded for another listing, or upload a new one.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Tabs defaultValue="library">
+            <TabsList>
+              <TabsTrigger value="library">Media library</TabsTrigger>
+              <TabsTrigger value="upload">Upload new</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="library" className="mt-4">
+              {libraryLoading ? (
+                <div className="grid h-40 place-items-center text-muted-foreground">
+                  <Loader2 className="size-5 animate-spin" />
+                </div>
+              ) : !library || library.length === 0 ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">
+                  No photos uploaded yet - use the &ldquo;Upload new&rdquo; tab to add the first one.
+                </p>
+              ) : (
+                <div className="grid max-h-80 grid-cols-4 gap-2 overflow-y-auto pr-1 sm:grid-cols-6">
+                  {library.map((img) => {
+                    const alreadyAdded = usedUrls.has(img.url);
+                    const isSelected = selected.has(img.url);
+                    return (
+                      <button
+                        key={img.url}
+                        type="button"
+                        disabled={alreadyAdded}
+                        onClick={() => toggleSelected(img.url)}
+                        title={alreadyAdded ? "Already added to this listing" : img.propertyName}
+                        className="group relative aspect-square overflow-hidden rounded-lg bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <Image src={img.url} alt={img.alt ?? img.propertyName} fill sizes="15vw" className="object-cover" />
+                        {isSelected && !alreadyAdded && (
+                          <div className="absolute inset-0 bg-brand-mist/40 ring-2 ring-inset ring-brand-mist">
+                            <span className="absolute right-1 top-1 grid size-4 place-items-center rounded-full bg-brand-mist text-white">
+                              <Check className="size-3" />
+                            </span>
+                          </div>
+                        )}
+                        {alreadyAdded && (
+                          <span className="absolute inset-x-0 bottom-0 bg-black/60 py-0.5 text-center text-[0.5625rem] font-medium text-white">
+                            Added
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="upload" className="mt-4">
+              <label className="flex h-40 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-border text-muted-foreground transition-colors hover:border-brand-mist hover:text-brand-mist">
+                {uploading ? <Loader2 className="size-5 animate-spin" /> : <Upload className="size-5" />}
+                <span className="text-sm font-medium">{uploading ? "Uploading…" : "Click to choose photos"}</span>
+                <span className="text-xs">You can select more than one</span>
+                <input
+                  ref={fileInput}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="sr-only"
+                  disabled={uploading}
+                  onChange={(e) => handleFiles(e.target.files)}
+                />
+              </label>
+            </TabsContent>
+          </Tabs>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button onClick={addSelectedFromLibrary} disabled={selected.size === 0 || adding}>
+              {adding && <Loader2 className="animate-spin" />}
+              Add {selected.size > 0 ? selected.size : ""} photo{selected.size === 1 ? "" : "s"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
