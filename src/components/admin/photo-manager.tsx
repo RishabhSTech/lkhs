@@ -3,13 +3,14 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, ImagePlus, Loader2, Trash2, Upload } from "lucide-react";
+import { Check, GripVertical, ImagePlus, Loader2, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type PhotoRow = { id: string; url: string; alt: string | null };
 type LibraryImage = { url: string; alt: string | null; propertyName: string };
@@ -27,6 +28,16 @@ export function PhotoManager({
   const fileInput = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  const [items, setItems] = useState(photos);
+  const [syncedPhotos, setSyncedPhotos] = useState(photos);
+  if (photos !== syncedPhotos) {
+    setSyncedPhotos(photos);
+    setItems(photos);
+  }
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+  const [reordering, setReordering] = useState(false);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [library, setLibrary] = useState<LibraryImage[] | null>(null);
@@ -125,13 +136,26 @@ export function PhotoManager({
     }
   }
 
-  async function move(index: number, direction: -1 | 1) {
-    const next = [...photos];
-    const swapWith = index + direction;
-    if (swapWith < 0 || swapWith >= next.length) return;
-    [next[index], next[swapWith]] = [next[swapWith], next[index]];
+  function handleDragOver(e: React.DragEvent, id: string) {
+    e.preventDefault();
+    if (dragId && dragId !== id && overId !== id) setOverId(id);
+  }
 
-    setBusyId(photos[index].id);
+  async function handleDrop(targetId: string) {
+    const sourceId = dragId;
+    setDragId(null);
+    setOverId(null);
+    if (!sourceId || sourceId === targetId) return;
+
+    const next = [...items];
+    const fromIndex = next.findIndex((p) => p.id === sourceId);
+    const toIndex = next.findIndex((p) => p.id === targetId);
+    if (fromIndex === -1 || toIndex === -1) return;
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, moved);
+    setItems(next);
+
+    setReordering(true);
     try {
       const res = await fetch(`/api/admin/properties/${propertyId}/photos`, {
         method: "PATCH",
@@ -142,8 +166,9 @@ export function PhotoManager({
       router.refresh();
     } catch {
       toast.error("Could not reorder photos.");
+      setItems(photos);
     } finally {
-      setBusyId(null);
+      setReordering(false);
     }
   }
 
@@ -167,8 +192,20 @@ export function PhotoManager({
   return (
     <div>
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-        {photos.map((img, index) => (
-          <div key={img.id} className="group relative aspect-square overflow-hidden rounded-lg bg-muted">
+        {items.map((img, index) => (
+          <div
+            key={img.id}
+            draggable={!reordering}
+            onDragStart={() => setDragId(img.id)}
+            onDragOver={(e) => handleDragOver(e, img.id)}
+            onDrop={() => handleDrop(img.id)}
+            onDragEnd={() => { setDragId(null); setOverId(null); }}
+            className={cn(
+              "group relative aspect-square cursor-grab overflow-hidden rounded-lg bg-muted transition-opacity active:cursor-grabbing",
+              dragId === img.id && "opacity-30",
+              overId === img.id && "ring-2 ring-brand-mist",
+            )}
+          >
             <Image src={img.url} alt={img.alt ?? propertyName} fill sizes="20vw" className="object-cover" />
             {index === 0 && (
               <span className="absolute left-1.5 top-1.5 rounded-full bg-black/60 px-2 py-0.5 text-[0.625rem] font-medium text-white">
@@ -181,15 +218,9 @@ export function PhotoManager({
               </div>
             ) : (
               <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-black/60 p-1 opacity-0 transition-opacity group-hover:opacity-100">
-                <button
-                  type="button"
-                  disabled={index === 0}
-                  onClick={() => move(index, -1)}
-                  aria-label="Move earlier"
-                  className="rounded p-1 text-white disabled:opacity-30"
-                >
-                  <ArrowLeft className="size-3.5" />
-                </button>
+                <span className="rounded p-1 text-white/70" aria-hidden="true">
+                  <GripVertical className="size-3.5" />
+                </span>
                 <button
                   type="button"
                   onClick={() => remove(img.id)}
@@ -197,15 +228,6 @@ export function PhotoManager({
                   className="rounded p-1 text-white hover:text-destructive"
                 >
                   <Trash2 className="size-3.5" />
-                </button>
-                <button
-                  type="button"
-                  disabled={index === photos.length - 1}
-                  onClick={() => move(index, 1)}
-                  aria-label="Move later"
-                  className="rounded p-1 text-white disabled:opacity-30"
-                >
-                  <ArrowRight className="size-3.5" />
                 </button>
               </div>
             )}
