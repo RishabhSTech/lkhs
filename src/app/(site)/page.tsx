@@ -347,17 +347,47 @@ export default async function HomePage() {
           )}
         </Section>
 
-        {/* ── 02 · Step inside ─────────────────────────────────────────────
-            The featured section above establishes that a home exists and what
-            it costs. It cannot tell you what being in it is like, which is the
-            thing actually being decided. The arc is built from CSS 3D - real
-            perspective on flat photographic planes, composited on the GPU, no
-            renderer shipped to the page to draw what amounts to five quads. */}
+        {/* ── 02 · Reviews ─────────────────────────────────────────────── */}
+        {railReviews.length > 0 && (
+          <Section
+            id="reviews"
+            size="feature"
+            bleed
+            className="border-y border-border bg-brand-ivory"
+          >
+            <Container>
+              <Reveal>
+                <SectionHeading
+                  index="02"
+                  size="feature"
+                  eyebrow="Guest reviews"
+                  title="What people say after"
+                  description={
+                    ratingAgg._avg.rating
+                      ? `${ratingAgg._avg.rating.toFixed(1)} average across ${ratingAgg._count} reviews, all left by guests who actually stayed.`
+                      : undefined
+                  }
+                />
+              </Reveal>
+            </Container>
+            <div className="mt-7">
+              <ReviewRail reviews={railReviews} />
+            </div>
+          </Section>
+        )}
+
+        {/* ── 03 · Step inside ─────────────────────────────────────────────
+            The sections above establish that a home exists, what it costs,
+            and what past guests think of it. None of them show what being in
+            it is like, which is the thing actually being decided. The arc is
+            built from CSS 3D - real perspective on flat photographic planes,
+            composited on the GPU, no renderer shipped to the page to draw
+            what amounts to five quads. */}
         {hero && gallery.length > 1 && (
           <Section size="feature">
             <Reveal>
               <SectionHeading
-                index="02"
+                index="03"
                 size="feature"
                 eyebrow="Step inside"
                 title={
@@ -378,7 +408,7 @@ export default async function HomePage() {
           </Section>
         )}
 
-        {/* ── 03 · Destinations: cities, derived from inventory ───────────
+        {/* ── 04 · Destinations: cities, derived from inventory ───────────
             Plus anywhere we have announced but cannot sell yet. Those come
             from `lib/seo/upcoming`, are filtered against live inventory, and
             are drawn as an announcement rather than as a card - no count, no
@@ -388,7 +418,7 @@ export default async function HomePage() {
         <Section size="feature">
           <Reveal>
             <SectionHeading
-              index="03"
+              index="04"
               layout="aside"
               size="feature"
               eyebrow="Destinations"
@@ -442,7 +472,7 @@ export default async function HomePage() {
           </div>
         </Section>
 
-        {/* ── 04 · Book direct ────────────────────────────────────────────
+        {/* ── 05 · Book direct ────────────────────────────────────────────
             The page's one saturated moment, and now genuinely the only one.
             The closing band used to run the same brand-blue field with the
             same grain and the same azure bloom, which meant the page's most
@@ -464,7 +494,7 @@ export default async function HomePage() {
               <div>
                 <Reveal>
                   <SectionHeading
-                    index="04"
+                    index="05"
                     size="feature"
                     tone="invert"
                     eyebrow="Direct booking benefits"
@@ -509,35 +539,6 @@ export default async function HomePage() {
             </div>
           </Container>
         </Section>
-
-        {/* ── 05 · Reviews ─────────────────────────────────────────────── */}
-        {railReviews.length > 0 && (
-          <Section
-            id="reviews"
-            size="feature"
-            bleed
-            className="border-y border-border bg-brand-ivory"
-          >
-            <Container>
-              <Reveal>
-                <SectionHeading
-                  index="05"
-                  size="feature"
-                  eyebrow="Guest reviews"
-                  title="What people say after"
-                  description={
-                    ratingAgg._avg.rating
-                      ? `${ratingAgg._avg.rating.toFixed(1)} average across ${ratingAgg._count} reviews, all left by guests who actually stayed.`
-                      : undefined
-                  }
-                />
-              </Reveal>
-            </Container>
-            <div className="mt-7">
-              <ReviewRail reviews={railReviews} />
-            </div>
-          </Section>
-        )}
 
         {/* ── 06 · How it works ───────────────────────────────────────────
             Demoted from third to seventh. A process explainer is the lowest
