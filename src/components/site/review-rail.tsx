@@ -124,9 +124,17 @@ export function ReviewRail({ reviews }: { reviews: RailReview[] }) {
                     {review.title}
                   </span>
                 )}
-                <span className="mt-2 block text-sm leading-relaxed text-muted-foreground">
+                <span className="mt-2 line-clamp-4 block text-sm leading-relaxed text-muted-foreground">
                   {review.body}
                 </span>
+                {review.body.length > 180 && (
+                  <Link
+                    href={`/stays/${review.propertySlug}#reviews`}
+                    className="mt-1.5 inline-block text-sm font-medium text-brand-azure underline underline-offset-4 transition-colors hover:text-brand-blue"
+                  >
+                    Show more
+                  </Link>
+                )}
               </blockquote>
 
               <figcaption className="mt-6 flex items-center gap-3 border-t border-border pt-4 text-xs text-muted-foreground">
