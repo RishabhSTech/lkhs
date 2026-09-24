@@ -70,7 +70,7 @@ export async function POST(request: Request) {
         phone: data.phone || null,
       },
       source: data.source,
-      userId: user.id,
+      userId: null,
       financials: {
         grossRevenue: data.grossRevenue,
         platformFee: data.platformFee,
