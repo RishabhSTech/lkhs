@@ -15,6 +15,7 @@ import {
   SOURCE_LABELS, STATUS_LABELS, sourceBadgeClass, statusBadgeClass,
 } from "@/lib/admin/sources";
 import { formatDateLong, formatDateRange, formatINR } from "@/lib/format";
+import { EditBookingDialog } from "@/components/admin/edit-booking-dialog";
 
 type Row = {
   id: string;
@@ -32,6 +33,8 @@ type Row = {
 
 type Detail = {
   id: string;
+  propertyId: string;
+  unitId: string;
   code: string;
   propertyName: string;
   propertyAddress: string;
@@ -58,6 +61,8 @@ type Detail = {
   auditLogs: { id: string; userName: string; summary: string; createdAt: string }[];
 };
 
+type Property = { id: string; name: string; units: { id: string; name: string }[] };
+
 export function ReservationsTable({
   reservations,
   properties,
@@ -65,7 +70,7 @@ export function ReservationsTable({
   selected,
 }: {
   reservations: Row[];
-  properties: { id: string; name: string }[];
+  properties: Property[];
   filters: { propertyId?: string; status?: string; source?: string };
   selected: Detail | null | undefined;
 }) {
@@ -285,6 +290,28 @@ export function ReservationsTable({
                   <Badge className={statusBadgeClass(selected.status)}>
                     {STATUS_LABELS[selected.status]}
                   </Badge>
+                  {selected.status !== "CANCELLED" && (
+                    <EditBookingDialog
+                      booking={{
+                        id: selected.id,
+                        propertyId: selected.propertyId,
+                        unitId: selected.unitId,
+                        checkIn: selected.checkIn.slice(0, 10),
+                        checkOut: selected.checkOut.slice(0, 10),
+                        adults: selected.adults,
+                        children: selected.children,
+                        name: selected.guest.name,
+                        email: selected.guest.email,
+                        phone: selected.guest.phone,
+                        source: selected.source,
+                        total: selected.total,
+                        platformFee: selected.platformFee,
+                        hostTax: selected.hostTax,
+                        otherCharges: selected.otherCharges,
+                      }}
+                      properties={properties}
+                    />
+                  )}
                   {(selected.status === "PENDING" || selected.status === "CONFIRMED") && (
                     <span className="ml-auto flex gap-2">
                       {selected.status === "PENDING" && (

@@ -245,7 +245,7 @@ async function upsertGuest(
 }
 
 /** Revenue plus its OTA/payment fees are posted as separate transactions. */
-async function postBookingFinancials(
+export async function postBookingFinancials(
   tx: TxClient,
   args: {
     propertyId: string;
@@ -337,6 +337,110 @@ async function postBookingFinancials(
       },
     });
   }
+}
+
+export type UpdateReservationInput = {
+  reservationId: string;
+  propertyId: string;
+  unitId: string;
+  checkIn: Date;
+  checkOut: Date;
+  adults: number;
+  children: number;
+  guest: { name: string; email?: string | null; phone?: string | null };
+  source: BookingSource;
+  financials: {
+    grossRevenue: number;
+    platformFee: number;
+    hostTax: number;
+    otherCharges: number;
+  };
+};
+
+export async function updateReservation(input: UpdateReservationInput) {
+  const checkIn = toUTCDate(input.checkIn);
+  const checkOut = toUTCDate(input.checkOut);
+  const nights = eachNight(checkIn, checkOut);
+  if (nights.length === 0) throw new Error("Checkout must be at least one night after check-in.");
+
+  const existing = await db.reservation.findUniqueOrThrow({
+    where: { id: input.reservationId },
+    select: { status: true, propertyId: true },
+  });
+  if (existing.status === "CANCELLED") throw new Error("Cancelled bookings cannot be edited.");
+
+  const property = await db.property.findUniqueOrThrow({
+    where: { id: input.propertyId },
+    select: { id: true, basePrice: true, cleaningFee: true },
+  });
+  const unit = await db.unit.findFirst({
+    where: { id: input.unitId, propertyId: property.id },
+    select: { id: true },
+  });
+  if (!unit) throw new Error("That unit does not belong to the selected property.");
+
+  const updated = await db.$transaction(async (tx) => {
+    const guest = await upsertGuest(tx, input.guest, null);
+    await tx.inventoryNight.deleteMany({ where: { reservationId: input.reservationId } });
+    await tx.inventoryNight.createMany({
+      data: nights.map((date) => ({ unitId: unit.id, date, reservationId: input.reservationId })),
+    });
+
+    const reservation = await tx.reservation.update({
+      where: { id: input.reservationId },
+      data: {
+        propertyId: property.id,
+        unitId: unit.id,
+        guestId: guest.id,
+        checkIn,
+        checkOut,
+        adults: input.adults,
+        children: input.children,
+        source: input.source,
+        subtotal: new Prisma.Decimal(input.financials.grossRevenue),
+        cleaningFee: new Prisma.Decimal(0),
+        taxes: new Prisma.Decimal(0),
+        discount: new Prisma.Decimal(0),
+        total: new Prisma.Decimal(input.financials.grossRevenue),
+        nightlyRate: new Prisma.Decimal(input.financials.grossRevenue / nights.length),
+        nights: nights.length,
+        platformFee: new Prisma.Decimal(input.financials.platformFee),
+        hostTax: new Prisma.Decimal(input.financials.hostTax),
+        otherCharges: new Prisma.Decimal(input.financials.otherCharges),
+        hasCustomFinancials: true,
+        reservationGuests: {
+          deleteMany: {},
+          create: {
+            name: input.guest.name,
+            email: input.guest.email ?? null,
+            phone: input.guest.phone ?? null,
+            isPrimary: true,
+          },
+        },
+      },
+    });
+
+    if (existing.status === "CONFIRMED") {
+      await tx.transaction.deleteMany({ where: { reservationId: input.reservationId } });
+      await postBookingFinancials(tx, {
+        propertyId: property.id,
+        reservationId: reservation.id,
+        total: input.financials.grossRevenue,
+        source: input.source,
+        date: checkIn,
+        ...input.financials,
+        hasCustomFinancials: true,
+      });
+    }
+    return reservation;
+  }).catch((error) => {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      throw new InventoryConflictError();
+    }
+    throw error;
+  });
+
+  return updated;
 }
 
 /** A booking (or its cancellation) changes which nights are free, so every

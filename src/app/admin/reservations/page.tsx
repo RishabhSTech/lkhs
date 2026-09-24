@@ -43,6 +43,7 @@ export default async function ReservationsPage({
         where: { id: selectedId },
         include: {
           property: { select: { id: true, name: true, addressLine: true } },
+          unit: { select: { id: true } },
           guest: true,
           payments: true,
           messages: { orderBy: { createdAt: "desc" } },
@@ -78,6 +79,8 @@ export default async function ReservationsPage({
           selected={
             selected && {
               id: selected.id,
+              propertyId: selected.property.id,
+              unitId: selected.unit.id,
               code: selected.code,
               propertyName: selected.property.name,
               propertyAddress: selected.property.addressLine,
