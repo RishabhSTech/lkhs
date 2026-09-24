@@ -2,6 +2,7 @@ import type { BookingSource, ReservationStatus } from "@prisma/client";
 import { AdminPage, PageHeader } from "@/components/admin/page-header";
 import { ReservationsTable } from "@/components/admin/reservations-table";
 import { db } from "@/lib/db";
+import { ManualBookingDialog } from "@/components/admin/manual-booking-dialog";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +33,7 @@ export default async function ReservationsPage({
       take: PAGE_SIZE,
     }),
     db.property.findMany({
-      select: { id: true, name: true },
+      select: { id: true, name: true, units: { select: { id: true, name: true }, orderBy: { name: "asc" } } },
       orderBy: { name: "asc" },
     }),
   ]);
@@ -55,6 +56,7 @@ export default async function ReservationsPage({
       <PageHeader
         title="Reservations"
         description={`${reservations.length} bookings shown, newest arrivals first.`}
+        actions={<ManualBookingDialog properties={properties} />}
       />
       <div className="mt-6">
         <ReservationsTable
