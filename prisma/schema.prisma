@@ -521,6 +521,10 @@ model Reservation {
   taxes       Decimal @default(0) @db.Decimal(12, 2)
   discount    Decimal @default(0) @db.Decimal(12, 2)
   total       Decimal @db.Decimal(12, 2)
+  platformFee Decimal @default(0) @db.Decimal(12, 2)
+  hostTax     Decimal @default(0) @db.Decimal(12, 2)
+  otherCharges Decimal @default(0) @db.Decimal(12, 2)
+  hasCustomFinancials Boolean @default(false)
 
   internalNotes String?
   createdAt     DateTime @default(now())

@@ -16,6 +16,10 @@ const schema = z.object({
   phone: z.string().min(8, "Enter a valid phone number.").optional().or(z.literal("")),
   source: z.enum(["DIRECT", "AIRBNB", "BOOKING_COM", "AGODA", "OTHER"]).default("DIRECT"),
   status: z.enum(["PENDING", "CONFIRMED"]).default("CONFIRMED"),
+  grossRevenue: z.number().nonnegative(),
+  platformFee: z.number().nonnegative().default(0),
+  hostTax: z.number().nonnegative().default(0),
+  otherCharges: z.number().nonnegative().default(0),
 });
 
 export async function POST(request: Request) {
@@ -34,6 +38,9 @@ export async function POST(request: Request) {
 
   if (checkOut <= checkIn) {
     return NextResponse.json({ error: "Check-out needs to be after check-in." }, { status: 400 });
+  }
+  if (data.grossRevenue < data.platformFee + data.hostTax + data.otherCharges) {
+    return NextResponse.json({ error: "Deductions cannot be greater than the booking amount." }, { status: 400 });
   }
 
   const unit = await db.unit.findFirst({
@@ -59,6 +66,12 @@ export async function POST(request: Request) {
       },
       source: data.source,
       userId: user.id,
+      financials: {
+        grossRevenue: data.grossRevenue,
+        platformFee: data.platformFee,
+        hostTax: data.hostTax,
+        otherCharges: data.otherCharges,
+      },
     });
 
     if (data.status === "CONFIRMED") {

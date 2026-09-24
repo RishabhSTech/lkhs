@@ -47,6 +47,10 @@ type Detail = {
   cleaningFee: number;
   taxes: number;
   discount: number;
+  platformFee: number;
+  hostTax: number;
+  otherCharges: number;
+  netPayout: number;
   total: number;
   internalNotes: string | null;
   payments: { id: string; method: string; amount: number; status: string; provider: string; createdAt: string }[];
@@ -375,6 +379,10 @@ export function ReservationsTable({
                       />
                       <Row label="Taxes" value={formatINR(selected.taxes)} />
                       <Row label="Total" value={formatINR(selected.total)} strong />
+                      <Row label="Platform fee" value={`− ${formatINR(selected.platformFee)}`} />
+                      <Row label="Host tax" value={`− ${formatINR(selected.hostTax)}`} />
+                      <Row label="Other charges" value={`− ${formatINR(selected.otherCharges)}`} />
+                      <Row label="Final payout" value={formatINR(selected.netPayout)} strong />
                     </Section>
 
                     <Section title="Payments">

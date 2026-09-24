@@ -34,6 +34,10 @@ export function ManualBookingDialog({ properties }: { properties: Property[] }) 
   const [children, setChildren] = useState("0");
   const [source, setSource] = useState("DIRECT");
   const [status, setStatus] = useState("CONFIRMED");
+  const [grossRevenue, setGrossRevenue] = useState("");
+  const [platformFee, setPlatformFee] = useState("0");
+  const [hostTax, setHostTax] = useState("0");
+  const [otherCharges, setOtherCharges] = useState("0");
   const [saving, setSaving] = useState(false);
 
   const selectedProperty = properties.find((property) => property.id === propertyId);
@@ -54,6 +58,8 @@ export function ManualBookingDialog({ properties }: { properties: Property[] }) 
         body: JSON.stringify({
           propertyId, unitId, checkIn, checkOut, name, email, phone,
           adults: Number(adults), children: Number(children), source, status,
+          grossRevenue: Number(grossRevenue), platformFee: Number(platformFee),
+          hostTax: Number(hostTax), otherCharges: Number(otherCharges),
         }),
       });
       const data = await response.json();
@@ -100,6 +106,10 @@ export function ManualBookingDialog({ properties }: { properties: Property[] }) 
               <option value="DIRECT">Direct</option><option value="AIRBNB">Airbnb</option><option value="BOOKING_COM">Booking.com</option><option value="AGODA">Agoda</option><option value="OTHER">Other</option>
             </select>
           </Field>
+          <Field label="Gross booking amount (₹)" required><Input type="number" min="0" step="0.01" value={grossRevenue} onChange={(event) => setGrossRevenue(event.target.value)} placeholder="25000" required /></Field>
+          <Field label="Platform fee (₹)"><Input type="number" min="0" step="0.01" value={platformFee} onChange={(event) => setPlatformFee(event.target.value)} /></Field>
+          <Field label="Host tax (₹)"><Input type="number" min="0" step="0.01" value={hostTax} onChange={(event) => setHostTax(event.target.value)} /></Field>
+          <Field label="Other charges (₹)"><Input type="number" min="0" step="0.01" value={otherCharges} onChange={(event) => setOtherCharges(event.target.value)} /></Field>
           <Field label="Adults" required><Input type="number" min="1" max="16" value={adults} onChange={(event) => setAdults(event.target.value)} required /></Field>
           <Field label="Children"><Input type="number" min="0" max="16" value={children} onChange={(event) => setChildren(event.target.value)} /></Field>
           <Field label="Status">

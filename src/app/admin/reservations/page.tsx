@@ -98,6 +98,10 @@ export default async function ReservationsPage({
               cleaningFee: Number(selected.cleaningFee),
               taxes: Number(selected.taxes),
               discount: Number(selected.discount),
+              platformFee: Number(selected.platformFee),
+              hostTax: Number(selected.hostTax),
+              otherCharges: Number(selected.otherCharges),
+              netPayout: Number(selected.total) - Number(selected.platformFee) - Number(selected.hostTax) - Number(selected.otherCharges),
               total: Number(selected.total),
               internalNotes: selected.internalNotes,
               payments: selected.payments.map((p) => ({

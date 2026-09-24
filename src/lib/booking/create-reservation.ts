@@ -25,6 +25,12 @@ export type CreateReservationInput = {
   guest: { name: string; email?: string | null; phone?: string | null };
   source?: BookingSource;
   userId?: string | null;
+  financials?: {
+    grossRevenue: number;
+    platformFee: number;
+    hostTax: number;
+    otherCharges: number;
+  };
 };
 
 const CODE_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -97,6 +103,8 @@ export async function createReservation(input: CreateReservationInput) {
 
   const source = input.source ?? "DIRECT";
   const code = generateCode();
+  const financials = input.financials;
+  const grossRevenue = financials?.grossRevenue ?? quote.total;
 
   const reservation = await db
     .$transaction(async (tx) => {
@@ -116,11 +124,15 @@ export async function createReservation(input: CreateReservationInput) {
           source,
           nightlyRate: new Prisma.Decimal(quote.averageNightlyRate),
           nights: quote.nightCount,
-          subtotal: new Prisma.Decimal(quote.subtotal),
-          cleaningFee: new Prisma.Decimal(quote.cleaningFee),
-          taxes: new Prisma.Decimal(quote.taxes),
+          subtotal: new Prisma.Decimal(financials ? grossRevenue : quote.subtotal),
+          cleaningFee: new Prisma.Decimal(financials ? 0 : quote.cleaningFee),
+          taxes: new Prisma.Decimal(financials ? 0 : quote.taxes),
           discount: new Prisma.Decimal(quote.discount),
-          total: new Prisma.Decimal(quote.total),
+          total: new Prisma.Decimal(grossRevenue),
+          platformFee: new Prisma.Decimal(financials?.platformFee ?? 0),
+          hostTax: new Prisma.Decimal(financials?.hostTax ?? 0),
+          otherCharges: new Prisma.Decimal(financials?.otherCharges ?? 0),
+          hasCustomFinancials: Boolean(financials),
           reservationGuests: {
             create: {
               name: input.guest.name,
@@ -241,6 +253,10 @@ async function postBookingFinancials(
     total: number;
     source: BookingSource;
     date: Date;
+    platformFee: number;
+    hostTax: number;
+    otherCharges: number;
+    hasCustomFinancials: boolean;
   },
 ) {
   const revenueCategory = await tx.transactionCategory.findFirstOrThrow({
@@ -263,8 +279,10 @@ async function postBookingFinancials(
     },
   });
 
-  const otaRate = OTA_FEE_RATES[args.source];
-  if (otaRate) {
+  const otaFee = args.hasCustomFinancials
+    ? args.platformFee
+    : Math.round(args.total * (OTA_FEE_RATES[args.source] ?? 0));
+  if (otaFee > 0) {
     const otaCategory = await tx.transactionCategory.findFirstOrThrow({
       where: { group: "OTA_FEE" },
     });
@@ -274,10 +292,48 @@ async function postBookingFinancials(
         categoryId: otaCategory.id,
         reservationId: args.reservationId,
         type: "OTA_FEE",
-        amount: new Prisma.Decimal(Math.round(args.total * otaRate)),
+        amount: new Prisma.Decimal(otaFee),
         date: args.date,
         status: "PAID",
-        description: `${args.source} commission`,
+        description: `${args.source} platform commission`,
+      },
+    });
+  }
+
+  if (args.hostTax > 0) {
+    const category = await tx.transactionCategory.findFirstOrThrow({
+      where: { group: "ONE_TIME_EXPENSE", name: "Host Tax" },
+    });
+    await tx.transaction.create({
+      data: {
+        propertyId: args.propertyId,
+        categoryId: category.id,
+        reservationId: args.reservationId,
+        type: "EXPENSE",
+        amount: new Prisma.Decimal(args.hostTax),
+        date: args.date,
+        status: "PAID",
+        paymentMethod: "OTHER",
+        description: `${args.source} host tax`,
+      },
+    });
+  }
+
+  if (args.otherCharges > 0) {
+    const category = await tx.transactionCategory.findFirstOrThrow({
+      where: { group: "PAYMENT_FEE", name: "Gateway Fee" },
+    });
+    await tx.transaction.create({
+      data: {
+        propertyId: args.propertyId,
+        categoryId: category.id,
+        reservationId: args.reservationId,
+        type: "PAYMENT_FEE",
+        amount: new Prisma.Decimal(args.otherCharges),
+        date: args.date,
+        status: "PAID",
+        paymentMethod: "OTHER",
+        description: `${args.source} other charges`,
       },
     });
   }
@@ -343,6 +399,10 @@ export async function confirmReservation(reservationId: string) {
       total: Number(reservation.total),
       source: reservation.source,
       date: reservation.checkIn,
+      platformFee: Number(reservation.platformFee),
+      hostTax: Number(reservation.hostTax),
+      otherCharges: Number(reservation.otherCharges),
+      hasCustomFinancials: reservation.hasCustomFinancials,
     });
   });
 
