@@ -11,8 +11,10 @@ import { CountUp, type CountUpFormat } from "@/components/site/count-up";
  * the hero and the direct-booking section - three statements of one argument
  * is not three times the trust, it is a page that protests too much.
  *
- * Every figure is read off the database. Nothing here is a marketing claim -
- * the moment one of them is, the others stop working.
+ * Cities and the lowest nightly rate are read straight off the database. The
+ * homes and reviews figures are a round marketing headline rather than a
+ * live count - kept here rather than in the hero because this is the band
+ * that reads as a masthead.
  *
  * Set as a ruled figure line rather than four equal boxes. Four equal columns
  * is what a statistics widget looks like, and a statistics widget is exactly
@@ -21,30 +23,26 @@ import { CountUp, type CountUpFormat } from "@/components/site/count-up";
  * a masthead - which is the register this band is actually in.
  */
 export function ProofBar({
-  homes,
   cities,
-  rating,
-  reviews,
   fromPrice,
 }: {
-  homes: number;
   /** Number of cities we operate in, so this line never says "Indore" again. */
   cities: number;
-  rating: number | null;
-  reviews: number;
   fromPrice: number | null;
 }) {
   const stats: {
     key: string;
     value: number;
     format?: CountUpFormat;
+    suffix?: string;
     label: string;
     star?: boolean;
   }[] = [
     {
       key: "homes",
-      value: homes,
-      label: homes === 1 ? "home, run by us" : "homes, all run by us",
+      value: 500,
+      suffix: "+",
+      label: "Happy Stays",
     },
   ];
 
@@ -57,15 +55,13 @@ export function ProofBar({
       label: "cities, known properly",
     });
   }
-  if (rating !== null && reviews > 0) {
-    stats.push({
-      key: "rating",
-      value: rating,
-      format: "rating",
-      label: `from ${reviews} guest ${reviews === 1 ? "review" : "reviews"}`,
-      star: true,
-    });
-  }
+  stats.push({
+    key: "rating",
+    value: 100,
+    suffix: "+",
+    label: "5-Star Reviews",
+    star: true,
+  });
   if (fromPrice !== null) {
     stats.push({
       key: "from",
@@ -89,8 +85,8 @@ export function ProofBar({
               underneath it come from, which is the only thing that makes a
               figure worth printing. */}
           <p className="copy max-w-xs text-[0.9375rem] leading-relaxed text-muted-foreground">
-            Every figure here is read straight off our own booking system, the
-            morning you load the page.
+            Every home is run by our own team, not handed off to individual
+            hosts.
           </p>
 
           {/* Hairline-divided, hung from a shared rule: two columns on
@@ -122,6 +118,7 @@ export function ProofBar({
                     />
                   )}
                   <CountUp value={stat.value} format={stat.format} />
+                  {stat.suffix}
                 </dd>
                 <dt className="mt-3 max-w-[15ch] text-[0.8125rem] leading-snug text-muted-foreground">
                   {stat.label}

@@ -110,7 +110,7 @@ const FAQS: Faq[] = [
 
 export default async function PreviewHomePage() {
   const [
-    cities, areasByCity, collectionTargets, portfolioReviews, ratingAgg,
+    cities, areasByCity, collectionTargets, portfolioReviews,
     propertyCount, cheapest,
   ] = await Promise.all([
     getCities(),
@@ -124,11 +124,6 @@ export default async function PreviewHomePage() {
       },
       orderBy: { createdAt: "desc" },
       take: 9,
-    }),
-    db.review.aggregate({
-      where: { status: "PUBLISHED" },
-      _avg: { rating: true },
-      _count: true,
     }),
     db.property.count({ where: { status: "ACTIVE" } }),
     db.property.findFirst({
@@ -245,10 +240,7 @@ export default async function PreviewHomePage() {
         </div>
 
         <ProofBar
-          homes={propertyCount}
           cities={cities.length}
-          rating={ratingAgg._avg.rating}
-          reviews={ratingAgg._count}
           fromPrice={fromPrice}
         />
 

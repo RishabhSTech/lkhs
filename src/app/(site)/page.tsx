@@ -293,10 +293,7 @@ export default async function HomePage() {
             heard of us decides whether we are real before they decide whether
             a particular home is nice. */}
         <ProofBar
-          homes={propertyCount}
           cities={cities.length}
-          rating={ratingAgg._avg.rating}
-          reviews={ratingAgg._count}
           fromPrice={fromPrice}
         />
 

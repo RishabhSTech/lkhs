@@ -1,12 +1,19 @@
 import { cn } from "@/lib/utils";
 
 // Source art is a 2172x724 wordmark lockup; white glyph for dark surfaces,
-// black glyph for light surfaces - both transparent SVGs so either drops
-// onto any background. Plain <img>, not next/image: Next's image optimizer
-// refuses local SVGs unless `images.dangerouslyAllowSVG` is set.
+// black glyph for light surfaces - both transparent PNGs so either drops
+// onto any background. These used to be ".svg" but weren't real vector
+// art - each file just wrapped this same raster image in an SVG mask/filter
+// to fake transparency. Browsers rasterize that mask at the element's
+// on-screen size rather than the image's native resolution, so shrinking it
+// to header size (e.g. the mobile header's 144x48) blurred the serif
+// letterforms into a thick, muddy blob. A plain PNG downscales cleanly, so
+// serving the raster directly fixes it. Plain <img>, not next/image: Next's
+// image optimizer refuses local SVGs unless `images.dangerouslyAllowSVG` is
+// set, and there's no SVG here anymore anyway.
 const LOGO_SRC = {
-  light: "/lkhs-white.svg",
-  dark: "/lkhs-dark.svg",
+  light: "/lkhs-white.png",
+  dark: "/lkhs-dark.png",
 } as const;
 
 export function Logo({
