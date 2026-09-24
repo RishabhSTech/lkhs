@@ -4,7 +4,9 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 /**
  * S3-compatible object storage for receipts and property photos. Works against
- * MinIO locally (docker-compose) and any S3 provider in production.
+ * MinIO locally (docker-compose), Supabase Storage, or any other S3 provider
+ * in production - see S3_PUBLIC_URL_BASE below for providers that serve
+ * public objects from a different host than the one they're uploaded to.
  */
 
 let presignClient: S3Client | null = null;
@@ -21,13 +23,30 @@ function isConfigured() {
  * S3_ENDPOINT only when no public endpoint is configured (e.g. a real S3
  * bucket, where the endpoint already is the public one).
  */
+function signingEndpoint() {
+  return process.env.S3_PUBLIC_ENDPOINT ?? process.env.S3_ENDPOINT;
+}
+
+/**
+ * The browser-facing base URL an uploaded object is displayed at. Defaults to
+ * the signing endpoint (true for MinIO and most S3 providers, which serve the
+ * object from the same host it was uploaded to). Set S3_PUBLIC_URL_BASE
+ * explicitly for providers that split the two - e.g. Supabase Storage, where
+ * the S3 protocol endpoint (`<ref>.storage.supabase.co/storage/v1/s3`) only
+ * accepts signed S3 operations, and public objects are served from a
+ * different host and path (`<ref>.supabase.co/storage/v1/object/public`).
+ */
+function publicUrlBase() {
+  return process.env.S3_PUBLIC_URL_BASE ?? signingEndpoint();
+}
+
 function getPresignClient() {
   if (!isConfigured()) return null;
 
   presignClient ??= new S3Client({
-    endpoint: process.env.S3_PUBLIC_ENDPOINT ?? process.env.S3_ENDPOINT,
+    endpoint: signingEndpoint(),
     region: process.env.S3_REGION ?? "us-east-1",
-    forcePathStyle: true, // MinIO requires path-style addressing
+    forcePathStyle: true, // MinIO and Supabase Storage both require path-style addressing
     credentials: {
       accessKeyId: process.env.S3_ACCESS_KEY!,
       secretAccessKey: process.env.S3_SECRET_KEY!,
@@ -52,7 +71,7 @@ export async function createUploadUrl(key: string, contentType: string) {
   });
 
   const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 });
-  const publicUrl = `${process.env.S3_PUBLIC_ENDPOINT ?? process.env.S3_ENDPOINT}/${process.env.S3_BUCKET}/${key}`;
+  const publicUrl = `${publicUrlBase()}/${process.env.S3_BUCKET}/${key}`;
 
   return { uploadUrl, publicUrl };
 }

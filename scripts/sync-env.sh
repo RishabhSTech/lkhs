@@ -23,6 +23,13 @@ cd "$(dirname "$0")/.."
 #                         object-storage credentials by hand once you have them
 #   PGSSL_DISABLE       - only for a plain-TLS local/CI Postgres
 #   NODE_ENV            - set by the platform, never by hand
+#   AUTH_SECRET         - signs every session JWT (src/lib/auth/session-shared.ts).
+#                         Overwriting the live value invalidates every logged-in
+#                         session (all users, all devices) the moment the next
+#                         deploy picks it up. Rotate it deliberately, by hand,
+#                         in the Vercel dashboard - never as a side effect of
+#                         syncing an unrelated key from a local .env that may
+#                         hold a different value than what's actually live.
 
 ENV_FILE="${1:-.env}"
 if [ ! -f "$ENV_FILE" ]; then
@@ -30,7 +37,7 @@ if [ ! -f "$ENV_FILE" ]; then
   exit 1
 fi
 
-EXCLUDE=(APP_URL REDIS_URL ALLOW_DEMO_FALLBACK PGSSL_DISABLE NODE_ENV)
+EXCLUDE=(APP_URL REDIS_URL ALLOW_DEMO_FALLBACK PGSSL_DISABLE NODE_ENV AUTH_SECRET)
 
 is_excluded() {
   local key="$1"
