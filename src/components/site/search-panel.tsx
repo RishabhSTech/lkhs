@@ -162,7 +162,7 @@ export function SearchPanel({
         className,
       )}
     >
-      <div className="grid gap-px overflow-hidden rounded-xl bg-border/70 sm:grid-cols-2 lg:grid-cols-[1.15fr_1.5fr_1fr_auto]">
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-border/70 lg:grid-cols-[1.15fr_1.5fr_1fr_auto]">
         <Cell
           icon={MapPin}
           label="Where"
@@ -294,7 +294,7 @@ export function SearchPanel({
           </PopoverContent>
         </Cell>
 
-        <div className="flex items-stretch bg-card p-1.5 sm:col-span-2 lg:col-span-1">
+        <div className="flex items-stretch bg-card p-1.5">
           <Button
             type="submit"
             size="lg"
@@ -339,7 +339,7 @@ function Cell({
           <button
             type="button"
             className={cn(
-              "flex flex-col gap-1 bg-card px-4 py-3 text-left transition-colors hover:bg-muted/50 focus-visible:z-10 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none",
+              "flex flex-col gap-1 bg-card px-4 py-2 text-left transition-colors hover:bg-muted/50 focus-visible:z-10 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none",
               open && "bg-muted/50",
             )}
           >

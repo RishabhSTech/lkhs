@@ -53,7 +53,10 @@ export function Hero({
 
   return (
     <section ref={ref} className="relative">
-      <div className="relative flex h-[92svh] max-h-[56rem] min-h-[44rem] w-full flex-col overflow-hidden">
+      {/* min-h capped at 100svh, not just 44rem: on a phone shorter than 44rem
+          (iPhone SE-class), an uncapped floor made the hero taller than the
+          screen, pushing the search button down under the fixed chat bubble. */}
+      <div className="relative flex h-[92svh] max-h-[56rem] min-h-[min(44rem,100svh)] w-full flex-col overflow-hidden">
         {/* One slow settle on load - enough to feel alive, no looping drift -
             and the scroll parallax layered on top of it. */}
         <motion.div
@@ -109,7 +112,7 @@ export function Hero({
           className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-background to-transparent"
         />
 
-        <div className="relative mx-auto flex h-full w-full max-w-6xl flex-col justify-end px-5 pb-10 sm:px-6 lg:pb-14">
+        <div className="relative mx-auto flex h-full w-full max-w-6xl flex-col justify-end px-5 pb-14 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -148,14 +151,14 @@ export function Hero({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-8 lg:mt-12"
+            className="mt-6 lg:mt-12"
           >
             <SearchPanel locations={locations} />
 
             {/* The three objections a first-time visitor has, answered before
                 they have to scroll to find out. Small on purpose: this is a
                 reassurance under the control, not a fourth headline. */}
-            <ul className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-[0.8125rem] text-white/70">
+            <ul className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[0.8125rem] text-white/70">
               {ASSURANCES.map((item) => (
                 <li key={item} className="flex items-center gap-2">
                   <span
