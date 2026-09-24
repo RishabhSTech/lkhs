@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getCurrentAdminUser } from "@/lib/auth/current-user";
 
@@ -53,7 +54,11 @@ export async function POST(request: Request, { params }: RouteParams) {
 }
 
 /** Reorders every photo in one shot - `order` is the full list of image ids
- * in their new sequence, so index 0 becomes the hero. */
+ * in their new sequence, so index 0 becomes the hero. One bulk UPDATE, not
+ * one query per photo inside a transaction - a gallery with 15-20+ photos
+ * pushed that many sequential round trips past Prisma's 5s interactive-
+ * transaction timeout (P2028: "rollback cannot be executed on an expired
+ * transaction"). */
 export async function PATCH(request: Request, { params }: RouteParams) {
   const { id: propertyId } = await params;
   const parsed = reorderSchema.safeParse(await request.json().catch(() => null));
@@ -61,14 +66,18 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "We couldn't save that photo order. Refresh and try again." }, { status: 400 });
   }
 
-  await db.$transaction(
-    parsed.data.order.map((imageId, index) =>
-      db.propertyImage.update({
-        where: { id: imageId, propertyId },
-        data: { sortOrder: index, isHero: index === 0 },
-      }),
-    ),
+  const { order } = parsed.data;
+  const sortOrderCases = Prisma.join(
+    order.map((imageId, index) => Prisma.sql`WHEN ${imageId} THEN ${index}`),
+    " ",
   );
+
+  await db.$executeRaw`
+    UPDATE "PropertyImage"
+    SET "sortOrder" = CASE "id" ${sortOrderCases} END,
+        "isHero" = "id" = ${order[0]}
+    WHERE "propertyId" = ${propertyId} AND "id" IN (${Prisma.join(order)})
+  `;
 
   return NextResponse.json({ ok: true });
 }
