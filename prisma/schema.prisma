@@ -559,7 +559,24 @@ model ReservationGuest {
   phone         String?
   isPrimary     Boolean @default(false)
 
+  // Digital check-in - collected via the guest-facing /checkin/[code] form
+  // linked from the DIGITAL_CHECKIN email, once the reservation is CONFIRMED.
+  // idDocumentUrl is optional (a scan/photo alongside the typed ID number),
+  // and checkedInAt marks this specific guest's row as submitted.
+  idType        GovtIdType?
+  idNumber      String?
+  idDocumentUrl String?
+  checkedInAt   DateTime?
+
   reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+}
+
+enum GovtIdType {
+  AADHAAR
+  PASSPORT
+  DRIVING_LICENCE
+  VOTER_ID
+  OTHER
 }
 
 enum PaymentProviderName {

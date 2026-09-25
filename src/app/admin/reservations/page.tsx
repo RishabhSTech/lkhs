@@ -48,6 +48,7 @@ export default async function ReservationsPage({
           payments: true,
           messages: { orderBy: { createdAt: "desc" } },
           auditLogs: { orderBy: { createdAt: "desc" } },
+          reservationGuests: { orderBy: { isPrimary: "desc" } },
         },
       })
     : null;
@@ -122,6 +123,15 @@ export default async function ReservationsPage({
                 body: m.body,
                 status: m.status,
                 createdAt: m.createdAt.toISOString(),
+              })),
+              checkinGuests: selected.reservationGuests.map((g) => ({
+                id: g.id,
+                name: g.name,
+                isPrimary: g.isPrimary,
+                idType: g.idType,
+                idNumber: g.idNumber,
+                idDocumentUrl: g.idDocumentUrl,
+                checkedInAt: g.checkedInAt ? g.checkedInAt.toISOString() : null,
               })),
               auditLogs: selected.auditLogs.map((a) => ({
                 id: a.id,

@@ -17,6 +17,14 @@ import {
 import { formatDateLong, formatDateRange, formatINR } from "@/lib/format";
 import { EditBookingDialog } from "@/components/admin/edit-booking-dialog";
 
+const ID_TYPE_LABELS: Record<string, string> = {
+  AADHAAR: "Aadhaar",
+  PASSPORT: "Passport",
+  DRIVING_LICENCE: "Driving Licence",
+  VOTER_ID: "Voter ID",
+  OTHER: "Other ID",
+};
+
 type Row = {
   id: string;
   code: string;
@@ -59,6 +67,15 @@ type Detail = {
   payments: { id: string; method: string; amount: number; status: string; provider: string; createdAt: string }[];
   messages: { id: string; channel: string; subject: string | null; body: string; status: string; createdAt: string }[];
   auditLogs: { id: string; userName: string; summary: string; createdAt: string }[];
+  checkinGuests: {
+    id: string;
+    name: string;
+    isPrimary: boolean;
+    idType: string | null;
+    idNumber: string | null;
+    idDocumentUrl: string | null;
+    checkedInAt: string | null;
+  }[];
 };
 
 type Property = { id: string; name: string; units: { id: string; name: string }[] };
@@ -353,6 +370,7 @@ export function ReservationsTable({
                   <TabsList className="w-full">
                     <TabsTrigger value="details">Details</TabsTrigger>
                     <TabsTrigger value="payment">Payment</TabsTrigger>
+                    <TabsTrigger value="checkin">Check-in</TabsTrigger>
                     <TabsTrigger value="messages">Messages</TabsTrigger>
                     <TabsTrigger value="history">History</TabsTrigger>
                   </TabsList>
@@ -444,6 +462,64 @@ export function ReservationsTable({
                             </li>
                           ))}
                         </ul>
+                      )}
+                    </Section>
+                  </TabsContent>
+
+                  <TabsContent value="checkin" className="mt-4 space-y-4">
+                    <Section title={`Digital check-in · ${selected.checkinGuests.filter((g) => g.checkedInAt).length} of ${selected.adults} adults`}>
+                      {Array.from({ length: selected.adults }, (_, i) => selected.checkinGuests[i]).map((g, i) =>
+                        g ? (
+                          <div
+                            key={g.id}
+                            className="flex flex-col gap-1 border-b border-border py-2 text-sm last:border-0"
+                          >
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="font-medium text-foreground">
+                                {g.name}
+                                {g.isPrimary && (
+                                  <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                                    (primary)
+                                  </span>
+                                )}
+                              </span>
+                              <Badge
+                                className={
+                                  g.checkedInAt
+                                    ? "border-chart-1/25 bg-chart-1/10 text-chart-1"
+                                    : "border-chart-4/25 bg-chart-4/10 text-chart-4"
+                                }
+                              >
+                                {g.checkedInAt ? "checked in" : "pending"}
+                              </Badge>
+                            </div>
+                            {g.idType && g.idNumber && (
+                              <p className="text-xs text-muted-foreground">
+                                {ID_TYPE_LABELS[g.idType] ?? g.idType} · {g.idNumber}
+                                {g.idDocumentUrl && (
+                                  <>
+                                    {" · "}
+                                    <a
+                                      href={g.idDocumentUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="underline underline-offset-2"
+                                    >
+                                      view ID
+                                    </a>
+                                  </>
+                                )}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <div key={`pending-${i}`} className="flex items-center justify-between gap-3 border-b border-border py-2 text-sm last:border-0">
+                            <span className="text-muted-foreground">Guest {i + 1}</span>
+                            <Badge className="border-border bg-muted text-muted-foreground">
+                              not submitted
+                            </Badge>
+                          </div>
+                        ),
                       )}
                     </Section>
                   </TabsContent>

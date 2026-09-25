@@ -550,6 +550,24 @@ export async function confirmReservation(reservationId: string) {
     propertyImageUrl: reservation.property.images[0]?.url,
     paymentMethod: reservation.payments[0]?.method,
   });
+
+  await notifyGuestDigitalCheckin({
+    reservationId: reservation.id,
+    code: reservation.code,
+    guest: {
+      name: primaryGuest?.name ?? "Guest",
+      email: primaryGuest?.email ?? null,
+      phone: primaryGuest?.phone ?? null,
+    },
+    propertyName: reservation.property.name,
+    checkIn: reservation.checkIn,
+    checkOut: reservation.checkOut,
+    nights: reservation.nights,
+    adults: reservation.adults,
+    children: reservation.children,
+    locationArea: reservation.property.locationArea,
+    city: reservation.property.city,
+  });
 }
 
 /** Releases a PENDING reservation's hold on inventory - used both when an
@@ -590,7 +608,7 @@ export async function cancelReservation(reservationId: string): Promise<boolean>
   const reservation = await db.reservation.findUnique({
     where: { id: reservationId },
     include: {
-      property: { select: { id: true, name: true } },
+      property: { select: { id: true, name: true, locationArea: true, city: true } },
       reservationGuests: { where: { isPrimary: true } },
     },
   });
@@ -622,6 +640,11 @@ export async function cancelReservation(reservationId: string): Promise<boolean>
     propertyName: reservation.property.name,
     checkIn: reservation.checkIn,
     checkOut: reservation.checkOut,
+    nights: reservation.nights,
+    adults: reservation.adults,
+    children: reservation.children,
+    locationArea: reservation.property.locationArea,
+    city: reservation.property.city,
     wasConfirmed,
   });
 
@@ -692,6 +715,67 @@ async function notifyGuestBookingConfirmed(args: {
     body: `${args.guest.name} booked ${args.propertyName} · ${args.code}`,
     severity: "INFO",
     link: `/admin/reservations?code=${args.code}`,
+  });
+}
+
+/**
+ * Sent right after notifyGuestBookingConfirmed, once a reservation is paid -
+ * links the guest to /checkin/[code], the public form that collects a
+ * government ID for every guest in the party (see ReservationGuest.idType).
+ * Email-only (no WhatsApp/SMS fallback): the check-in link and upload flow
+ * don't render usefully outside a browser, so a guest with no email address
+ * on file just doesn't get this message - the team still has to collect IDs
+ * by hand for those bookings, same as before this feature existed.
+ */
+async function notifyGuestDigitalCheckin(args: {
+  reservationId: string;
+  code: string;
+  guest: { name: string; email?: string | null; phone?: string | null };
+  propertyName: string;
+  checkIn: Date;
+  checkOut: Date;
+  nights: number;
+  adults: number;
+  children: number;
+  locationArea: string;
+  city: string;
+}) {
+  if (!args.guest.email) return;
+
+  const rendered = renderTemplate("DIGITAL_CHECKIN", {
+    guestName: args.guest.name,
+    propertyName: args.propertyName,
+    checkIn: args.checkIn,
+    checkOut: args.checkOut,
+    bookingCode: args.code,
+    nights: args.nights,
+    adults: args.adults,
+    children: args.children,
+    locationArea: args.locationArea,
+    city: args.city,
+  });
+
+  const notifier = getNotificationProvider();
+  const result = await notifier.send({
+    channel: "EMAIL",
+    to: args.guest.email,
+    subject: rendered.subject,
+    body: rendered.body,
+    html: rendered.html,
+    templateKey: "DIGITAL_CHECKIN",
+  });
+
+  await db.message.create({
+    data: {
+      reservationId: args.reservationId,
+      channel: "EMAIL",
+      direction: "OUTBOUND",
+      templateKey: "DIGITAL_CHECKIN",
+      subject: rendered.subject,
+      body: rendered.body,
+      status: result.status === "SENT" ? "SENT" : "FAILED",
+      sentAt: new Date(),
+    },
   });
 }
 
@@ -768,6 +852,11 @@ async function notifyGuestBookingCancelled(args: {
   propertyName: string;
   checkIn: Date;
   checkOut: Date;
+  nights: number;
+  adults: number;
+  children: number;
+  locationArea: string;
+  city: string;
   wasConfirmed: boolean;
 }) {
   const rendered = renderTemplate("BOOKING_CANCELLED", {
@@ -776,6 +865,11 @@ async function notifyGuestBookingCancelled(args: {
     checkIn: args.checkIn,
     checkOut: args.checkOut,
     bookingCode: args.code,
+    nights: args.nights,
+    adults: args.adults,
+    children: args.children,
+    locationArea: args.locationArea,
+    city: args.city,
   });
 
   const notifier = getNotificationProvider();
@@ -786,6 +880,7 @@ async function notifyGuestBookingCancelled(args: {
       to: destination,
       subject: rendered.subject,
       body: rendered.body,
+      html: args.guest.email ? rendered.html : undefined,
       templateKey: "BOOKING_CANCELLED",
     });
 

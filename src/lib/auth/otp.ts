@@ -2,6 +2,7 @@ import "server-only";
 import { randomInt } from "node:crypto";
 import { db } from "@/lib/db";
 import { EMAIL_IS_LIVE, getNotificationProvider } from "@/lib/notifications/provider";
+import { renderOtpEmailHtml } from "@/lib/notifications/templates";
 
 const OTP_TTL_MINUTES = 10;
 const MAX_ATTEMPTS = 5;
@@ -32,6 +33,7 @@ export async function requestOtp(identifier: string) {
     to: identifier,
     subject: "Your Lime Kraft sign-in code",
     body: `Your Lime Kraft verification code is ${code}. It expires in ${OTP_TTL_MINUTES} minutes.`,
+    html: isEmail(identifier) ? renderOtpEmailHtml(code, OTP_TTL_MINUTES) : undefined,
     templateKey: "OTP",
   });
 

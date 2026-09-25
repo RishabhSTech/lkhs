@@ -2,6 +2,7 @@ import type { NotificationSeverity, NotificationType } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getNotificationProvider } from "@/lib/notifications/provider";
 import { sendPushToTeam } from "@/lib/notifications/push";
+import { renderTeamAlertHtml } from "@/lib/notifications/templates";
 
 export type TeamAlert = {
   type: NotificationType;
@@ -39,6 +40,12 @@ export async function alertTeam(alert: TeamAlert) {
           to: teamEmail,
           subject: `New inquiry: ${alert.title}`,
           body: `${alert.body}${alert.link ? `\n\nOpen: ${process.env.APP_URL ?? ""}${alert.link}` : ""}`,
+          html: renderTeamAlertHtml({
+            title: alert.title,
+            body: alert.body,
+            severity: alert.severity ?? "INFO",
+            link: alert.link,
+          }),
         })
       : Promise.resolve(),
   ]);
