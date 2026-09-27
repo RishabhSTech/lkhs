@@ -63,9 +63,14 @@ describe("upsertBookingFromEmail", () => {
   afterAll(async () => {
     if (!propertyId) return;
     await db.processedEmailMessage.deleteMany({ where: { emailMessageId: { startsWith: marker } } });
+    await db.message.deleteMany({ where: { subject: { contains: marker } } });
     const reservations = await db.reservation.findMany({ where: { propertyId }, select: { guestId: true } });
     await db.reservation.deleteMany({ where: { propertyId } });
     await db.guest.deleteMany({ where: { id: { in: reservations.map((r) => r.guestId) } } });
+    // The double-booking test creates an Airbnb guest via upsertGuestForEmail
+    // before the reservation insert fails, so it's never attached to a
+    // reservation and would otherwise leak.
+    await db.guest.deleteMany({ where: { email: { startsWith: marker } } });
     await db.notification.deleteMany({ where: { body: { contains: marker } } });
     await db.property.delete({ where: { id: propertyId } });
   });

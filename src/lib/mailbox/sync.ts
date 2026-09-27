@@ -71,9 +71,17 @@ export async function runMailboxPoll(): Promise<PollSummary> {
     const emailMessageId = parsed.messageId ?? `${integration.id}:uid-${uid}`;
 
     const already = await db.processedEmailMessage.findUnique({ where: { emailMessageId } });
-    if (already) {
+    // A FAILED record means something went wrong before we could act on the
+    // email (e.g. a misconfigured extractor, a transient API outage) - it
+    // must be retried on the next poll rather than permanently swallowing a
+    // real inquiry/booking. Only PROCESSED/NEEDS_REVIEW mean we've actually
+    // dealt with this email.
+    if (already && already.status !== "FAILED") {
       summary.skipped++;
       continue;
+    }
+    if (already) {
+      await db.processedEmailMessage.delete({ where: { emailMessageId } });
     }
 
     const envelope: Envelope = {
@@ -82,29 +90,34 @@ export async function runMailboxPoll(): Promise<PollSummary> {
       receivedAt: parsed.date ?? new Date(),
     };
 
-    try {
-      const source = sourceFromAddress(envelope.from);
-      if (!source) {
-        // Matched the IMAP search's domain filter but our stricter
-        // per-source check disagrees (e.g. a forwarded copy) - log it
-        // rather than silently drop it, but don't guess a source.
-        await db.processedEmailMessage.create({
-          data: {
-            emailMessageId,
-            receivedAt: envelope.receivedAt,
-            fromAddress: envelope.from,
-            subject: envelope.subject,
-            classification: "OTHER",
-            status: "NEEDS_REVIEW",
-            error: "Could not determine which OTA this email is from.",
-          },
-        });
-        summary.processed++;
-        continue;
-      }
+    const source = sourceFromAddress(envelope.from);
+    if (!source) {
+      // Matched the IMAP search's domain filter but our stricter per-source
+      // check disagrees (e.g. a forwarded copy) - log it rather than
+      // silently drop it, but don't guess a source.
+      await db.processedEmailMessage.create({
+        data: {
+          emailMessageId,
+          receivedAt: envelope.receivedAt,
+          fromAddress: envelope.from,
+          subject: envelope.subject,
+          classification: "OTHER",
+          status: "NEEDS_REVIEW",
+          error: "Could not determine which OTA this email is from.",
+        },
+      });
+      summary.processed++;
+      continue;
+    }
 
+    try {
       const bodyText = parsed.text || "";
-      const extraction = await extractBookingInfo({ source, subject: envelope.subject, body: bodyText });
+      const extraction = await extractBookingInfo({
+        source,
+        subject: envelope.subject,
+        body: bodyText,
+        receivedAt: envelope.receivedAt,
+      });
 
       const isBookingEvent =
         extraction.classification === "BOOKING_CONFIRMED" ||
@@ -127,6 +140,7 @@ export async function runMailboxPoll(): Promise<PollSummary> {
             receivedAt: envelope.receivedAt,
             fromAddress: envelope.from,
             subject: envelope.subject,
+            source,
             classification: "OTHER",
             status: "FAILED",
             error: error instanceof Error ? error.message : "Unknown error",
