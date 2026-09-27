@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { MessageCircle, Send, X, Loader2, BedDouble, Users, ImageOff } from "lucide-react";
+import { MessageCircle, Send, X, Loader2, BedDouble, Users, ImageOff, User, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatINR } from "@/lib/format";
 
@@ -19,7 +19,32 @@ type PropertyCard = {
   availability?: { checkIn: string; checkOut: string; nights: number; total: number; currency: string };
 };
 
-type ChatMessage = { role: "user" | "assistant"; content: string; properties?: PropertyCard[] };
+type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+  properties?: PropertyCard[];
+  contactForm?: string;
+};
+
+/** The model writes plain **bold** markdown - render it instead of showing literal asterisks. */
+function renderChatText(content: string) {
+  const lines = content.split("\n");
+  return lines.map((line, li) => {
+    const parts = line.split(/(\*\*[^*]+\*\*)/g).filter(Boolean);
+    return (
+      <Fragment key={li}>
+        {li > 0 && <br />}
+        {parts.map((part, pi) =>
+          part.startsWith("**") && part.endsWith("**") ? (
+            <strong key={pi}>{part.slice(2, -2)}</strong>
+          ) : (
+            <Fragment key={pi}>{part}</Fragment>
+          ),
+        )}
+      </Fragment>
+    );
+  });
+}
 
 const STORAGE_KEY = "lkhs-chat-history";
 const GREETING: ChatMessage = {
@@ -58,8 +83,7 @@ export function ChatbotWidget() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, open]);
 
-  async function send() {
-    const text = input.trim();
+  async function sendMessage(text: string) {
     if (!text || sending) return;
 
     const next = [...messages, { role: "user" as const, content: text }];
@@ -76,7 +100,12 @@ export function ChatbotWidget() {
       const data = await res.json();
       setMessages([
         ...next,
-        { role: "assistant", content: data.reply ?? "Sorry, something went wrong.", properties: data.properties },
+        {
+          role: "assistant",
+          content: data.reply ?? "Sorry, something went wrong.",
+          properties: data.properties,
+          contactForm: data.contactForm,
+        },
       ]);
     } catch {
       setMessages([...next, { role: "assistant", content: "Sorry, something went wrong - please try again or use the contact form." }]);
@@ -111,7 +140,7 @@ export function ChatbotWidget() {
                       : "mr-auto max-w-[85%] rounded-2xl rounded-bl-sm bg-muted px-3.5 py-2 text-sm text-foreground"
                   }
                 >
-                  {m.content}
+                  {renderChatText(m.content)}
                 </div>
                 {m.properties && m.properties.length > 0 && (
                   <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
@@ -119,6 +148,9 @@ export function ChatbotWidget() {
                       <PropertySuggestionCard key={p.slug} property={p} />
                     ))}
                   </div>
+                )}
+                {i === messages.length - 1 && m.contactForm && (
+                  <ContactFormCard onSubmit={sendMessage} disabled={sending} />
                 )}
               </div>
             ))}
@@ -133,7 +165,7 @@ export function ChatbotWidget() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              send();
+              sendMessage(input.trim());
             }}
             className="flex items-center gap-2 border-t border-border p-3"
           >
@@ -173,11 +205,11 @@ function PropertySuggestionCard({ property }: { property: PropertyCard }) {
   return (
     <Link
       href={`/stays/${property.slug}`}
-      className="block w-40 shrink-0 overflow-hidden rounded-xl border border-border bg-background transition-shadow hover:shadow-md"
+      className="block w-44 shrink-0 overflow-hidden rounded-xl border border-border bg-background shadow-sm transition-shadow hover:shadow-lg"
     >
-      <div className="relative h-24 w-full bg-muted">
+      <div className="relative h-28 w-full bg-muted">
         {property.heroImageUrl ? (
-          <Image src={property.heroImageUrl} alt={property.name} fill className="object-cover" sizes="160px" />
+          <Image src={property.heroImageUrl} alt={property.name} fill className="object-cover" sizes="176px" />
         ) : (
           <div className="flex h-full items-center justify-center text-muted-foreground">
             <ImageOff className="size-5" />
@@ -203,5 +235,71 @@ function PropertySuggestionCard({ property }: { property: PropertyCard }) {
         </span>
       </div>
     </Link>
+  );
+}
+
+function ContactFormCard({ onSubmit, disabled }: { onSubmit: (text: string) => void; disabled: boolean }) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  const valid = name.trim().length > 0 && (email.trim().length > 0 || phone.trim().length > 0);
+
+  if (submitted) return null;
+
+  function submit() {
+    if (!valid) return;
+    const parts = [`My name is ${name.trim()}.`];
+    if (email.trim()) parts.push(`Email: ${email.trim()}.`);
+    if (phone.trim()) parts.push(`Phone: ${phone.trim()}.`);
+    setSubmitted(true);
+    onSubmit(parts.join(" "));
+  }
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        submit();
+      }}
+      className="mr-auto w-full max-w-[85%] space-y-2 rounded-2xl rounded-bl-sm border border-border bg-background p-3"
+    >
+      <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-2.5">
+        <User className="size-3.5 text-muted-foreground" />
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Your name"
+          className="h-8 flex-1 bg-transparent text-sm outline-none"
+          maxLength={100}
+        />
+      </div>
+      <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-2.5">
+        <Mail className="size-3.5 text-muted-foreground" />
+        <input
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
+          type="email"
+          className="h-8 flex-1 bg-transparent text-sm outline-none"
+          maxLength={200}
+        />
+      </div>
+      <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-2.5">
+        <Phone className="size-3.5 text-muted-foreground" />
+        <input
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="Phone (optional if email given)"
+          type="tel"
+          className="h-8 flex-1 bg-transparent text-sm outline-none"
+          maxLength={30}
+        />
+      </div>
+      <Button type="submit" size="sm" className="w-full" disabled={!valid || disabled}>
+        Share details
+      </Button>
+    </form>
   );
 }

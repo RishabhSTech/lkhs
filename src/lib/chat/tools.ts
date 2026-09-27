@@ -55,6 +55,19 @@ export const CHAT_TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "request_contact_form",
+    description:
+      "Call this when you need the guest's name and a contact method (email or phone) - to hold a booking, log an inquiry, or have the team follow up. Don't ask for these fields in your text reply; call this tool instead and keep your reply to one short sentence like 'Sure, just share your details below.' - the UI shows an actual form. After the guest submits it, their info arrives as a normal message, so call create_inquiry next.",
+    input_schema: {
+      type: "object",
+      properties: {
+        reason: { type: "string", description: "One short phrase for why you need it, e.g. 'hold the Gather Villa for Oct 3'." },
+      },
+      required: ["reason"],
+      additionalProperties: false,
+    },
+  },
+  {
     name: "create_inquiry",
     description:
       "Log this conversation as an inquiry for the Lime Kraft team and alert them immediately (push notification + email), so a human follows up. Call this once you have the guest's name and at least one contact method (email or phone), and either they've asked to be contacted, you can't fully resolve their question, or they want to book. Only call this once per conversation.",
@@ -272,7 +285,7 @@ async function createInquiry(input: {
   return { ok: true, message: "Logged - the team will reach out shortly." };
 }
 
-export type ChatToolResult = { forModel: unknown; cards: PropertyCard[] };
+export type ChatToolResult = { forModel: unknown; cards: PropertyCard[]; contactFormReason?: string };
 
 export async function runChatTool(name: string, input: unknown): Promise<ChatToolResult> {
   switch (name) {
@@ -280,6 +293,12 @@ export async function runChatTool(name: string, input: unknown): Promise<ChatToo
       return searchProperties(input as Parameters<typeof searchProperties>[0]);
     case "check_availability_and_price":
       return checkAvailabilityAndPrice(input as Parameters<typeof checkAvailabilityAndPrice>[0]);
+    case "request_contact_form":
+      return {
+        forModel: { ok: true },
+        cards: [],
+        contactFormReason: (input as { reason: string }).reason,
+      };
     case "get_property_details":
       return { forModel: await getPropertyDetails(input as Parameters<typeof getPropertyDetails>[0]), cards: [] };
     case "create_inquiry":

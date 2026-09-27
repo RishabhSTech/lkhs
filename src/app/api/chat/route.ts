@@ -24,10 +24,14 @@ const schema = z.object({
     .max(40),
 });
 
-const SYSTEM_PROMPT = `You are the guest-facing chat assistant for Lime Kraft Home Stays, an
+function buildSystemPrompt() {
+  const today = new Date().toISOString().slice(0, 10);
+  return `You are the guest-facing chat assistant for Lime Kraft Home Stays, an
 Indian home-stay and villa booking company. Be warm, concise, and honest -
 never invent availability, prices, or property details; always check with a
 tool first.
+
+Today's date is ${today}. If a guest gives a date without a year (e.g. "Oct 3" or "this weekend"), assume the nearest upcoming occurrence - never a past date or a random year from your training data.
 
 Guidelines:
 - Use search_properties to find homes matching what the guest describes, then check_availability_and_price for specific dates before quoting a number.
@@ -39,6 +43,7 @@ Guidelines:
 
 # Reference knowledge
 ${CHATBOT_KNOWLEDGE}`;
+}
 
 export async function POST(request: Request) {
   if (!CHAT_IS_CONFIGURED) {
@@ -62,9 +67,12 @@ export async function POST(request: Request) {
     content: m.content,
   }));
 
-  // Cards from this turn's tool calls, carried to the frontend alongside the
-  // reply - kept out of what's sent back to the model (see tools.ts).
+  // Side-channel data from this turn's tool calls, carried to the frontend
+  // alongside the reply - kept out of what's sent back to the model (see
+  // tools.ts).
   const cardsBySlug = new Map<string, PropertyCard>();
+  let contactFormReason: string | undefined;
+  const systemPrompt = buildSystemPrompt();
 
   try {
     // Bounded loop: a guest turn should resolve in a couple of tool calls at
@@ -73,7 +81,7 @@ export async function POST(request: Request) {
       const response = await client.messages.create({
         model: MODEL,
         max_tokens: 1024,
-        system: SYSTEM_PROMPT,
+        system: systemPrompt,
         tools: CHAT_TOOLS,
         messages,
       });
@@ -82,7 +90,8 @@ export async function POST(request: Request) {
         const text = response.content.find((b) => b.type === "text");
         return NextResponse.json({
           reply: text?.text ?? "Sorry, could you rephrase that?",
-          properties: [...cardsBySlug.values()],
+          properties: selectCards(cardsBySlug),
+          contactForm: contactFormReason,
         });
       }
 
@@ -91,8 +100,9 @@ export async function POST(request: Request) {
       const toolUses = response.content.filter((b) => b.type === "tool_use");
       const results = await Promise.all(
         toolUses.map(async (toolUse) => {
-          const { forModel, cards } = await runChatTool(toolUse.name, toolUse.input);
+          const { forModel, cards, contactFormReason: reason } = await runChatTool(toolUse.name, toolUse.input);
           for (const card of cards) cardsBySlug.set(card.slug, card);
+          if (reason) contactFormReason = reason;
           return {
             type: "tool_result" as const,
             tool_use_id: toolUse.id,
@@ -105,7 +115,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       reply: "Let's take this to email - please use the contact form and our team will follow up.",
-      properties: [...cardsBySlug.values()],
+      properties: selectCards(cardsBySlug),
     });
   } catch (error) {
     console.error("[chat] request failed", error);
@@ -113,4 +123,15 @@ export async function POST(request: Request) {
       reply: "Something went wrong on our end - please use the contact form instead.",
     });
   }
+}
+
+/**
+ * A turn that both browses (search_properties) and checks specific dates
+ * (check_availability_and_price) shouldn't show the whole browse list next
+ * to the one property actually being discussed - prefer the priced card(s).
+ */
+function selectCards(cardsBySlug: Map<string, PropertyCard>) {
+  const all = [...cardsBySlug.values()];
+  const priced = all.filter((c) => c.availability);
+  return priced.length > 0 ? priced : all;
 }
