@@ -1,10 +1,25 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MessageCircle, Send, X, Loader2 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { MessageCircle, Send, X, Loader2, BedDouble, Users, ImageOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatINR } from "@/lib/format";
 
-type ChatMessage = { role: "user" | "assistant"; content: string };
+type PropertyCard = {
+  slug: string;
+  name: string;
+  city: string | null;
+  area: string | null;
+  bedrooms: number;
+  maxGuests: number;
+  basePrice: number;
+  heroImageUrl: string | null;
+  availability?: { checkIn: string; checkOut: string; nights: number; total: number; currency: string };
+};
+
+type ChatMessage = { role: "user" | "assistant"; content: string; properties?: PropertyCard[] };
 
 const STORAGE_KEY = "lkhs-chat-history";
 const GREETING: ChatMessage = {
@@ -59,7 +74,10 @@ export function ChatbotWidget() {
         body: JSON.stringify({ messages: next }),
       });
       const data = await res.json();
-      setMessages([...next, { role: "assistant", content: data.reply ?? "Sorry, something went wrong." }]);
+      setMessages([
+        ...next,
+        { role: "assistant", content: data.reply ?? "Sorry, something went wrong.", properties: data.properties },
+      ]);
     } catch {
       setMessages([...next, { role: "assistant", content: "Sorry, something went wrong - please try again or use the contact form." }]);
     } finally {
@@ -70,7 +88,7 @@ export function ChatbotWidget() {
   return (
     <div className="fixed right-4 bottom-20 z-50 lg:right-6 lg:bottom-6">
       {open && (
-        <div className="mb-3 flex h-[28rem] w-[calc(100vw-2rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
+        <div className="mb-3 flex h-[32rem] w-[calc(100vw-2rem)] max-w-md flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
           <div className="flex items-center justify-between border-b border-border bg-brand-blue px-4 py-3">
             <p className="text-sm font-semibold text-brand-ivory">Lime Kraft Assistant</p>
             <button
@@ -85,15 +103,23 @@ export function ChatbotWidget() {
 
           <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
             {messages.map((m, i) => (
-              <div
-                key={i}
-                className={
-                  m.role === "user"
-                    ? "ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-brand-azure px-3.5 py-2 text-sm text-white"
-                    : "mr-auto max-w-[85%] rounded-2xl rounded-bl-sm bg-muted px-3.5 py-2 text-sm text-foreground"
-                }
-              >
-                {m.content}
+              <div key={i} className="space-y-2">
+                <div
+                  className={
+                    m.role === "user"
+                      ? "ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-brand-azure px-3.5 py-2 text-sm text-white"
+                      : "mr-auto max-w-[85%] rounded-2xl rounded-bl-sm bg-muted px-3.5 py-2 text-sm text-foreground"
+                  }
+                >
+                  {m.content}
+                </div>
+                {m.properties && m.properties.length > 0 && (
+                  <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+                    {m.properties.map((p) => (
+                      <PropertySuggestionCard key={p.slug} property={p} />
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
             {sending && (
@@ -136,5 +162,46 @@ export function ChatbotWidget() {
         {open ? <X /> : <MessageCircle />}
       </Button>
     </div>
+  );
+}
+
+function PropertySuggestionCard({ property }: { property: PropertyCard }) {
+  const priceLine = property.availability
+    ? `${formatINR(property.availability.total)} for ${property.availability.nights} night${property.availability.nights === 1 ? "" : "s"}`
+    : `From ${formatINR(property.basePrice)}/night`;
+
+  return (
+    <Link
+      href={`/stays/${property.slug}`}
+      className="block w-40 shrink-0 overflow-hidden rounded-xl border border-border bg-background transition-shadow hover:shadow-md"
+    >
+      <div className="relative h-24 w-full bg-muted">
+        {property.heroImageUrl ? (
+          <Image src={property.heroImageUrl} alt={property.name} fill className="object-cover" sizes="160px" />
+        ) : (
+          <div className="flex h-full items-center justify-center text-muted-foreground">
+            <ImageOff className="size-5" />
+          </div>
+        )}
+      </div>
+      <div className="space-y-1 p-2.5">
+        <p className="truncate text-xs font-semibold text-foreground">{property.name}</p>
+        <p className="truncate text-[11px] text-muted-foreground">{[property.area, property.city].filter(Boolean).join(", ")}</p>
+        <p className="flex items-center gap-2 text-[11px] text-muted-foreground">
+          <span className="flex items-center gap-0.5">
+            <BedDouble className="size-3" />
+            {property.bedrooms}
+          </span>
+          <span className="flex items-center gap-0.5">
+            <Users className="size-3" />
+            {property.maxGuests}
+          </span>
+        </p>
+        <p className="text-xs font-semibold text-brand-blue">{priceLine}</p>
+        <span className="mt-1 block rounded-md bg-brand-blue px-2 py-1 text-center text-[11px] font-medium text-brand-ivory">
+          View &amp; book
+        </span>
+      </div>
+    </Link>
   );
 }
