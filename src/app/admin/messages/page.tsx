@@ -9,30 +9,46 @@ import {
 } from "@/lib/notifications/templates";
 import { formatDateLong } from "@/lib/format";
 import { LogOtaMessageDialog } from "@/components/admin/log-ota-message-dialog";
+import { MailboxInboxFeed } from "@/components/admin/mailbox-inbox-feed";
+import { buildInboxThreads, OTA_SOURCE_LABELS } from "@/lib/mailbox/inbox-threads";
 
 export const dynamic = "force-dynamic";
 
 const CHANNELS = ["WHATSAPP", "EMAIL", "SMS", "OTA", "CHAT"] as const;
 
-const OTA_SOURCE_LABELS: Record<string, string> = {
-  AIRBNB: "Airbnb",
-  BOOKING_COM: "Booking.com",
-  AGODA: "Agoda",
-};
-
 export default async function MessagesPage() {
-  const messages = await db.message.findMany({
-    include: {
-      reservation: {
-        include: {
-          guest: { select: { name: true } },
-          property: { select: { name: true } },
+  const [messages, emailRows] = await Promise.all([
+    db.message.findMany({
+      include: {
+        reservation: {
+          include: {
+            guest: { select: { name: true } },
+            property: { select: { name: true } },
+          },
         },
       },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 80,
-  });
+      orderBy: { createdAt: "desc" },
+      take: 80,
+    }),
+    db.processedEmailMessage.findMany({
+      include: {
+        message: { select: { id: true, body: true, guest: { select: { id: true, name: true } } } },
+        reservation: {
+          select: {
+            id: true,
+            code: true,
+            status: true,
+            rawData: true,
+            property: { select: { name: true } },
+            guest: { select: { id: true, name: true } },
+          },
+        },
+      },
+      orderBy: { receivedAt: "desc" },
+      take: 300,
+    }),
+  ]);
+  const inboxThreads = buildInboxThreads(emailRows);
 
   return (
     <AdminPage>
@@ -53,13 +69,23 @@ export default async function MessagesPage() {
         <Link href="/admin/channels" className="underline">Channels</Link>).
       </p>
 
-      <Tabs defaultValue="inbox" className="mt-6">
+      <Tabs defaultValue="mailbox-inbox" className="mt-6">
         <TabsList>
-          <TabsTrigger value="inbox">Activity</TabsTrigger>
+          <TabsTrigger value="mailbox-inbox">Inbox</TabsTrigger>
+          <TabsTrigger value="activity">Activity</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="inbox" className="mt-5">
+        <TabsContent value="mailbox-inbox" className="mt-5">
+          <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
+            Every Airbnb, Booking.com and Agoda notification email as it arrived - read-only, there&apos;s
+            no reply from here. Grouped per guest so you can see whether it&apos;s still just an inquiry
+            or it turned into a booking, and whether a booking was later cancelled.
+          </p>
+          <MailboxInboxFeed threads={inboxThreads} />
+        </TabsContent>
+
+        <TabsContent value="activity" className="mt-5">
           <Tabs defaultValue="ALL">
             <TabsList>
               <TabsTrigger value="ALL">All</TabsTrigger>

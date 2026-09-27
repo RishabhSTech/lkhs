@@ -37,6 +37,16 @@ export function formatDateLong(date: Date | string) {
   });
 }
 
+export function formatDateTime(date: Date | string) {
+  return new Date(date).toLocaleString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 export function formatDateRange(from: Date | string, to: Date | string) {
   const a = new Date(from);
   const b = new Date(to);
