@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import Anthropic from "@anthropic-ai/sdk";
+import type Anthropic from "@anthropic-ai/sdk";
 import { CHAT_TOOLS, runChatTool, type PropertyCard } from "@/lib/chat/tools";
 import { CHATBOT_KNOWLEDGE } from "@/lib/chat/knowledge";
 import { checkRateLimit } from "@/lib/rate-limit";
-
-export const CHAT_IS_CONFIGURED = Boolean(process.env.ANTHROPIC_API_KEY);
+import { getAnthropicClient } from "@/lib/ai/anthropic";
 
 // Haiku 4.5, not Opus - this bot is property lookups + short replies, not
 // deep reasoning, and Haiku is a fifth the per-token price. Keep it here
@@ -46,7 +45,8 @@ ${CHATBOT_KNOWLEDGE}`;
 }
 
 export async function POST(request: Request) {
-  if (!CHAT_IS_CONFIGURED) {
+  const client = await getAnthropicClient();
+  if (!client) {
     return NextResponse.json({
       reply:
         "Chat isn't available right now - please use the contact form and our team will get back to you.",
@@ -61,7 +61,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const client = new Anthropic();
   const messages: Anthropic.MessageParam[] = parsed.data.messages.map((m) => ({
     role: m.role,
     content: m.content,

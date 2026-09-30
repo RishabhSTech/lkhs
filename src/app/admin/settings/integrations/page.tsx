@@ -3,6 +3,7 @@ import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { AdminPage, PageHeader } from "@/components/admin/page-header";
 import { Badge } from "@/components/ui/badge";
 import { MailboxConnectionCard } from "@/components/admin/mailbox-connection-card";
+import { AnthropicConnectionCard } from "@/components/admin/anthropic-connection-card";
 import { db } from "@/lib/db";
 import { formatDateLong } from "@/lib/format";
 
@@ -29,8 +30,9 @@ const OTA_LABELS: Record<string, string> = {
 };
 
 export default async function IntegrationsPage() {
-  const [integration, recent] = await Promise.all([
+  const [integration, anthropicIntegration, recent] = await Promise.all([
     db.mailboxIntegration.findFirst({ orderBy: { createdAt: "desc" } }),
+    db.anthropicIntegration.findFirst({ orderBy: { createdAt: "desc" } }),
     db.processedEmailMessage.findMany({
       orderBy: { createdAt: "desc" },
       take: 25,
@@ -69,6 +71,19 @@ export default async function IntegrationsPage() {
                   status: integration.status,
                   connectedAt: integration.connectedAt?.toISOString() ?? null,
                   lastSyncAt: integration.lastSyncAt?.toISOString() ?? null,
+                }
+              : null
+          }
+        />
+
+        <AnthropicConnectionCard
+          integration={
+            anthropicIntegration
+              ? {
+                  status: anthropicIntegration.status,
+                  error: anthropicIntegration.error,
+                  connectedAt: anthropicIntegration.connectedAt?.toISOString() ?? null,
+                  lastCheckedAt: anthropicIntegration.lastCheckedAt?.toISOString() ?? null,
                 }
               : null
           }

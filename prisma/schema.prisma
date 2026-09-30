@@ -718,6 +718,23 @@ model MailboxIntegration {
   updatedAt         DateTime                @updatedAt
 }
 
+// Single shared Anthropic API key, admin-configured here instead of only via
+// the ANTHROPIC_API_KEY env var - powers both the mailbox email extractor
+// and the guest chatbot. Saved only after a real (tiny, cheap) generation
+// call against it succeeds, so a bad or org-scoped key never gets stored as
+// if it were working; `error` holds the reason when the last check failed.
+model AnthropicIntegration {
+  id              String                  @id @default(cuid())
+  apiKeyEncrypted String
+  status          ChannelConnectionStatus @default(NOT_CONFIGURED)
+  error           String?
+  connectedAt     DateTime?
+  disconnectedAt  DateTime?
+  lastCheckedAt   DateTime?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+}
+
 enum EmailClassification {
   INQUIRY
   BOOKING_CONFIRMED

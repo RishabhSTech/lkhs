@@ -1,5 +1,6 @@
-import Anthropic from "@anthropic-ai/sdk";
+import type Anthropic from "@anthropic-ai/sdk";
 import type { BookingSource } from "@prisma/client";
+import { getAnthropicClient } from "@/lib/ai/anthropic";
 
 /**
  * Turns one OTA notification email into structured fields. Uses Haiku with a
@@ -8,8 +9,6 @@ import type { BookingSource } from "@prisma/client";
  * background job classifying potentially many emails per poll, so it uses
  * the cheap/fast model, not the guest-facing chatbot's.
  */
-
-export const EXTRACTION_IS_CONFIGURED = Boolean(process.env.ANTHROPIC_API_KEY);
 
 export type EmailClassification =
   | "INQUIRY"
@@ -82,11 +81,11 @@ export async function extractBookingInfo(args: {
   body: string;
   receivedAt: Date;
 }): Promise<ExtractedBookingInfo> {
-  if (!EXTRACTION_IS_CONFIGURED) {
-    throw new Error("ANTHROPIC_API_KEY is not set - cannot extract booking info from email.");
+  const client = await getAnthropicClient();
+  if (!client) {
+    throw new Error("No Anthropic API key configured - set one in Settings → Integrations, or set ANTHROPIC_API_KEY.");
   }
 
-  const client = new Anthropic();
   const response = await client.messages.create({
     model: "claude-haiku-4-5-20251001",
     max_tokens: 700,
