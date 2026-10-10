@@ -94,7 +94,7 @@ export function ReservationsTable({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [pendingAction, setPendingAction] = useState<"confirm" | "cancel" | null>(null);
+  const [pendingAction, setPendingAction] = useState<"confirm" | "cancel" | "delete" | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   async function runReservationAction(id: string, action: "confirm" | "cancel") {
@@ -115,6 +115,26 @@ export function ReservationsTable({
       router.refresh();
     } catch (err) {
       setActionError(err instanceof Error ? err.message : `Couldn't ${action} that booking.`);
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
+  async function deleteReservation(id: string) {
+    const ok = window.confirm(
+      "Permanently delete this cancelled booking? This can't be undone.",
+    );
+    if (!ok) return;
+    setPendingAction("delete");
+    setActionError(null);
+    try {
+      const res = await fetch(`/api/admin/reservations/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Couldn't delete that booking.");
+      closeDrawer();
+      router.refresh();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Couldn't delete that booking.");
     } finally {
       setPendingAction(null);
     }
@@ -328,6 +348,18 @@ export function ReservationsTable({
                       }}
                       properties={properties}
                     />
+                  )}
+                  {selected.status === "CANCELLED" && (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="ml-auto"
+                      disabled={pendingAction !== null}
+                      onClick={() => deleteReservation(selected.id)}
+                    >
+                      {pendingAction === "delete" && <Loader2 className="animate-spin" />}
+                      Delete booking
+                    </Button>
                   )}
                   {(selected.status === "PENDING" || selected.status === "CONFIRMED") && (
                     <span className="ml-auto flex gap-2">

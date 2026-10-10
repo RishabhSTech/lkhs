@@ -87,3 +87,66 @@ export async function PATCH(
     return NextResponse.json({ error: "Could not update that booking." }, { status: 500 });
   }
 }
+
+/**
+ * Permanently removes a CANCELLED booking. Refuses if money was ever posted
+ * against it (Transaction rows are the accounting record) or a review exists.
+ * Audit and processed-email rows are kept but detached so history and mailbox
+ * de-duplication survive.
+ */
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  const { user } = await getCurrentAdminUser();
+
+  const reservation = await db.reservation.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      code: true,
+      status: true,
+      _count: { select: { transactions: true } },
+      review: { select: { id: true } },
+    },
+  });
+  if (!reservation) {
+    return NextResponse.json({ error: "That booking no longer exists." }, { status: 404 });
+  }
+  if (reservation.status !== "CANCELLED") {
+    return NextResponse.json(
+      { error: "Only a cancelled booking can be deleted. Cancel it first." },
+      { status: 409 },
+    );
+  }
+  if (reservation._count.transactions > 0 || reservation.review) {
+    return NextResponse.json(
+      {
+        error:
+          "This booking has finance transactions or a review attached, so it can't be deleted. Remove those first.",
+      },
+      { status: 409 },
+    );
+  }
+
+  await db.$transaction([
+    db.auditLog.updateMany({ where: { reservationId: id }, data: { reservationId: null } }),
+    db.processedEmailMessage.updateMany({ where: { reservationId: id }, data: { reservationId: null } }),
+    db.cleaningTask.deleteMany({ where: { reservationId: id } }),
+    db.inventoryNight.deleteMany({ where: { reservationId: id } }),
+    db.reservation.delete({ where: { id } }),
+    db.auditLog.create({
+      data: {
+        userId: user.id,
+        userName: user.name,
+        action: "RESERVATION_DELETED",
+        entityType: "Reservation",
+        entityId: id,
+        summary: `${reservation.code} deleted by ${user.name}`,
+      },
+    }),
+  ]);
+
+  return NextResponse.json({ deleted: true });
+}
