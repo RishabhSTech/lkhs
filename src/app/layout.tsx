@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Newsreader, Instrument_Sans, Inter, Geist_Mono } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SITE } from "@/lib/seo/site";
@@ -100,6 +101,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Toaster position="top-center" richColors closeButton />
         </TooltipProvider>
         <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
