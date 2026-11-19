@@ -10,6 +10,8 @@ import {
 } from "@/lib/queries/property-calendar";
 import { addDays, parseISODate, toISODate, todayUTC } from "@/lib/dates";
 import { cn } from "@/lib/utils";
+import { requireAdminPage, inScope } from "@/lib/auth/guards";
+import { OFFICE_ROLES } from "@/lib/auth/roles";
 
 export const dynamic = "force-dynamic";
 
@@ -18,17 +20,18 @@ const WINDOW_DAYS = 28;
 export default async function CalendarPage({
   searchParams,
 }: PageProps<"/admin/calendar">) {
+  const { scope } = await requireAdminPage(OFFICE_ROLES);
   const params = await searchParams;
   const propertyId = typeof params.property === "string" ? params.property : null;
   const monthParam = typeof params.month === "string" ? params.month : null;
   const isMonthView =
     params.view === "month" || Boolean(propertyId) || Boolean(monthParam);
 
-  const navigation = await getPropertyNavigation();
+  const navigation = (await getPropertyNavigation()).filter((p) => inScope(scope, p.id));
 
   // Per-property month view
   if (isMonthView && navigation.length > 0) {
-    const activeId = propertyId ?? navigation[0]?.id;
+    const activeId = propertyId && inScope(scope, propertyId) ? propertyId : navigation[0]?.id;
     const month = monthParam
       ? parseISODate(`${monthParam}-01`)
       : todayUTC();
@@ -60,7 +63,7 @@ export default async function CalendarPage({
   // Multi-property timeline view
   const fromParam = typeof params.from === "string" ? params.from : null;
   const start = fromParam ? parseISODate(fromParam) : addDays(todayUTC(), -3);
-  const rows = await getCalendarData(start, WINDOW_DAYS);
+  const rows = (await getCalendarData(start, WINDOW_DAYS)).filter((row) => inScope(scope, row.propertyId));
   const days = Array.from({ length: WINDOW_DAYS }, (_, i) =>
     toISODate(addDays(start, i)),
   );

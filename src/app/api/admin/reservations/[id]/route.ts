@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { getCurrentAdminUser } from "@/lib/auth/current-user";
+import { guardApi, inScope, outOfScope } from "@/lib/auth/guards";
+import { BOOKING_WRITE_ROLES } from "@/lib/auth/roles";
 import {
   updateReservation,
   GuestConflictError,
@@ -39,7 +40,14 @@ export async function PATCH(
     return NextResponse.json({ error: "Deductions cannot be greater than the booking amount." }, { status: 400 });
   }
 
-  const { user } = await getCurrentAdminUser();
+  const auth = await guardApi(BOOKING_WRITE_ROLES, "You don't have permission to edit bookings.");
+  if ("error" in auth) return auth.error;
+  const { user, scope } = auth;
+  if (scope) {
+    const current = await db.reservation.findUnique({ where: { id }, select: { propertyId: true } });
+    if (!current) return NextResponse.json({ error: "That booking no longer exists." }, { status: 404 });
+    if (!inScope(scope, current.propertyId, data.propertyId)) return outOfScope();
+  }
   try {
     const reservation = await updateReservation({
       reservationId: id,
@@ -99,7 +107,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const { user } = await getCurrentAdminUser();
+  const auth = await guardApi(BOOKING_WRITE_ROLES, "You don't have permission to delete bookings.");
+  if ("error" in auth) return auth.error;
+  const { user, scope } = auth;
 
   const reservation = await db.reservation.findUnique({
     where: { id },
@@ -107,6 +117,7 @@ export async function DELETE(
       id: true,
       code: true,
       status: true,
+      propertyId: true,
       _count: { select: { transactions: true } },
       review: { select: { id: true } },
     },
@@ -114,6 +125,7 @@ export async function DELETE(
   if (!reservation) {
     return NextResponse.json({ error: "That booking no longer exists." }, { status: 404 });
   }
+  if (!inScope(scope, reservation.propertyId)) return outOfScope();
   if (reservation.status !== "CANCELLED") {
     return NextResponse.json(
       { error: "Only a cancelled booking can be deleted. Cancel it first." },

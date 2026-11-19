@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
-import { getCurrentAdminUser } from "@/lib/auth/current-user";
+import { guardApi, inScope, outOfScope } from "@/lib/auth/guards";
+import { LISTING_ROLES } from "@/lib/auth/roles";
 
 const createSchema = z.object({
   url: z.string().url(),
@@ -24,8 +25,11 @@ export async function POST(request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "We couldn't add that photo - check the file and try again." }, { status: 400 });
   }
 
-  const [{ user }, count] = await Promise.all([
-    getCurrentAdminUser(),
+  const auth = await guardApi(LISTING_ROLES);
+  if ("error" in auth) return auth.error;
+  const { user, scope } = auth;
+  if (!inScope(scope, propertyId)) return outOfScope();
+  const [count] = await Promise.all([
     db.propertyImage.count({ where: { propertyId } }),
   ]);
 
@@ -66,6 +70,9 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "We couldn't save that photo order. Refresh and try again." }, { status: 400 });
   }
 
+  const auth = await guardApi(LISTING_ROLES);
+  if ("error" in auth) return auth.error;
+  if (!inScope(auth.scope, propertyId)) return outOfScope();
   const { order } = parsed.data;
   const sortOrderCases = Prisma.join(
     order.map((imageId, index) => Prisma.sql`WHEN ${imageId} THEN ${index}::integer`),
@@ -92,7 +99,10 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "We couldn't remove that photo. Refresh and try again." }, { status: 400 });
   }
 
-  const { user } = await getCurrentAdminUser();
+  const auth = await guardApi(LISTING_ROLES);
+  if ("error" in auth) return auth.error;
+  const { user, scope } = auth;
+  if (!inScope(scope, propertyId)) return outOfScope();
   await db.propertyImage.delete({ where: { id: parsed.data.imageId, propertyId } });
 
   // If the hero was the one just removed, promote whichever photo is first now.

@@ -190,7 +190,7 @@ export async function getTodayOperations() {
       },
     }),
     db.cleaningTask.findMany({
-      where: { status: { not: "READY" } },
+      where: { status: { not: "READY" }, scheduledDate: { lte: today } },
       include: {
         property: { select: { name: true } },
         assignedTo: { select: { name: true } },

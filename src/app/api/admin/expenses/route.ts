@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
+import { isOwnStorageUrl } from "@/lib/storage/s3";
 import { db } from "@/lib/db";
 import { parseISODate, startOfMonthUTC } from "@/lib/dates";
 import { getCurrentAdminUser } from "@/lib/auth/current-user";
-import { FINANCE_WRITE_ROLES } from "@/lib/auth/session-shared";
+import { getPropertyScope, inScope, outOfScope } from "@/lib/auth/guards";
+import { EXPENSE_SUBMIT_ROLES, FINANCE_ROLES } from "@/lib/auth/roles";
 import { formatINR } from "@/lib/format";
 
 const schema = z.object({
@@ -16,7 +18,7 @@ const schema = z.object({
   description: z.string().max(300).optional(),
   paymentMethod: z.enum(["CASH", "UPI", "BANK_TRANSFER", "CARD", "OTHER"]).default("BANK_TRANSFER"),
   status: z.enum(["PENDING", "PAID", "OVERDUE", "APPROVED"]).default("PAID"),
-  receiptUrl: z.string().optional(),
+  receiptUrl: z.string().refine(isOwnStorageUrl, "Attach the receipt again.").optional(),
 });
 
 export async function POST(request: Request) {
@@ -35,17 +37,33 @@ export async function POST(request: Request) {
     db.property.findUnique({ where: { id: data.propertyId } }),
   ]);
 
-  if (!FINANCE_WRITE_ROLES.includes(user.role)) {
+  if (!EXPENSE_SUBMIT_ROLES.includes(user.role)) {
     return NextResponse.json(
       { error: "You don't have permission to record expenses." },
       { status: 403 },
     );
   }
+  if (!inScope(await getPropertyScope(user), data.propertyId)) return outOfScope();
   if (!category || !property) {
     return NextResponse.json(
       { error: "That property or expense category no longer exists. Refresh and pick again." },
       { status: 404 },
     );
+  }
+
+  // Team members outside finance log day-to-day spend only, and it waits for
+  // finance to approve it. Setup capital, deposits and recurring schedules
+  // stay a finance decision.
+  const isFinance = FINANCE_ROLES.includes(user.role);
+  if (!isFinance) {
+    if (category.group !== "ONE_TIME_EXPENSE" && category.group !== "RECURRING_EXPENSE") {
+      return NextResponse.json(
+        { error: "Pick an operating expense category - finance records setup costs and deposits." },
+        { status: 403 },
+      );
+    }
+    data.status = "PENDING";
+    data.frequency = "ONE_TIME";
   }
 
   // The category's group decides the transaction type, so refundable deposits
@@ -107,6 +125,18 @@ export async function POST(request: Request) {
       metadata: { amount: data.amount, categoryId: data.categoryId },
     },
   });
+
+  if (!isFinance) {
+    await db.notification.create({
+      data: {
+        type: "EXPENSE_PENDING",
+        title: "Expense waiting for approval",
+        body: `${user.name} logged ${formatINR(data.amount)} · ${category.name} at ${property.name}`,
+        severity: "INFO",
+        link: "/admin/finance/expenses?status=PENDING",
+      },
+    });
+  }
 
   return NextResponse.json({ id: transaction.id });
 }

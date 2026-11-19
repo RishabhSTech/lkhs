@@ -2,8 +2,11 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { AdminPage, PageHeader } from "@/components/admin/page-header";
 import { PropertyForm } from "@/components/admin/property-form";
+import { requireAdminPage } from "@/lib/auth/guards";
+import { SETTINGS_ROLES } from "@/lib/auth/roles";
 
-export default function NewPropertyPage() {
+export default async function NewPropertyPage() {
+  await requireAdminPage(SETTINGS_ROLES);
   return (
     <AdminPage>
       <Link

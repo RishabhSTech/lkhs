@@ -8,15 +8,19 @@ import { db } from "@/lib/db";
 import { buildPL, type TxWithCategory } from "@/lib/finance/calculations";
 import { endOfMonthUTC, startOfMonthUTC, todayUTC } from "@/lib/dates";
 import { formatINR, formatINRCompact, formatPercent } from "@/lib/format";
+import { requireAdminPage, propertyScopeFilter } from "@/lib/auth/guards";
+import { OFFICE_ROLES } from "@/lib/auth/roles";
 
 export const dynamic = "force-dynamic";
 
 export default async function PropertiesPage() {
+  const { scope } = await requireAdminPage(OFFICE_ROLES);
   const today = todayUTC();
   const monthStart = startOfMonthUTC(today);
   const monthEnd = endOfMonthUTC(today);
 
   const properties = await db.property.findMany({
+    where: propertyScopeFilter(scope),
     include: {
       images: { take: 1, orderBy: { sortOrder: "asc" }, select: { url: true } },
       transactions: { select: { amount: true, type: true, category: { select: { name: true } } } },

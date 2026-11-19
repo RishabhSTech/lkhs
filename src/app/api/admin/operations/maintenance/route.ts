@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { getCurrentAdminUser } from "@/lib/auth/current-user";
+import { guardApi, inScope, outOfScope } from "@/lib/auth/guards";
+import { CLEANING_MANAGE_ROLES, CLEANING_STAFF_ROLES, MAINTENANCE_REPORT_ROLES } from "@/lib/auth/roles";
 import { alertTeam } from "@/lib/notifications/alert";
 
 const STATUSES = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"] as const;
@@ -30,8 +31,21 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  const { user } = await getCurrentAdminUser();
+  const auth = await guardApi(MAINTENANCE_REPORT_ROLES);
+  if ("error" in auth) return auth.error;
+  const { user, scope } = auth;
   const data = parsed.data;
+  if (!inScope(scope, data.propertyId)) return outOfScope();
+  // Only managers decide who fixes it; a cleaner just reports.
+  if (data.assignedToId && !CLEANING_MANAGE_ROLES.includes(user.role)) data.assignedToId = undefined;
+  if (data.assignedToId) {
+    const assignee = await db.user.findUnique({ where: { id: data.assignedToId }, select: { role: true } });
+    if (!assignee || !CLEANING_STAFF_ROLES.includes(assignee.role)) {
+      return NextResponse.json({ error: "That person isn't on the operations team." }, { status: 400 });
+    }
+  }
+  const property = await db.property.findUnique({ where: { id: data.propertyId }, select: { name: true } });
+  if (!property) return NextResponse.json({ error: "That property no longer exists." }, { status: 404 });
 
   const task = await db.maintenanceTask.create({
     data: {
@@ -46,8 +60,8 @@ export async function POST(request: Request) {
 
   await alertTeam({
     type: "MAINTENANCE_ISSUE",
-    title: "New maintenance issue",
-    body: task.title,
+    title: `Maintenance: ${property.name}`,
+    body: `${task.title} · reported by ${user.name}`,
     severity: data.priority === "URGENT" ? "CRITICAL" : data.priority === "HIGH" ? "WARNING" : "INFO",
     link: "/admin/operations",
   });
@@ -71,8 +85,13 @@ export async function PATCH(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "We couldn't update that issue. Refresh and try again." }, { status: 400 });
   }
-  const { user } = await getCurrentAdminUser();
+  const auth = await guardApi(CLEANING_MANAGE_ROLES, "Ask a manager to update this issue.");
+  if ("error" in auth) return auth.error;
+  const { user, scope } = auth;
   const { id, ...rest } = parsed.data;
+  const existing = await db.maintenanceTask.findUnique({ where: { id }, select: { propertyId: true } });
+  if (!existing) return NextResponse.json({ error: "That issue no longer exists." }, { status: 404 });
+  if (!inScope(scope, existing.propertyId)) return outOfScope();
 
   const isResolving = rest.status === "RESOLVED" || rest.status === "CLOSED";
   const task = await db.maintenanceTask.update({

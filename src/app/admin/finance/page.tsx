@@ -5,12 +5,17 @@ import { KpiCard } from "@/components/admin/kpi-card";
 import { RevenueChart } from "@/components/charts/revenue-chart";
 import { ChannelProfitTable } from "@/components/admin/channel-profit-table";
 import { Button } from "@/components/ui/button";
+import { QuickAddButton } from "@/components/admin/quick-add";
 import { getPortfolioFinance } from "@/lib/queries/finance";
 import { formatINR, formatINRCompact, formatPercent } from "@/lib/format";
+
+import { requirePortfolioAccess } from "@/lib/auth/guards";
+import { FINANCE_ROLES } from "@/lib/auth/roles";
 
 export const dynamic = "force-dynamic";
 
 export default async function FinanceOverviewPage() {
+  await requirePortfolioAccess(FINANCE_ROLES);
   const finance = await getPortfolioFinance();
 
   return (
@@ -20,13 +25,10 @@ export default async function FinanceOverviewPage() {
         description="Every figure below is computed from transaction records."
         actions={
           <>
-            <Button
-              render={<Link href="/admin/finance/expenses/new" />}
-              size="sm"
-            >
+            <QuickAddButton kind="expense">
               <Plus />
               Add expense
-            </Button>
+            </QuickAddButton>
             <Button
               render={<Link href="/admin/finance/expenses" />}
               variant="outline"

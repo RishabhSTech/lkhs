@@ -423,3 +423,47 @@
     border-color: color-mix(in oklch, var(--color-brand-azure) 55%, transparent);
   }
 }
+
+/* Back office as an installed app: no grey tap flash, no double-tap zoom
+   delay on controls, and the page itself doesn't rubber-band behind sheets. */
+.admin-app {
+  -webkit-tap-highlight-color: transparent;
+}
+.admin-app :is(a, button, label, select, input) {
+  touch-action: manipulation;
+}
+@media (max-width: 1023px) {
+  html:has(.admin-app) {
+    overscroll-behavior-y: none;
+  }
+
+  /* Every back-office field, including older forms, is thumb-sized and uses a
+     16px font so iOS never zooms the page when it takes focus. */
+  :is(.admin-app, [data-slot="dialog-content"], [data-slot="sheet-content"], [data-slot="drawer-content"])
+    :is(
+      input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"]),
+      select,
+      textarea,
+      [data-slot="select-trigger"]
+    ) {
+    font-size: 16px;
+  }
+  :is(.admin-app, [data-slot="dialog-content"], [data-slot="sheet-content"], [data-slot="drawer-content"])
+    :is(
+      input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"]),
+      select,
+      [data-slot="select-trigger"]
+    ) {
+    min-height: 2.75rem;
+  }
+  :is(.admin-app, [data-slot="dialog-content"], [data-slot="sheet-content"], [data-slot="drawer-content"])
+    :is(input[type="checkbox"], input[type="radio"]) {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+  /* Text buttons inside forms get a comfortable tap height. */
+  :is([data-slot="dialog-content"], [data-slot="sheet-content"], [data-slot="drawer-content"], .admin-app form)
+    [data-slot="button"]:not(.size-7, .size-8, .size-10, .size-12, .h-7) {
+    min-height: 2.5rem;
+  }
+}

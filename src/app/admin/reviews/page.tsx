@@ -10,6 +10,8 @@ import { db } from "@/lib/db";
 import { summariseReviews } from "@/lib/property/reviews";
 import { buildAdminReviewRows } from "@/lib/admin/review-rows";
 import { cn } from "@/lib/utils";
+import { requirePortfolioAccess } from "@/lib/auth/guards";
+import { LISTING_ROLES } from "@/lib/auth/roles";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +25,7 @@ const FILTERS: { value: string; label: string; status?: ReviewStatus }[] = [
 export default async function AdminReviewsPage({
   searchParams,
 }: PageProps<"/admin/reviews">) {
+  await requirePortfolioAccess(LISTING_ROLES);
   const params = await searchParams;
   const filter = typeof params.status === "string" ? params.status : "all";
   const propertyFilter =

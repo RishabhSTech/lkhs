@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getCurrentAdminUser } from "@/lib/auth/current-user";
+import { guardApi, inScope, outOfScope } from "@/lib/auth/guards";
+import { BOOKING_WRITE_ROLES } from "@/lib/auth/roles";
 import { confirmReservation } from "@/lib/booking/create-reservation";
 
 /**
@@ -18,15 +19,18 @@ export async function POST(
   if (!id) {
     return NextResponse.json({ error: "Reservation id is required." }, { status: 400 });
   }
-  const { user } = await getCurrentAdminUser();
+  const auth = await guardApi(BOOKING_WRITE_ROLES, "You don't have permission to change bookings.");
+  if ("error" in auth) return auth.error;
+  const { user, scope } = auth;
 
   const reservation = await db.reservation.findUnique({
     where: { id },
-    select: { id: true, code: true, status: true },
+    select: { id: true, code: true, status: true, propertyId: true },
   });
   if (!reservation) {
     return NextResponse.json({ error: "That booking no longer exists." }, { status: 404 });
   }
+  if (!inScope(scope, reservation.propertyId)) return outOfScope();
   if (reservation.status !== "PENDING") {
     return NextResponse.json(
       { error: "Only a pending booking request can be confirmed." },

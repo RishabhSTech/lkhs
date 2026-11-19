@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getCurrentAdminUser } from "@/lib/auth/current-user";
+import { guardApi, scopeFilter } from "@/lib/auth/guards";
+import { FINANCE_ROLES, OFFICE_ROLES } from "@/lib/auth/roles";
 
 export async function GET(request: Request) {
-  await getCurrentAdminUser();
+  const auth = await guardApi(OFFICE_ROLES);
+  if ("error" in auth) return auth.error;
+  const { user, scope } = auth;
+  // Money only for finance; property-scoped staff only see their own homes'
+  // bookings and the guests who stayed there.
+  const showMoney = FINANCE_ROLES.includes(user.role);
 
   const q = new URL(request.url).searchParams.get("q")?.trim();
   if (!q || q.length < 2) {
@@ -13,6 +19,7 @@ export async function GET(request: Request) {
   const [reservations, guests, transactions] = await Promise.all([
     db.reservation.findMany({
       where: {
+        ...scopeFilter(scope),
         OR: [
           { code: { contains: q, mode: "insensitive" } },
           { guest: { name: { contains: q, mode: "insensitive" } } },
@@ -28,6 +35,7 @@ export async function GET(request: Request) {
     }),
     db.guest.findMany({
       where: {
+        ...(scope ? { reservations: { some: { propertyId: { in: scope } } } } : {}),
         OR: [
           { name: { contains: q, mode: "insensitive" } },
           { email: { contains: q, mode: "insensitive" } },
@@ -36,8 +44,10 @@ export async function GET(request: Request) {
       },
       take: 5,
     }),
-    db.transaction.findMany({
-      where: { description: { contains: q, mode: "insensitive" } },
+    !showMoney
+      ? Promise.resolve([])
+      : db.transaction.findMany({
+      where: { ...scopeFilter(scope), description: { contains: q, mode: "insensitive" } },
       include: { property: { select: { name: true } } },
       take: 5,
       orderBy: { date: "desc" },

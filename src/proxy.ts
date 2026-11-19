@@ -9,13 +9,16 @@ import {
   signSessionToken,
   verifySessionToken,
 } from "@/lib/auth/session-shared";
+import { cleanerMayAccess } from "@/lib/auth/roles";
 
 // Optimistic gate in front of /admin and /stakeholder: reject requests with
 // no valid session before they render. The authoritative check still lives
 // in getCurrentAdminUser / getCurrentStakeholder (src/lib/auth/current-user.ts),
 // which re-verifies against the database - proxy alone is not a substitute
 // for that per Next's guidance on Proxy as an optimistic check only.
-const DEMO_FALLBACK_ENABLED = process.env.ALLOW_DEMO_FALLBACK === "true";
+// Never in production: it signs every visitor in as the first super admin.
+const DEMO_FALLBACK_ENABLED =
+  process.env.ALLOW_DEMO_FALLBACK === "true" && process.env.NODE_ENV !== "production";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -32,6 +35,15 @@ export async function proxy(request: NextRequest) {
 
   const allowedRoles = isAdminPath ? ADMIN_ROLES : STAKEHOLDER_ROLES;
   if (session && allowedRoles.includes(session.role)) {
+    // Cleaners get their task list and expenses, nothing else. Optimistic -
+    // the API routes they can reach re-check the role themselves.
+    if (session.role === "CLEANER" && isAdminPath && !cleanerMayAccess(pathname)) {
+      if (isApiAdminPath) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      return NextResponse.redirect(new URL("/admin/operations", request.url));
+    }
+
     const response = NextResponse.next();
 
     // Sliding expiration: sessions were previously signed once at login with

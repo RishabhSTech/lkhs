@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { getCurrentAdminUser } from "@/lib/auth/current-user";
+import { guardApi, inScope, outOfScope } from "@/lib/auth/guards";
+import { INVENTORY_ROLES } from "@/lib/auth/roles";
 import { enqueueChannelSync } from "@/lib/queue";
 
 const schema = z.object({ channelPropertyId: z.string().min(1) });
@@ -12,13 +13,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "We couldn't start that sync. Refresh and try again." }, { status: 400 });
   }
 
-  const [{ user }, link] = await Promise.all([
-    getCurrentAdminUser(),
+  const auth = await guardApi(INVENTORY_ROLES);
+  if ("error" in auth) return auth.error;
+  const { user, scope } = auth;
+  const [link] = await Promise.all([
     db.channelProperty.findUnique({
       where: { id: parsed.data.channelPropertyId },
       include: { property: { select: { name: true } }, channel: { select: { name: true } } },
     }),
   ]);
+  if (link && !inScope(scope, link.propertyId)) return outOfScope();
   if (!link) {
     return NextResponse.json({ error: "That channel connection no longer exists." }, { status: 404 });
   }

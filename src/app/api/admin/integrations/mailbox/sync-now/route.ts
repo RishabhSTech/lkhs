@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getCurrentAdminUser } from "@/lib/auth/current-user";
+import { guardApi } from "@/lib/auth/guards";
+import { SETTINGS_ROLES } from "@/lib/auth/roles";
 import { enqueueMailboxPoll } from "@/lib/queue";
 
 export async function POST() {
-  const { user } = await getCurrentAdminUser();
+  const auth = await guardApi(SETTINGS_ROLES);
+  if ("error" in auth) return auth.error;
+  const { user } = auth;
 
   const integration = await db.mailboxIntegration.findFirst({ orderBy: { createdAt: "desc" } });
   if (!integration || integration.status !== "CONNECTED") {

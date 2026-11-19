@@ -2,7 +2,8 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { buildPL, PL_TRANSACTION_SELECT } from "@/lib/finance/calculations";
 import { buildPortfolioReportPdf, buildTransactionsReportPdf } from "@/lib/finance/pdf";
-import { getCurrentAdminUser } from "@/lib/auth/current-user";
+import { guardApi } from "@/lib/auth/guards";
+import { FINANCE_ROLES } from "@/lib/auth/roles";
 
 function toCsv(rows: (string | number)[][]) {
   return rows
@@ -18,7 +19,10 @@ function toCsv(rows: (string | number)[][]) {
 }
 
 export async function GET(request: Request) {
-  await getCurrentAdminUser();
+  const auth = await guardApi(FINANCE_ROLES);
+  if ("error" in auth) return auth.error;
+  const { scope } = auth;
+  if (scope) return NextResponse.json({ error: "Reports cover the whole portfolio." }, { status: 403 });
 
   const params = new URL(request.url).searchParams;
   const type = params.get("type") ?? "portfolio";

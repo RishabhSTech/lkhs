@@ -6,12 +6,15 @@ import { AdminPage, PageHeader } from "@/components/admin/page-header";
 import { ChannelConnectList } from "@/components/admin/channel-connect-list";
 import { db } from "@/lib/db";
 import { CHANNEL_GUIDES } from "@/lib/admin/channel-guides";
+import { requirePortfolioAccess } from "@/lib/auth/guards";
+import { INVENTORY_ROLES } from "@/lib/auth/roles";
 
 export const dynamic = "force-dynamic";
 
 export default async function ChannelGuidePage({
   params,
 }: PageProps<"/admin/channels/[code]">) {
+  await requirePortfolioAccess(INVENTORY_ROLES);
   const { code } = await params;
   if (!code) notFound();
   const channelCode = code.toUpperCase() as ChannelCode;

@@ -1,11 +1,19 @@
 {
   "name": "Lime Kraft Home Stays",
   "short_name": "Lime Kraft",
+  "id": "/admin",
   "start_url": "/admin",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#f7f9fc",
   "theme_color": "#0b2f6b",
   "icons": [
-    { "src": "/favico.png", "sizes": "250x250", "type": "image/png" }
+    { "src": "/favico.png", "sizes": "250x250", "type": "image/png", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Add expense", "short_name": "Expense", "url": "/admin/finance/expenses?add=1" },
+    { "name": "Bookings", "short_name": "Bookings", "url": "/admin/reservations" },
+    { "name": "Cleaning tasks", "short_name": "Cleaning", "url": "/admin/operations" }
   ]
 }

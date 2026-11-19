@@ -127,7 +127,8 @@ export function PushAlertButton() {
   return (
     <Button variant="outline" size="sm" disabled={busy} onClick={enable} className="gap-1.5">
       <BellRing className="size-3.5" />
-      Enable instant alerts
+      <span className="hidden sm:inline">Enable instant alerts</span>
+      <span className="sr-only sm:hidden">Enable instant alerts</span>
     </Button>
   );
 }

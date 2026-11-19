@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getCurrentAdminUser } from "@/lib/auth/current-user";
+import { guardApi } from "@/lib/auth/guards";
+import { LISTING_ROLES } from "@/lib/auth/roles";
 
 /** Every photo ever uploaded for a property, deduped by URL, newest first -
  * backs the "choose from library" tab so admins can reuse a photo instead of
  * uploading it again. */
 export async function GET() {
-  await getCurrentAdminUser();
+  const auth = await guardApi(LISTING_ROLES);
+  if ("error" in auth) return auth.error;
 
   const rows = await db.propertyImage.findMany({
     select: { url: true, alt: true, property: { select: { name: true } } },

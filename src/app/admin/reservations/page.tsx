@@ -1,44 +1,90 @@
-import type { BookingSource, ReservationStatus } from "@prisma/client";
+import type { BookingSource, Prisma, ReservationStatus } from "@prisma/client";
+import { Plus } from "lucide-react";
 import { AdminPage, PageHeader } from "@/components/admin/page-header";
-import { ReservationsTable } from "@/components/admin/reservations-table";
+import { QuickAddButton } from "@/components/admin/quick-add";
+import { ReservationsView, type ReservationViewKey } from "@/components/admin/reservations-view";
 import { db } from "@/lib/db";
-import { ManualBookingDialog } from "@/components/admin/manual-booking-dialog";
+import { requireAdminPage, inScope, scopeFilter, propertyScopeFilter } from "@/lib/auth/guards";
+import { BOOKING_WRITE_ROLES, OFFICE_ROLES } from "@/lib/auth/roles";
+import { addDays, toISODate, todayUTC } from "@/lib/dates";
+import { SOURCE_LABELS, STATUS_LABELS } from "@/lib/admin/sources";
 
 export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 40;
+const VIEWS = new Set<ReservationViewKey>(["all", "arrivals", "inhouse", "departures", "upcoming", "pending"]);
 
 export default async function ReservationsPage({
   searchParams,
 }: PageProps<"/admin/reservations">) {
+  const { user, scope } = await requireAdminPage(OFFICE_ROLES);
   const params = await searchParams;
-  const propertyId = typeof params.property === "string" ? params.property : undefined;
-  const status = typeof params.status === "string" ? (params.status as ReservationStatus) : undefined;
-  const source = typeof params.source === "string" ? (params.source as BookingSource) : undefined;
-  const selectedId = typeof params.id === "string" ? params.id : undefined;
+  const str = (key: string) => (typeof params[key] === "string" ? (params[key] as string) : undefined);
 
-  const [reservations, properties] = await Promise.all([
+  const propertyId = str("property");
+  const status = str("status") && str("status")! in STATUS_LABELS ? (str("status") as ReservationStatus) : undefined;
+  const source = str("source") && str("source")! in SOURCE_LABELS ? (str("source") as BookingSource) : undefined;
+  const q = str("q")?.trim().slice(0, 80) || undefined;
+  const view: ReservationViewKey = VIEWS.has(str("view") as ReservationViewKey) ? (str("view") as ReservationViewKey) : "all";
+  const limit = Math.min(400, Math.max(PAGE_SIZE, Number(str("limit")) || PAGE_SIZE));
+  const selectedId = str("id");
+
+  const today = todayUTC();
+  const tomorrow = addDays(today, 1);
+  const live: ReservationStatus[] = ["PENDING", "CONFIRMED"];
+
+  const own = scopeFilter(scope);
+  const viewWhere: Record<ReservationViewKey, Prisma.ReservationWhereInput> = {
+    all: { ...own },
+    arrivals: { ...own, checkIn: today, status: { in: live } },
+    inhouse: { ...own, checkIn: { lte: today }, checkOut: { gt: today }, status: "CONFIRMED" },
+    departures: { ...own, checkOut: today, status: { in: ["CONFIRMED", "COMPLETED"] } },
+    upcoming: { ...own, checkIn: { gte: tomorrow }, status: { in: live } },
+    pending: { ...own, status: "PENDING" },
+  };
+  const ascending = view === "upcoming" || view === "pending";
+
+  const digits = q?.replace(/\D/g, "") ?? "";
+  const where: Prisma.ReservationWhereInput = {
+    AND: [
+      viewWhere[view],
+      propertyId ? { propertyId } : {},
+      status ? { status } : {},
+      source ? { source } : {},
+      q
+        ? {
+            OR: [
+              { code: { contains: q, mode: "insensitive" } },
+              { externalReservationId: { contains: q, mode: "insensitive" } },
+              { guest: { name: { contains: q, mode: "insensitive" } } },
+              { guest: { email: { contains: q, mode: "insensitive" } } },
+              ...(digits.length >= 4 ? [{ guest: { phone: { contains: digits } } }] : []),
+            ],
+          }
+        : {},
+    ],
+  };
+
+  const [rows, properties, arrivals, inhouse, departures, pending] = await Promise.all([
     db.reservation.findMany({
-      where: {
-        ...(propertyId ? { propertyId } : {}),
-        ...(status ? { status } : {}),
-        ...(source ? { source } : {}),
-      },
+      where,
       include: {
         property: { select: { id: true, name: true } },
-        guest: { select: { id: true, name: true, email: true, phone: true } },
-        payments: true,
+        guest: { select: { name: true } },
       },
-      orderBy: { checkIn: "desc" },
-      take: PAGE_SIZE,
+      orderBy: { checkIn: ascending ? "asc" : "desc" },
+      take: limit + 1,
     }),
-    db.property.findMany({
-      select: { id: true, name: true, units: { select: { id: true, name: true }, orderBy: { name: "asc" } } },
-      orderBy: { name: "asc" },
-    }),
+    db.property.findMany({ where: propertyScopeFilter(scope), select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    db.reservation.count({ where: viewWhere.arrivals }),
+    db.reservation.count({ where: viewWhere.inhouse }),
+    db.reservation.count({ where: viewWhere.departures }),
+    db.reservation.count({ where: viewWhere.pending }),
   ]);
+  const hasMore = rows.length > limit;
+  const reservations = rows.slice(0, limit);
 
-  const selected = selectedId
+  const selectedRow = selectedId
     ? await db.reservation.findUnique({
         where: { id: selectedId },
         include: {
@@ -52,16 +98,24 @@ export default async function ReservationsPage({
         },
       })
     : null;
+  const selected = selectedRow && inScope(scope, selectedRow.propertyId) ? selectedRow : null;
+
+  const canWrite = BOOKING_WRITE_ROLES.includes(user.role);
 
   return (
     <AdminPage>
       <PageHeader
-        title="Reservations"
-        description={`${reservations.length} bookings shown, newest arrivals first.`}
-        actions={<ManualBookingDialog properties={properties} />}
+        title="Bookings"
+        description={`${reservations.length}${hasMore ? "+" : ""} shown${q ? ` for "${q}"` : ""}`}
+        actions={
+          <QuickAddButton kind="booking">
+            <Plus />
+            Add booking
+          </QuickAddButton>
+        }
       />
-      <div className="mt-6">
-        <ReservationsTable
+      <div className="mt-5">
+        <ReservationsView
           reservations={reservations.map((r) => ({
             id: r.id,
             code: r.code,
@@ -73,10 +127,13 @@ export default async function ReservationsPage({
             source: r.source,
             status: r.status,
             total: Number(r.total),
-            paymentStatus: r.payments[0]?.status ?? "PENDING",
           }))}
           properties={properties}
-          filters={{ propertyId, status, source }}
+          filters={{ q, view, propertyId, status, source, limit }}
+          counts={{ arrivals, inhouse, departures, pending }}
+          hasMore={hasMore}
+          today={toISODate(today)}
+          canWrite={canWrite}
           selected={
             selected && {
               id: selected.id,
@@ -105,7 +162,11 @@ export default async function ReservationsPage({
               platformFee: Number(selected.platformFee),
               hostTax: Number(selected.hostTax),
               otherCharges: Number(selected.otherCharges),
-              netPayout: Number(selected.total) - Number(selected.platformFee) - Number(selected.hostTax) - Number(selected.otherCharges),
+              netPayout:
+                Number(selected.total) -
+                Number(selected.platformFee) -
+                Number(selected.hostTax) -
+                Number(selected.otherCharges),
               total: Number(selected.total),
               internalNotes: selected.internalNotes,
               payments: selected.payments.map((p) => ({

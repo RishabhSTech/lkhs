@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { getCurrentAdminUser } from "@/lib/auth/current-user";
+import { guardApi, inScope, outOfScope } from "@/lib/auth/guards";
+import { INVENTORY_ROLES } from "@/lib/auth/roles";
 
 const linkSchema = z.object({
   channelCode: z.enum(["WEBSITE", "AIRBNB", "BOOKING_COM", "AGODA"]),
@@ -21,8 +22,11 @@ export async function POST(request: Request) {
   }
   const { channelCode, propertyId, externalListingId } = parsed.data;
 
-  const [{ user }, channel, property] = await Promise.all([
-    getCurrentAdminUser(),
+  const auth = await guardApi(INVENTORY_ROLES);
+  if ("error" in auth) return auth.error;
+  const { user, scope } = auth;
+  if (!inScope(scope, propertyId)) return outOfScope();
+  const [channel, property] = await Promise.all([
     db.channel.findUnique({ where: { code: channelCode } }),
     db.property.findUnique({ where: { id: propertyId }, select: { name: true } }),
   ]);
@@ -80,8 +84,11 @@ export async function DELETE(request: Request) {
   }
   const { channelCode, propertyId } = parsed.data;
 
-  const [{ user }, channel, property] = await Promise.all([
-    getCurrentAdminUser(),
+  const auth = await guardApi(INVENTORY_ROLES);
+  if ("error" in auth) return auth.error;
+  const { user, scope } = auth;
+  if (!inScope(scope, propertyId)) return outOfScope();
+  const [channel, property] = await Promise.all([
     db.channel.findUnique({ where: { code: channelCode } }),
     db.property.findUnique({ where: { id: propertyId }, select: { name: true } }),
   ]);

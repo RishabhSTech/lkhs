@@ -83,3 +83,21 @@ export async function createUploadUrl(key: string, contentType: string) {
 
   return { uploadUrl, publicUrl };
 }
+
+/**
+ * True only for a URL pointing into our own bucket. Anything a user can save
+ * as a link (receipts, guest ID scans) must pass this, so nobody can store a
+ * `javascript:` or look-alike URL that staff later click.
+ */
+export function isOwnStorageUrl(url: string) {
+  const base = publicUrlBase();
+  const bucket = process.env.S3_BUCKET;
+  if (!base || !bucket) return false;
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return false;
+    return url.startsWith(`${base.replace(/\/$/, "")}/${bucket}/`) && !parsed.pathname.includes("..");
+  } catch {
+    return false;
+  }
+}

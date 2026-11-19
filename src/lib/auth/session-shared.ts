@@ -4,6 +4,7 @@
 // the same module graph as the rendered app.
 import { SignJWT, jwtVerify } from "jose";
 import type { RoleName } from "@prisma/client";
+import { FINANCE_ROLES } from "@/lib/auth/roles";
 
 export const SESSION_COOKIE = "lk_session";
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
@@ -91,4 +92,4 @@ export const STAKEHOLDER_ROLES: RoleName[] = ["OWNER", "INVESTOR"];
  * ADMIN_ROLES - Cleaner/Marketing/Operations/Manager logins can use the
  * rest of the admin console but shouldn't be able to write financial
  * transactions. */
-export const FINANCE_WRITE_ROLES: RoleName[] = ["SUPER_ADMIN", "ADMIN", "FINANCE"];
+export const FINANCE_WRITE_ROLES: RoleName[] = FINANCE_ROLES;

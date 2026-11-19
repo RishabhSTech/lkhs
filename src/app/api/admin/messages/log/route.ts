@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { getCurrentAdminUser } from "@/lib/auth/current-user";
+import { guardApi } from "@/lib/auth/guards";
+import { BOOKING_WRITE_ROLES } from "@/lib/auth/roles";
 import { alertTeam } from "@/lib/notifications/alert";
 
 const OTA_SOURCES = ["AIRBNB", "BOOKING_COM", "AGODA"] as const;
@@ -27,7 +28,8 @@ const schema = z.object({
  * as a website inquiry.
  */
 export async function POST(request: Request) {
-  await getCurrentAdminUser();
+  const auth = await guardApi(BOOKING_WRITE_ROLES);
+  if ("error" in auth) return auth.error;
 
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {

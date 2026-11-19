@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { getCurrentAdminUser } from "@/lib/auth/current-user";
+import { guardApi, inScope, outOfScope } from "@/lib/auth/guards";
+import { INVENTORY_ROLES } from "@/lib/auth/roles";
 import { parseISODate } from "@/lib/dates";
 import { enqueueChannelSync } from "@/lib/queue";
 
@@ -47,8 +48,11 @@ export async function POST(request: Request) {
     );
   }
   const data = parsed.data;
-  const [{ user }, property] = await Promise.all([
-    getCurrentAdminUser(),
+  const auth = await guardApi(INVENTORY_ROLES);
+  if ("error" in auth) return auth.error;
+  const { user, scope } = auth;
+  if (!inScope(scope, data.propertyId)) return outOfScope();
+  const [property] = await Promise.all([
     db.property.findUnique({ where: { id: data.propertyId }, select: { name: true } }),
   ]);
   if (!property) {
@@ -90,7 +94,12 @@ export async function PATCH(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "We couldn't update that pricing rule - check the values and try again." }, { status: 400 });
   }
-  const { user } = await getCurrentAdminUser();
+  const auth = await guardApi(INVENTORY_ROLES);
+  if ("error" in auth) return auth.error;
+  const { user, scope } = auth;
+  const target = await db.pricingRule.findUnique({ where: { id: parsed.data.id }, select: { propertyId: true } });
+  if (!target) return NextResponse.json({ error: "That rule no longer exists." }, { status: 404 });
+  if (!inScope(scope, target.propertyId)) return outOfScope();
   const rule = await db.pricingRule.update({
     where: { id: parsed.data.id },
     data: { isActive: parsed.data.isActive },
@@ -117,7 +126,12 @@ export async function DELETE(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "We couldn't delete that pricing rule. Refresh and try again." }, { status: 400 });
   }
-  const { user } = await getCurrentAdminUser();
+  const auth = await guardApi(INVENTORY_ROLES);
+  if ("error" in auth) return auth.error;
+  const { user, scope } = auth;
+  const target = await db.pricingRule.findUnique({ where: { id: parsed.data.id }, select: { propertyId: true } });
+  if (!target) return NextResponse.json({ error: "That rule no longer exists." }, { status: 404 });
+  if (!inScope(scope, target.propertyId)) return outOfScope();
   const rule = await db.pricingRule.delete({ where: { id: parsed.data.id } });
 
   await db.auditLog.create({

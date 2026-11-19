@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 import { AdminPage, PageHeader } from "@/components/admin/page-header";
 import { KpiCard } from "@/components/admin/kpi-card";
 import { RevenueChart } from "@/components/charts/revenue-chart";
@@ -8,11 +8,14 @@ import { ChannelProfitTable } from "@/components/admin/channel-profit-table";
 import { CapitalRecovery } from "@/components/admin/capital-recovery";
 import { PLStatement } from "@/components/admin/pl-statement";
 import { BudgetTable } from "@/components/admin/budget-table";
-import { ExpenseDialog } from "@/components/admin/expense-dialog";
+import { QuickAddButton } from "@/components/admin/quick-add";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
 import { getPropertyFinance } from "@/lib/queries/finance";
 import { formatINR, formatINRCompact, formatPercent } from "@/lib/format";
+
+import { requirePortfolioAccess } from "@/lib/auth/guards";
+import { FINANCE_ROLES } from "@/lib/auth/roles";
 
 export const dynamic = "force-dynamic";
 
@@ -20,23 +23,15 @@ export default async function PropertyFinancePage({
   params,
 }: PageProps<"/admin/finance/property/[id]">) {
   const { id } = await params;
+  await requirePortfolioAccess(FINANCE_ROLES);
   if (!id) notFound();
 
-  const [finance, budgetCategories, expenseCategories] = await Promise.all([
+  const [finance, budgetCategories] = await Promise.all([
     getPropertyFinance(id).catch(() => null),
     db.transactionCategory.findMany({
       where: { group: { in: ["RECURRING_EXPENSE", "ONE_TIME_EXPENSE"] } },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
-    }),
-    db.transactionCategory.findMany({
-      where: {
-        group: {
-          in: ["INITIAL_INVESTMENT", "RECURRING_EXPENSE", "ONE_TIME_EXPENSE", "DEPOSIT"],
-        },
-      },
-      select: { id: true, name: true, group: true, isRefundableDeposit: true },
-      orderBy: [{ group: "asc" }, { name: "asc" }],
     }),
   ]);
   if (!finance) notFound();
@@ -60,10 +55,10 @@ export default async function PropertyFinancePage({
           description={`${property.locationArea}, ${property.city} · financial performance`}
           actions={
             <div className="flex items-center gap-2">
-              <ExpenseDialog
-                property={{ id: property.id, name: property.name }}
-                categories={expenseCategories}
-              />
+              <QuickAddButton kind="expense" propertyId={property.id}>
+                <Plus />
+                Add expense
+              </QuickAddButton>
               <Button
                 render={<Link href={`/admin/properties/${property.id}`} />}
                 variant="outline"

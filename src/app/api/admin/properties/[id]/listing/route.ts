@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { getCurrentAdminUser } from "@/lib/auth/current-user";
+import { guardApi, inScope, outOfScope } from "@/lib/auth/guards";
+import { LISTING_ROLES } from "@/lib/auth/roles";
 import { HIGHLIGHT_BY_CODE, type HighlightCode } from "@/lib/property/highlights";
 import { THING_TO_KNOW_BY_CODE } from "@/lib/property/things-to-know";
 
@@ -56,7 +57,10 @@ export async function PUT(
   if (!id) {
     return NextResponse.json({ error: "Property id is required." }, { status: 400 });
   }
-  const { user } = await getCurrentAdminUser();
+  const auth = await guardApi(LISTING_ROLES);
+  if ("error" in auth) return auth.error;
+  const { user, scope } = auth;
+  if (!inScope(scope, id)) return outOfScope();
 
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {

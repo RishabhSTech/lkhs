@@ -11,12 +11,15 @@ import { formatDateLong } from "@/lib/format";
 import { LogOtaMessageDialog } from "@/components/admin/log-ota-message-dialog";
 import { MailboxInboxFeed } from "@/components/admin/mailbox-inbox-feed";
 import { buildInboxThreads, OTA_SOURCE_LABELS } from "@/lib/mailbox/inbox-threads";
+import { requirePortfolioAccess } from "@/lib/auth/guards";
+import { OFFICE_ROLES } from "@/lib/auth/roles";
 
 export const dynamic = "force-dynamic";
 
 const CHANNELS = ["WHATSAPP", "EMAIL", "SMS", "OTA", "CHAT"] as const;
 
 export default async function MessagesPage() {
+  await requirePortfolioAccess(OFFICE_ROLES);
   const [messages, emailRows] = await Promise.all([
     db.message.findMany({
       include: {

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import type { RoleName } from "@prisma/client";
 import { LogOut } from "lucide-react";
 import { LogoStacked } from "@/components/brand/logo";
-import { visibleNavFor } from "@/lib/admin/nav";
+import { isActivePath, visibleNavFor } from "@/lib/admin/nav";
 import { cn } from "@/lib/utils";
 
 /** Groups keep a thirteen-item nav scannable instead of one long list. */
@@ -19,7 +19,7 @@ const GROUPS: { label: string | null; hrefs: string[] }[] = [
     label: "Inventory",
     hrefs: ["/admin/properties", "/admin/pricing", "/admin/channels"],
   },
-  { label: "Money", hrefs: ["/admin/finance", "/admin/stakeholders"] },
+  { label: "Money", hrefs: ["/admin/finance", "/admin/finance/expenses", "/admin/stakeholders"] },
   {
     label: "Running it",
     hrefs: ["/admin/operations", "/admin/messages", "/admin/analytics", "/admin/settings"],
@@ -29,18 +29,20 @@ const GROUPS: { label: string | null; hrefs: string[] }[] = [
 export function AdminSidebar({
   role,
   userName,
+  scoped,
 }: {
   role: RoleName;
   userName: string;
+  scoped: boolean;
 }) {
   const pathname = usePathname();
-  const nav = visibleNavFor(role);
+  const nav = visibleNavFor(role, scoped);
   const byHref = new Map(nav.map((item) => [item.href, item]));
 
   return (
     <aside className="hidden w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
       <div className="px-4 py-4">
-        <Link href="/admin">
+        <Link href={scoped ? "/admin/reservations" : "/admin"}>
           <LogoStacked tone="light" />
         </Link>
       </div>
@@ -61,10 +63,7 @@ export function AdminSidebar({
               )}
               <ul className="space-y-0.5">
                 {items.map((item) => {
-                  const active =
-                    item.href === "/admin"
-                      ? pathname === "/admin"
-                      : pathname.startsWith(item.href);
+                  const active = isActivePath(pathname, item.href);
                   return (
                     <li key={item.href}>
                       <Link

@@ -10,9 +10,13 @@ import { getPortfolioFinance } from "@/lib/queries/finance";
 import { SOURCE_LABELS, sourceBadgeClass } from "@/lib/admin/sources";
 import { formatDateLong, formatINR, formatINRCompact } from "@/lib/format";
 
+import { requirePortfolioAccess } from "@/lib/auth/guards";
+import { FINANCE_ROLES } from "@/lib/auth/roles";
+
 export const dynamic = "force-dynamic";
 
 export default async function RevenuePage() {
+  await requirePortfolioAccess(FINANCE_ROLES);
   const [finance, recentRevenue] = await Promise.all([
     getPortfolioFinance(12),
     db.transaction.findMany({

@@ -5,9 +5,13 @@ import { db } from "@/lib/db";
 import { buildCapitalPosition, buildPL, type TxWithCategory } from "@/lib/finance/calculations";
 import { formatINRCompact, formatPercent } from "@/lib/format";
 
+import { requirePortfolioAccess } from "@/lib/auth/guards";
+import { FINANCE_ROLES } from "@/lib/auth/roles";
+
 export const dynamic = "force-dynamic";
 
 export default async function StakeholdersPage() {
+  await requirePortfolioAccess(FINANCE_ROLES);
   const stakeholders = await db.stakeholder.findMany({
     include: {
       properties: {

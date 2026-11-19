@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, CalendarPlus, ExternalLink, Receipt, Sparkles } from "lucide-react";
+import { QuickAddButton } from "@/components/admin/quick-add";
 import { AdminPage, PageHeader } from "@/components/admin/page-header";
 import { KpiCard } from "@/components/admin/kpi-card";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,8 @@ import { buildAdminReviewRows } from "@/lib/admin/review-rows";
 import { SOURCE_LABELS, STATUS_LABELS, sourceBadgeClass, statusBadgeClass } from "@/lib/admin/sources";
 import { addMonths, todayUTC } from "@/lib/dates";
 import { formatDateRange, formatINR, formatINRCompact } from "@/lib/format";
+import { requireAdminPage, inScope } from "@/lib/auth/guards";
+import { OFFICE_ROLES } from "@/lib/auth/roles";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +31,8 @@ export default async function AdminPropertyPage({
   params,
 }: PageProps<"/admin/properties/[id]">) {
   const { id } = await params;
+  const { scope } = await requireAdminPage(OFFICE_ROLES);
+  if (!inScope(scope, id)) notFound();
 
   const today = todayUTC();
   const pricingHorizon = addMonths(today, 3);
@@ -123,8 +128,21 @@ export default async function AdminPropertyPage({
           description={`${property.locationArea}, ${property.city}`}
           actions={
             <>
+              <QuickAddButton kind="booking" propertyId={property.id}>
+                <CalendarPlus />
+                Booking
+              </QuickAddButton>
+              <QuickAddButton kind="expense" propertyId={property.id} variant="outline">
+                <Receipt />
+                Expense
+              </QuickAddButton>
+              <QuickAddButton kind="cleaning" propertyId={property.id} variant="outline">
+                <Sparkles />
+                Cleaning
+              </QuickAddButton>
               <Button
                 render={<Link href={`/admin/finance/property/${property.id}`} />}
+                variant="outline"
                 size="sm"
               >
                 Finance

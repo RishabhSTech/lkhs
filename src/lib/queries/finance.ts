@@ -130,22 +130,29 @@ export async function getPortfolioFinance(monthsBack = 6) {
 
 export async function getExpenses(options?: {
   propertyId?: string;
+  propertyIds?: string[];
   status?: string;
+  createdById?: string;
   limit?: number;
 }) {
   return db.transaction.findMany({
     where: {
       type: { in: ["EXPENSE", "INVESTMENT", "DEPOSIT_OUT"] },
-      ...(options?.propertyId ? { propertyId: options.propertyId } : {}),
+      ...(options?.propertyId
+        ? { propertyId: options.propertyId }
+        : options?.propertyIds
+          ? { propertyId: { in: options.propertyIds } }
+          : {}),
       ...(options?.status ? { status: options.status as never } : {}),
+      ...(options?.createdById ? { createdById: options.createdById } : {}),
     },
     include: {
       category: true,
       property: { select: { id: true, name: true } },
       createdBy: { select: { name: true } },
     },
-    orderBy: { date: "desc" },
-    take: options?.limit ?? 60,
+    orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+    take: options?.limit ?? 100,
   });
 }
 

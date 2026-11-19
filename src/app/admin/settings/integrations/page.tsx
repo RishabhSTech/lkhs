@@ -6,6 +6,8 @@ import { MailboxConnectionCard } from "@/components/admin/mailbox-connection-car
 import { AnthropicConnectionCard } from "@/components/admin/anthropic-connection-card";
 import { db } from "@/lib/db";
 import { formatDateLong } from "@/lib/format";
+import { requirePortfolioAccess } from "@/lib/auth/guards";
+import { SETTINGS_ROLES } from "@/lib/auth/roles";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +32,7 @@ const OTA_LABELS: Record<string, string> = {
 };
 
 export default async function IntegrationsPage() {
+  await requirePortfolioAccess(SETTINGS_ROLES);
   const [integration, anthropicIntegration, recent] = await Promise.all([
     db.mailboxIntegration.findFirst({ orderBy: { createdAt: "desc" } }),
     db.anthropicIntegration.findFirst({ orderBy: { createdAt: "desc" } }),

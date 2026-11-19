@@ -2,10 +2,13 @@ import { AdminPage, PageHeader } from "@/components/admin/page-header";
 import { db } from "@/lib/db";
 import { formatDateLong, formatINR } from "@/lib/format";
 import { EmptyState } from "@/components/site/empty-state";
+import { requirePortfolioAccess } from "@/lib/auth/guards";
+import { OFFICE_ROLES } from "@/lib/auth/roles";
 
 export const dynamic = "force-dynamic";
 
 export default async function GuestsPage() {
+  await requirePortfolioAccess(OFFICE_ROLES);
   const guests = await db.guest.findMany({
     include: {
       reservations: {

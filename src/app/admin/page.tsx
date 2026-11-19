@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { syncTurnoverTasks } from "@/lib/operations/turnovers";
+import { STAGE_LABEL } from "@/lib/operations/cleaning-stages";
 import {
   AlertTriangle, ArrowUpRight, BedDouble, CalendarCheck, CalendarX, CircleDollarSign,
   Percent, TrendingUp, Wallet, Wrench,
@@ -18,6 +20,8 @@ import {
 } from "@/lib/queries/admin-metrics";
 import { formatDateRange, formatINR, formatINRCompact, formatPercent } from "@/lib/format";
 import { SOURCE_LABELS, sourceBadgeClass } from "@/lib/admin/sources";
+import { requirePortfolioAccess } from "@/lib/auth/guards";
+import { OFFICE_ROLES } from "@/lib/auth/roles";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +34,10 @@ function greeting() {
 }
 
 export default async function AdminOverviewPage() {
+  // Cleaners land on their task list; property-scoped staff on their bookings.
+  await requirePortfolioAccess(OFFICE_ROLES);
+  await syncTurnoverTasks().catch((error) => console.error("Turnover sync failed", error));
+
   const [
     { user }, kpis, revenueSeries, occupancySeries, upcoming, operations,
     channelHealth, allAlerts,
@@ -51,13 +59,55 @@ export default async function AdminOverviewPage() {
         title={`${greeting()}, ${user.name.split(" ")[0]} 👋`}
         description="Here's how the portfolio is doing today."
         actions={
-          <Button render={<Link href="/admin/calendar" />} variant="outline" size="sm">
+          <Button render={<Link href="/admin/calendar" />} variant="outline" size="sm" className="hidden sm:inline-flex">
             Open calendar
           </Button>
         }
       />
 
-      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <Panel
+        title="Today"
+        className="mt-5"
+        action={{ href: "/admin/operations", label: "Cleaning tasks" }}
+      >
+        <div className="grid gap-5 sm:grid-cols-3 sm:gap-6">
+          <OpsColumn
+            title="Arriving"
+            href="/admin/reservations?view=arrivals"
+            empty="No arrivals today."
+            items={operations.arrivals.map((r) => ({
+              id: r.id,
+              href: `/admin/reservations?view=arrivals&id=${r.id}`,
+              primary: r.guest.name,
+              secondary: r.property.name,
+            }))}
+          />
+          <OpsColumn
+            title="Departing"
+            href="/admin/reservations?view=departures"
+            empty="No departures today."
+            items={operations.departures.map((r) => ({
+              id: r.id,
+              href: `/admin/reservations?view=departures&id=${r.id}`,
+              primary: r.guest.name,
+              secondary: r.property.name,
+            }))}
+          />
+          <OpsColumn
+            title="Cleaning queue"
+            href="/admin/operations"
+            empty="Every home is turned over."
+            items={operations.cleaning.map((c) => ({
+              id: c.id,
+              href: "/admin/operations",
+              primary: c.property.name,
+              secondary: `${STAGE_LABEL[c.status]} · ${c.assignedTo?.name ?? "unassigned"}`,
+            }))}
+          />
+        </div>
+      </Panel>
+
+      <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <KpiCard
           label="Today's revenue"
           value={formatINR(kpis.todayRevenue)}
@@ -136,10 +186,11 @@ export default async function AdminOverviewPage() {
           ) : (
             <ul className="divide-y divide-border">
               {upcoming.map((reservation) => (
-                <li
-                  key={reservation.id}
-                  className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
-                >
+                <li key={reservation.id} className="py-3 first:pt-0 last:pb-0">
+                  <Link
+                    href={`/admin/reservations?id=${reservation.id}`}
+                    className="flex flex-wrap items-center justify-between gap-3 active:opacity-70"
+                  >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-foreground">
                       {reservation.guest.name}
@@ -157,6 +208,7 @@ export default async function AdminOverviewPage() {
                       {formatINR(Number(reservation.total))}
                     </span>
                   </div>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -230,71 +282,39 @@ export default async function AdminOverviewPage() {
         </div>
       </div>
 
-      <Panel
-        title="Today's operations"
-        className="mt-5"
-        action={{ href: "/admin/operations", label: "Operations board" }}
-      >
-        <div className="grid gap-6 sm:grid-cols-3">
-          <OpsColumn
-            title="Arriving"
-            empty="No arrivals today."
-            items={operations.arrivals.map((r) => ({
-              id: r.id,
-              primary: r.guest.name,
-              secondary: r.property.name,
-            }))}
-          />
-          <OpsColumn
-            title="Departing"
-            empty="No departures today."
-            items={operations.departures.map((r) => ({
-              id: r.id,
-              primary: r.guest.name,
-              secondary: r.property.name,
-            }))}
-          />
-          <OpsColumn
-            title="Cleaning queue"
-            empty="Every home is turned over."
-            items={operations.cleaning.map((c) => ({
-              id: c.id,
-              primary: c.property.name,
-              secondary: `${c.status.replace(/_/g, " ").toLowerCase()}${
-                c.assignedTo ? ` · ${c.assignedTo.name}` : ""
-              }`,
-            }))}
-          />
-        </div>
-      </Panel>
     </AdminPage>
   );
 }
 
 function OpsColumn({
   title,
+  href,
   items,
   empty,
 }: {
   title: string;
-  items: { id: string; primary: string; secondary: string }[];
+  href: string;
+  items: { id: string; href: string; primary: string; secondary: string }[];
   empty: string;
 }) {
   return (
     <div>
-      <h3 className="text-[0.6875rem] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
-        {title}
-      </h3>
+      <Link href={href} className="flex items-baseline justify-between gap-2">
+        <h3 className="text-[0.6875rem] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
+          {title}
+        </h3>
+        <span className="text-sm font-semibold tabular-nums text-foreground">{items.length}</span>
+      </Link>
       {items.length === 0 ? (
-        <p className="mt-3 text-sm text-muted-foreground">{empty}</p>
+        <p className="mt-2 text-sm text-muted-foreground">{empty}</p>
       ) : (
-        <ul className="mt-3 space-y-2.5">
+        <ul className="mt-2 divide-y divide-border">
           {items.map((item) => (
             <li key={item.id}>
-              <p className="text-sm font-medium text-foreground">{item.primary}</p>
-              <p className="text-xs capitalize text-muted-foreground">
-                {item.secondary}
-              </p>
+              <Link href={item.href} className="block py-2 active:opacity-70">
+                <p className="truncate text-sm font-medium text-foreground">{item.primary}</p>
+                <p className="truncate text-xs text-muted-foreground">{item.secondary}</p>
+              </Link>
             </li>
           ))}
         </ul>

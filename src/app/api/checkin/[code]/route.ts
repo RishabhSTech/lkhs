@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { isOwnStorageUrl } from "@/lib/storage/s3";
 import { db } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -15,7 +16,12 @@ const guestSchema = z.object({
   name: z.string().trim().min(2, "Enter each guest's full name.").max(120),
   idType: z.enum(["AADHAAR", "PASSPORT", "DRIVING_LICENCE", "VOTER_ID", "OTHER"]),
   idNumber: z.string().trim().min(4, "Enter a valid ID number.").max(40),
-  idDocumentUrl: z.url().optional().or(z.literal("")),
+  // Must point into our own bucket (the upload-url route hands these out) - a
+  // free-form URL here would be a link staff click from the booking drawer.
+  idDocumentUrl: z
+    .string()
+    .refine((url) => url === "" || isOwnStorageUrl(url), "Upload the ID photo again.")
+    .optional(),
 });
 
 const schema = z.object({

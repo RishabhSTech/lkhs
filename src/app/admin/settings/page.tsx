@@ -4,7 +4,9 @@ import { AdminPage, PageHeader } from "@/components/admin/page-header";
 import { UserManager } from "@/components/admin/user-manager";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getCurrentAdminUser } from "@/lib/auth/current-user";
+import { requirePortfolioAccess } from "@/lib/auth/guards";
+import { SETTINGS_ROLES } from "@/lib/auth/roles";
+import { STAFF_USER_ROLES } from "@/lib/admin/user-management";
 import { db } from "@/lib/db";
 import { formatDateLong } from "@/lib/format";
 import { EMAIL_IS_LIVE } from "@/lib/notifications/provider";
@@ -86,15 +88,17 @@ function buildIntegrations(mailboxStatus: string | null) {
 }
 
 export default async function SettingsPage() {
-  const { user } = await getCurrentAdminUser();
+  const { user } = await requirePortfolioAccess(SETTINGS_ROLES);
   const isSuperAdmin = user.role === "SUPER_ADMIN";
-  const [users, auditLogs, mailboxIntegration] = await Promise.all([
+  const [users, auditLogs, mailboxIntegration, properties] = await Promise.all([
     db.user.findMany({
-      include: { propertyAssignments: { include: { property: { select: { name: true } } } } },
+      where: { role: { in: STAFF_USER_ROLES } },
+      include: { propertyAssignments: { include: { property: { select: { id: true, name: true } } } } },
       orderBy: { name: "asc" },
     }),
     db.auditLog.findMany({ orderBy: { createdAt: "desc" }, take: 25 }),
     db.mailboxIntegration.findFirst({ orderBy: { createdAt: "desc" } }),
+    db.property.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
   ]);
   const integrations = buildIntegrations(mailboxIntegration?.status ?? null);
 
@@ -115,6 +119,7 @@ export default async function SettingsPage() {
         <TabsContent value="team" className="mt-5 space-y-5">
           {isSuperAdmin && (
             <UserManager
+              properties={properties}
               initialUsers={users.map((member) => ({
                 id: member.id,
                 name: member.name,
@@ -122,7 +127,7 @@ export default async function SettingsPage() {
                 phone: member.phone,
                 role: member.role,
                 propertyAssignments: member.propertyAssignments.map((assignment) => ({
-                  property: { name: assignment.property.name },
+                  property: { id: assignment.property.id, name: assignment.property.name },
                 })),
               }))}
             />

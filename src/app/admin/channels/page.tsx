@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { db } from "@/lib/db";
 import { CHANNEL_GUIDES, CHANNEL_ORDER } from "@/lib/admin/channel-guides";
 import { formatDateLong } from "@/lib/format";
+import { requirePortfolioAccess } from "@/lib/auth/guards";
+import { INVENTORY_ROLES } from "@/lib/auth/roles";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +18,7 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default async function ChannelsPage() {
+  await requirePortfolioAccess(INVENTORY_ROLES);
   const [channels, propertyCount] = await Promise.all([
     db.channel.findMany({
       include: {

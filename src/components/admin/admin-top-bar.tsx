@@ -1,8 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { Bell, Search } from "lucide-react";
+import { Bell, Plus, Search } from "lucide-react";
+import type { RoleName } from "@prisma/client";
+import { useQuickAdd } from "@/components/admin/quick-add";
+import { FINANCE_ROLES } from "@/lib/auth/roles";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -23,36 +27,54 @@ type NotificationItem = {
 };
 
 export function AdminTopBar({
+  role,
+  scoped,
   userName,
   notifications,
   properties,
   isDemoFallback,
 }: {
+  role: RoleName;
+  scoped: boolean;
   userName: string;
   notifications: NotificationItem[];
   properties: { id: string; name: string; slug: string }[];
   isDemoFallback: boolean;
 }) {
   const [commandOpen, setCommandOpen] = useState(false);
+  const { openMenu, can } = useQuickAdd();
+  const isCleaner = role === "CLEANER";
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-md sm:px-6">
-        <button
-          type="button"
-          onClick={() => setCommandOpen(true)}
-          className="flex h-9 flex-1 items-center gap-2 rounded-lg border border-border bg-card px-3 text-sm text-muted-foreground transition-colors hover:border-brand-mist sm:max-w-sm"
-        >
-          <Search className="size-4" />
-          <span className="flex-1 text-left">Search everything…</span>
-          <kbd className="hidden rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[0.625rem] sm:block">
-            ⌘K
-          </kbd>
-        </button>
+      <header className="sticky top-0 z-30 border-b border-border bg-background/90 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
+       <div className="flex h-14 items-center gap-2 px-4 sm:gap-3 sm:px-6">
+        <Link href={isCleaner ? "/admin/operations" : scoped ? "/admin/reservations" : "/admin"} className="shrink-0 lg:hidden" aria-label="Home">
+          <Image src="/favico.png" alt="" width={32} height={32} className="size-8 rounded-lg" />
+        </Link>
+        {!isCleaner && (
+          <button
+            type="button"
+            onClick={() => setCommandOpen(true)}
+            className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-full border border-border bg-card px-3.5 text-sm text-muted-foreground transition-colors hover:border-brand-mist sm:max-w-sm sm:rounded-lg lg:h-9"
+          >
+            <Search className="size-4 shrink-0" />
+            <span className="flex-1 truncate text-left">Search guests, bookings…</span>
+            <kbd className="hidden rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[0.625rem] sm:block">
+              ⌘K
+            </kbd>
+          </button>
+        )}
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
+          {(can.booking || can.expense || can.cleaning || can.maintenance) && (
+            <Button size="sm" onClick={openMenu} className="hidden lg:inline-flex">
+              <Plus />
+              New
+            </Button>
+          )}
           <PushAlertButton />
-          <AskLimePanel />
+          {FINANCE_ROLES.includes(role) && !scoped && <AskLimePanel />}
 
           <Popover>
             <PopoverTrigger
@@ -70,7 +92,7 @@ export function AdminTopBar({
                 </Button>
               }
             />
-            <PopoverContent align="end" className="w-80 p-0">
+            <PopoverContent align="end" className="w-[min(20rem,calc(100vw-2rem))] p-0">
               <div className="border-b border-border px-4 py-3">
                 <p className="text-sm font-semibold text-foreground">
                   Notifications
@@ -128,6 +150,7 @@ export function AdminTopBar({
             </Badge>
           )}
         </div>
+       </div>
       </header>
 
       <CommandPalette

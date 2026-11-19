@@ -488,7 +488,11 @@ async function notifyChannelsOfAvailabilityChange(propertyId: string) {
  * PENDING has already been confirmed (or cancelled) and is left alone, so
  * a client-side confirm racing the webhook can't double-post revenue.
  */
-export async function confirmReservation(reservationId: string) {
+export async function confirmReservation(
+  reservationId: string,
+  options: { notifyGuest?: boolean } = {},
+) {
+  const notifyGuest = options.notifyGuest ?? true;
   const reservation = await db.reservation.findUnique({
     where: { id: reservationId },
     include: {
@@ -528,6 +532,9 @@ export async function confirmReservation(reservationId: string) {
       hasCustomFinancials: reservation.hasCustomFinancials,
     });
   });
+
+  // Back-filled or past bookings entered by hand shouldn't email the guest.
+  if (!notifyGuest) return;
 
   const primaryGuest = reservation.reservationGuests[0];
   await notifyGuestBookingConfirmed({

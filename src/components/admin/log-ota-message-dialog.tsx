@@ -6,14 +6,9 @@ import { Loader2, MessageSquarePlus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
+import { ResponsiveSheet } from "@/components/admin/responsive-sheet";
+import { ChipGroup, Field, fieldControlClass } from "@/components/admin/form-fields";
 
 const SOURCES = [
   { value: "AIRBNB", label: "Airbnb" },
@@ -68,81 +63,54 @@ export function LogOtaMessageDialog() {
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
+    <>
       <Button variant="outline" size="sm" onClick={() => setOpen(true)} className="gap-1.5">
         <MessageSquarePlus className="size-3.5" />
         Log OTA message
       </Button>
 
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Log an OTA message</DialogTitle>
-          <DialogDescription>
-            Paste in an Airbnb, Booking.com or Agoda message so it lands in
-            this inbox and alerts the team, same as a direct inquiry.
-          </DialogDescription>
-        </DialogHeader>
-
+      <ResponsiveSheet
+        open={open}
+        onOpenChange={(o) => {
+          setOpen(o);
+          if (!o) reset();
+        }}
+        title="Log an OTA message"
+        description="Paste an Airbnb, Booking.com or Agoda message so it lands here and alerts the team."
+        size="sm"
+        footer={
+          <Button size="lg" className="w-full lg:h-10" onClick={save} disabled={saving || !guestName.trim() || !body.trim()}>
+            {saving && <Loader2 className="animate-spin" />}
+            Log message
+          </Button>
+        }
+      >
         <div className="space-y-4">
-          <div>
-            <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              Platform
-            </Label>
-            <Select value={source} onValueChange={(v) => setSource(v as typeof source)}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {SOURCES.map((s) => (
-                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <Field label="Platform">
+            <ChipGroup ariaLabel="Platform" value={source} onChange={setSource} options={[...SOURCES]} />
+          </Field>
+          <Field label="Guest name" required>
+            <Input value={guestName} onChange={(e) => setGuestName(e.target.value)} placeholder="Priya Sharma" className={fieldControlClass} />
+          </Field>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Phone">
+              <Input type="tel" inputMode="tel" value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} placeholder="+91" className={fieldControlClass} />
+            </Field>
+            <Field label="Email">
+              <Input type="email" inputMode="email" value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} placeholder="guest@email.com" className={fieldControlClass} />
+            </Field>
           </div>
-
-          <div>
-            <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              Guest name
-            </Label>
-            <Input value={guestName} onChange={(e) => setGuestName(e.target.value)} placeholder="Priya Sharma" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                Email (optional)
-              </Label>
-              <Input value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} placeholder="guest@email.com" />
-            </div>
-            <div>
-              <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                Phone (optional)
-              </Label>
-              <Input value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} placeholder="+91…" />
-            </div>
-          </div>
-
-          <div>
-            <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              Message
-            </Label>
+          <Field label="Message" required>
             <Textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
               placeholder="What the guest actually wrote…"
-              rows={4}
+              rows={5}
+              className="text-base lg:text-sm"
             />
-          </div>
+          </Field>
         </div>
-
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={save} disabled={saving || !guestName || !body}>
-            {saving && <Loader2 className="animate-spin" />}
-            Log message
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveSheet>
+    </>
   );
 }

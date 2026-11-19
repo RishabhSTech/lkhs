@@ -1,25 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle, Loader2, PencilLine, UserRound } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronRight, Loader2, Plus } from "lucide-react";
 import type { RoleName } from "@prisma/client";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { ResponsiveSheet } from "@/components/admin/responsive-sheet";
+import { Field, FormError, NativeSelect, fieldControlClass } from "@/components/admin/form-fields";
+import { SCOPABLE_ROLES } from "@/lib/auth/roles";
 
-const ROLE_OPTIONS: RoleName[] = [
-  "SUPER_ADMIN",
-  "ADMIN",
-  "MANAGER",
-  "FINANCE",
-  "OPERATIONS",
-  "CLEANER",
-  "MARKETING",
+const ROLE_OPTIONS: { value: RoleName; label: string; hint: string }[] = [
+  { value: "SUPER_ADMIN", label: "Super admin", hint: "Everything, including users and integrations." },
+  { value: "ADMIN", label: "Admin", hint: "Everything except managing users." },
+  { value: "MANAGER", label: "Manager", hint: "Bookings, pricing, listings, cleaning team." },
+  { value: "FINANCE", label: "Finance", hint: "P&L, expenses, approvals, reports." },
+  { value: "OPERATIONS", label: "Operations", hint: "Bookings, cleaning, maintenance." },
+  { value: "CLEANER", label: "Cleaner", hint: "Their cleaning tasks and expenses only." },
+  { value: "MARKETING", label: "Marketing", hint: "Listings, photos and reviews." },
 ];
-
-const selectClass =
-  "h-10 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 export type UserManagerUser = {
   id: string;
@@ -27,219 +28,215 @@ export type UserManagerUser = {
   email: string | null;
   phone: string | null;
   role: RoleName;
-  propertyAssignments?: Array<{ property: { name: string } }>;
+  propertyAssignments?: Array<{ property: { id?: string; name: string } }>;
 };
 
-const emptyForm = {
-  name: "",
-  email: "",
-  phone: "",
-  role: "ADMIN" as RoleName,
-};
+type Sheet = { open: boolean; session: number; user: UserManagerUser | null };
 
-export function UserManager({ initialUsers }: { initialUsers: UserManagerUser[] }) {
+export function UserManager({
+  initialUsers,
+  properties,
+}: {
+  initialUsers: UserManagerUser[];
+  properties: { id: string; name: string }[];
+}) {
   const [users, setUsers] = useState(initialUsers);
-  const [form, setForm] = useState(emptyForm);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [sheet, setSheet] = useState<Sheet>({ open: false, session: 0, user: null });
   const [saving, setSaving] = useState(false);
+
+  const open = (user: UserManagerUser | null) => setSheet((s) => ({ open: true, session: s.session + 1, user }));
+
+  return (
+    <div className="mt-5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">{users.length} people</p>
+        <Button size="sm" onClick={() => open(null)}>
+          <Plus />
+          Add user
+        </Button>
+      </div>
+
+      <ul className="mt-3 divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+        {users.map((user) => {
+          const scoped = user.propertyAssignments?.length ?? 0;
+          return (
+            <li key={user.id}>
+              <button
+                type="button"
+                onClick={() => open(user)}
+                className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-muted/60 lg:hover:bg-muted/40"
+              >
+                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-blue/10 text-xs font-semibold text-brand-blue">
+                  {user.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .slice(0, 2)
+                    .join("")
+                    .toUpperCase()}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex flex-wrap items-center gap-1.5">
+                    <span className="truncate text-sm font-semibold text-foreground">{user.name}</span>
+                    <Badge className="border-border bg-muted text-muted-foreground">
+                      {ROLE_OPTIONS.find((r) => r.value === user.role)?.label ?? user.role.toLowerCase()}
+                    </Badge>
+                  </span>
+                  <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                    {user.email ?? user.phone ?? "No contact on file"}
+                    {SCOPABLE_ROLES.includes(user.role) &&
+                      (scoped ? ` · ${scoped} ${scoped === 1 ? "property" : "properties"}` : " · all properties")}
+                  </span>
+                </span>
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+              </button>
+            </li>
+          );
+        })}
+        {users.length === 0 && <li className="p-6 text-sm text-muted-foreground">No back-office users yet.</li>}
+      </ul>
+
+      <ResponsiveSheet
+        open={sheet.open}
+        onOpenChange={(o) => setSheet((s) => ({ ...s, open: o }))}
+        title={sheet.user ? sheet.user.name : "Add user"}
+        description="They sign in with this email or phone number."
+        size="md"
+        footer={
+          <Button type="submit" form="user-form" size="lg" className="w-full lg:h-10" disabled={saving}>
+            {saving && <Loader2 className="animate-spin" />}
+            {sheet.user ? "Save changes" : "Add user"}
+          </Button>
+        }
+      >
+        <UserForm
+          key={sheet.session}
+          user={sheet.user}
+          properties={properties}
+          setSaving={setSaving}
+          onSaved={(saved) => {
+            setUsers((current) =>
+              [...current.filter((u) => u.id !== saved.id), saved].sort((a, b) => a.name.localeCompare(b.name)),
+            );
+            setSheet((s) => ({ ...s, open: false }));
+          }}
+        />
+      </ResponsiveSheet>
+    </div>
+  );
+}
+
+function UserForm({
+  user,
+  properties,
+  setSaving,
+  onSaved,
+}: {
+  user: UserManagerUser | null;
+  properties: { id: string; name: string }[];
+  setSaving: (saving: boolean) => void;
+  onSaved: (user: UserManagerUser) => void;
+}) {
+  const router = useRouter();
+  const [name, setName] = useState(user?.name ?? "");
+  const [email, setEmail] = useState(user?.email ?? "");
+  const [phone, setPhone] = useState(user?.phone ?? "");
+  const [role, setRole] = useState<RoleName>(user?.role ?? "OPERATIONS");
+  const [selected, setSelected] = useState<Set<string>>(
+    new Set((user?.propertyAssignments ?? []).map((a) => a.property.id).filter((id): id is string => Boolean(id))),
+  );
   const [error, setError] = useState<string | null>(null);
+  const scopable = SCOPABLE_ROLES.includes(role);
 
-  function resetForm() {
-    setEditingId(null);
-    setForm(emptyForm);
-  }
-
-  function startEdit(user: UserManagerUser) {
-    setEditingId(user.id);
-    setForm({
-      name: user.name,
-      email: user.email ?? "",
-      phone: user.phone ?? "",
-      role: user.role,
+  function toggle(id: string) {
+    setSelected((s) => {
+      const next = new Set(s);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
     });
   }
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
     setError(null);
+    if (name.trim().length < 2) return setError("Enter their name.");
+    if (!email.trim() && !phone.trim()) return setError("Add an email or a phone number to sign in with.");
     setSaving(true);
-
     try {
-      const payload = {
-        ...form,
-        name: form.name.trim(),
-        email: form.email.trim(),
-        phone: form.phone.trim(),
+      const body = {
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        role,
+        propertyIds: scopable ? [...selected] : [],
       };
-
-      if (!payload.name) throw new Error("Name is required.");
-      if (!payload.email && !payload.phone) {
-        throw new Error("Add either an email or a phone number.");
-      }
-
       const res = await fetch("/api/admin/users", {
-        method: editingId ? "PATCH" : "POST",
+        method: user ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          editingId ? { ...payload, id: editingId } : payload,
-        ),
+        body: JSON.stringify(user ? { ...body, id: user.id } : body),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "The user request failed.");
-
-      const nextUser: UserManagerUser = data;
-      setUsers((current) => {
-        const filtered = current.filter((user) => user.id !== nextUser.id);
-        return [...filtered, nextUser].sort((a, b) => a.name.localeCompare(b.name));
-      });
-      resetForm();
+      if (!res.ok) throw new Error(data.error ?? "Could not save that user.");
+      toast.success(user ? "User updated" : `${body.name} added`);
+      onSaved(data);
+      router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save the user.");
+      setError(err instanceof Error ? err.message : "Could not save that user.");
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <div className="mt-6 grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
-      <section className="rounded-xl border border-border bg-card p-5">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              User access
-            </p>
-            <h2 className="mt-1 text-lg font-semibold text-foreground">
-              {editingId ? "Edit user" : "Add user"}
-            </h2>
-          </div>
-          {editingId && (
-            <Button type="button" variant="ghost" size="sm" onClick={resetForm}>
-              Cancel
-            </Button>
-          )}
-        </div>
-
-        <form onSubmit={submit} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="user-name">Name</Label>
-            <Input
-              id="user-name"
-              value={form.name}
-              onChange={(e) => setForm((current) => ({ ...current, name: e.target.value }))}
-              placeholder="Ava Singh"
-              required
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="user-email">Email</Label>
-            <Input
-              id="user-email"
-              type="email"
-              value={form.email}
-              onChange={(e) => setForm((current) => ({ ...current, email: e.target.value }))}
-              placeholder="ava@limekraft.com"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="user-phone">Phone</Label>
-            <Input
-              id="user-phone"
-              value={form.phone}
-              onChange={(e) => setForm((current) => ({ ...current, phone: e.target.value }))}
-              placeholder="9876543210"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="user-role">Role</Label>
-            <select
-              id="user-role"
-              value={form.role}
-              onChange={(e) => setForm((current) => ({ ...current, role: e.target.value as RoleName }))}
-              className={selectClass}
-            >
-              {ROLE_OPTIONS.map((role) => (
-                <option key={role} value={role}>
-                  {role.replace(/_/g, " ")}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {error && (
-            <p role="alert" className="flex items-start gap-2 rounded-lg bg-destructive/8 p-3 text-sm text-destructive">
-              <AlertCircle className="mt-0.5 size-4 shrink-0" />
-              {error}
-            </p>
-          )}
-
-          <div className="flex gap-3">
-            <Button type="submit" disabled={saving}>
-              {saving && <Loader2 className="size-4 animate-spin" />}
-              {editingId ? "Update user" : "Add user"}
-            </Button>
-            {editingId && (
-              <Button type="button" variant="outline" onClick={resetForm}>
-                Clear
-              </Button>
-            )}
-          </div>
-        </form>
-      </section>
-
-      <section className="rounded-xl border border-border bg-card p-5">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-              <UserRound className="size-4" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                Team
-              </p>
-              <h2 className="mt-1 text-lg font-semibold text-foreground">Backend users</h2>
-            </div>
-          </div>
-          <Badge className="border-chart-3/25 bg-chart-3/10 text-chart-3">{users.length} total</Badge>
-        </div>
-
-        <div className="space-y-3">
-          {users.map((user) => (
-            <div
-              key={user.id}
-              className="flex flex-col gap-3 rounded-lg border border-border bg-background/60 p-3 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="font-medium text-foreground">{user.name}</p>
-                  <Badge className="border-border bg-muted text-muted-foreground">
-                    {user.role.replace(/_/g, " ").toLowerCase()}
-                  </Badge>
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {user.email ?? user.phone ?? "No contact on file"}
-                  {user.propertyAssignments && user.propertyAssignments.length > 0
-                    ? ` · ${user.propertyAssignments.length} property assignments`
-                    : ""}
-                </p>
-              </div>
-
-              <Button type="button" variant="outline" size="sm" onClick={() => startEdit(user)}>
-                <PencilLine className="size-3.5" />
-                Edit
-              </Button>
-            </div>
+    <form id="user-form" onSubmit={submit} className="space-y-4">
+      <Field label="Name" required>
+        <Input value={name} onChange={(e) => setName(e.target.value)} autoComplete="off" className={fieldControlClass} />
+      </Field>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Phone">
+          <Input type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91" className={fieldControlClass} />
+        </Field>
+        <Field label="Email">
+          <Input type="email" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} className={fieldControlClass} />
+        </Field>
+      </div>
+      <Field label="Role" hint={ROLE_OPTIONS.find((r) => r.value === role)?.hint}>
+        <NativeSelect value={role} onChange={(e) => setRole(e.target.value as RoleName)}>
+          {ROLE_OPTIONS.map((r) => (
+            <option key={r.value} value={r.value}>
+              {r.label}
+            </option>
           ))}
+        </NativeSelect>
+      </Field>
 
-          {users.length === 0 && (
-            <div className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">
-              No backend users yet.
-            </div>
-          )}
-        </div>
-      </section>
-    </div>
+      {scopable && properties.length > 0 && (
+        <fieldset>
+          <legend className="mb-1.5 text-xs font-semibold text-muted-foreground">Properties they can access</legend>
+          <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border">
+            {properties.map((p) => (
+              <li key={p.id}>
+                <label className="flex min-h-12 cursor-pointer items-center gap-3 bg-card px-3.5 py-2.5">
+                  <input
+                    type="checkbox"
+                    checked={selected.has(p.id)}
+                    onChange={() => toggle(p.id)}
+                    className="size-5 accent-[var(--color-brand-blue)]"
+                  />
+                  <span className="text-sm text-foreground">{p.name}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            {selected.size === 0
+              ? "None ticked = access to every property. Tick some to limit them to those."
+              : `Limited to ${selected.size} ${selected.size === 1 ? "property" : "properties"} - portfolio-wide screens are hidden.`}
+          </p>
+        </fieldset>
+      )}
+
+      <FormError>{error}</FormError>
+    </form>
   );
 }

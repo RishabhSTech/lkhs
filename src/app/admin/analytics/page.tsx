@@ -8,10 +8,13 @@ import {
 } from "@/lib/queries/admin-metrics";
 import { getPortfolioFinance } from "@/lib/queries/finance";
 import { formatINR, formatINRCompact, formatPercent } from "@/lib/format";
+import { requirePortfolioAccess } from "@/lib/auth/guards";
+import { OFFICE_ROLES } from "@/lib/auth/roles";
 
 export const dynamic = "force-dynamic";
 
 export default async function AnalyticsPage() {
+  await requirePortfolioAccess(OFFICE_ROLES);
   const [kpis, revenue, occupancy, finance] = await Promise.all([
     getPortfolioKpis(),
     getRevenueSeries(12),

@@ -3,6 +3,8 @@ import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getCurrentAdminUser } from "@/lib/auth/current-user";
+import { guardApi, inScope, outOfScope } from "@/lib/auth/guards";
+import { INVENTORY_ROLES } from "@/lib/auth/roles";
 import { sanitizeDescriptionHtml } from "@/lib/property/rich-text";
 
 const patchSchema = z.object({
@@ -39,7 +41,10 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "Nothing to update." }, { status: 400 });
   }
 
-  const { user } = await getCurrentAdminUser();
+  const auth = await guardApi(INVENTORY_ROLES);
+  if ("error" in auth) return auth.error;
+  const { user, scope } = auth;
+  if (!inScope(scope, propertyId)) return outOfScope();
 
   if (slug !== undefined) {
     const existing = await db.property.findUnique({ where: { slug }, select: { id: true } });

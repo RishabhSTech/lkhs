@@ -170,7 +170,7 @@ export function CommandPalette({
             </CommandGroup>
 
             <CommandGroup heading="Quick actions">
-              <CommandItem onSelect={() => go("/admin/finance/expenses/new")}>
+              <CommandItem onSelect={() => go("/admin/finance/expenses?add=1")}>
                 <CreditCard />
                 Add an expense
               </CommandItem>

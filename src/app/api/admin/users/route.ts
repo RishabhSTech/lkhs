@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { getCurrentAdminUser } from "@/lib/auth/current-user";
 import { db } from "@/lib/db";
+import { SCOPABLE_ROLES } from "@/lib/auth/roles";
 
 const roleEnum = z.enum([
   "SUPER_ADMIN",
@@ -19,7 +20,19 @@ const userPayload = z.object({
   email: z.string().trim().email("Enter a valid email.").optional().or(z.literal("")),
   phone: z.string().trim().min(7, "Phone must be at least 7 digits.").optional().or(z.literal("")),
   role: roleEnum,
+  // Which properties this person is limited to; empty = whole portfolio.
+  propertyIds: z.array(z.string().min(1)).max(200).optional(),
 });
+
+const memberInclude = {
+  propertyAssignments: { include: { property: { select: { id: true, name: true } } } },
+} as const;
+
+function assignmentsFor(role: string, propertyIds: string[] | undefined) {
+  if (propertyIds === undefined) return undefined;
+  // Super admins and admins are never property-scoped.
+  return SCOPABLE_ROLES.includes(role as never) ? propertyIds : [];
+}
 
 const updateUserPayload = userPayload.extend({
   id: z.string().min(1, "User not found."),
@@ -46,7 +59,7 @@ export async function GET() {
   }
 
   const members = await db.user.findMany({
-    include: { propertyAssignments: { include: { property: { select: { name: true } } } } },
+    include: memberInclude,
     orderBy: { name: "asc" },
   });
 
@@ -66,13 +79,18 @@ export async function POST(request: Request) {
 
   try {
     const { email, phone } = normalizeContact(parsed.data.email, parsed.data.phone);
+    const propertyIds = assignmentsFor(parsed.data.role, parsed.data.propertyIds);
     const member = await db.user.create({
       data: {
         name: parsed.data.name,
         email,
         phone,
         role: parsed.data.role,
+        propertyAssignments: propertyIds?.length
+          ? { create: propertyIds.map((propertyId) => ({ propertyId })) }
+          : undefined,
       },
+      include: memberInclude,
     });
 
     await db.auditLog.create({
@@ -109,14 +127,38 @@ export async function PATCH(request: Request) {
 
   try {
     const { email, phone } = normalizeContact(parsed.data.email, parsed.data.phone);
-    const member = await db.user.update({
-      where: { id: parsed.data.id },
-      data: {
-        name: parsed.data.name,
-        email,
-        phone,
-        role: parsed.data.role,
-      },
+
+    // Guard against locking everyone out of user management.
+    const target = await db.user.findUnique({ where: { id: parsed.data.id }, select: { role: true } });
+    if (!target) {
+      return NextResponse.json({ error: "That user no longer exists." }, { status: 404 });
+    }
+    if (target.role === "SUPER_ADMIN" && parsed.data.role !== "SUPER_ADMIN") {
+      if (parsed.data.id === user.id) {
+        return NextResponse.json({ error: "You can't remove your own super admin access." }, { status: 409 });
+      }
+      const superAdmins = await db.user.count({ where: { role: "SUPER_ADMIN" } });
+      if (superAdmins <= 1) {
+        return NextResponse.json({ error: "Keep at least one super admin." }, { status: 409 });
+      }
+    }
+
+    const propertyIds = assignmentsFor(parsed.data.role, parsed.data.propertyIds);
+    const member = await db.$transaction(async (tx) => {
+      if (propertyIds !== undefined) {
+        await tx.propertyAssignment.deleteMany({ where: { userId: parsed.data.id } });
+        if (propertyIds.length) {
+          await tx.propertyAssignment.createMany({
+            data: propertyIds.map((propertyId) => ({ userId: parsed.data.id, propertyId })),
+            skipDuplicates: true,
+          });
+        }
+      }
+      return tx.user.update({
+        where: { id: parsed.data.id },
+        data: { name: parsed.data.name, email, phone, role: parsed.data.role },
+        include: memberInclude,
+      });
     });
 
     await db.auditLog.create({

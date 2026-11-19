@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { getCurrentAdminUser } from "@/lib/auth/current-user";
+import { guardApi, inScope, outOfScope } from "@/lib/auth/guards";
+import { LISTING_ROLES } from "@/lib/auth/roles";
 import { parseISODate } from "@/lib/dates";
 import { REVIEW_TOPIC_BY_CODE } from "@/lib/property/review-topics";
 
@@ -60,7 +61,9 @@ async function revalidateListing(propertyId: string) {
  * verified stay on the listing.
  */
 export async function POST(request: Request) {
-  const { user } = await getCurrentAdminUser();
+  const auth = await guardApi(LISTING_ROLES);
+  if ("error" in auth) return auth.error;
+  const { user, scope } = auth;
 
   const parsed = createSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
@@ -70,6 +73,7 @@ export async function POST(request: Request) {
     );
   }
   const data = parsed.data;
+  if (!inScope(scope, data.propertyId)) return outOfScope();
 
   const property = await db.property.findUnique({
     where: { id: data.propertyId },
@@ -128,7 +132,9 @@ export async function POST(request: Request) {
 
 /** Moderation: publish, hide, feature, or reply to an existing review. */
 export async function PATCH(request: Request) {
-  const { user } = await getCurrentAdminUser();
+  const auth = await guardApi(LISTING_ROLES);
+  if ("error" in auth) return auth.error;
+  const { user, scope } = auth;
 
   const parsed = updateSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
@@ -143,6 +149,7 @@ export async function PATCH(request: Request) {
   if (!existing) {
     return NextResponse.json({ error: "That review no longer exists." }, { status: 404 });
   }
+  if (!inScope(scope, existing.propertyId)) return outOfScope();
 
   const response = data.response?.trim() || null;
 
@@ -190,7 +197,9 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const { user } = await getCurrentAdminUser();
+  const auth = await guardApi(LISTING_ROLES);
+  if ("error" in auth) return auth.error;
+  const { user, scope } = auth;
   const id = new URL(request.url).searchParams.get("id");
   if (!id) {
     return NextResponse.json({ error: "We couldn't tell which review that was." }, { status: 400 });
@@ -203,6 +212,7 @@ export async function DELETE(request: Request) {
   if (!existing) {
     return NextResponse.json({ error: "That review no longer exists." }, { status: 404 });
   }
+  if (!inScope(scope, existing.propertyId)) return outOfScope();
   // A guest's own review is hidden, never deleted - deleting it would let a
   // bad review be made to disappear with no trace and no way back.
   if (existing.guestId) {

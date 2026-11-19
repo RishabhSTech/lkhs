@@ -6,10 +6,13 @@ import { addDays, addMonths, todayUTC } from "@/lib/dates";
 import { formatDateShort, formatINR } from "@/lib/format";
 import { PricingRuleEditor } from "@/components/admin/pricing-rule-editor";
 import { DailyRateEditor } from "@/components/admin/daily-rate-editor";
+import { requirePortfolioAccess } from "@/lib/auth/guards";
+import { INVENTORY_ROLES } from "@/lib/auth/roles";
 
 export const dynamic = "force-dynamic";
 
 export default async function PricingPage() {
+  await requirePortfolioAccess(INVENTORY_ROLES);
   const today = todayUTC();
   const horizon = addMonths(today, 3);
 

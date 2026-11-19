@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { getCurrentAdminUser } from "@/lib/auth/current-user";
+import { guardApi, inScope, outOfScope } from "@/lib/auth/guards";
+import { BOOKING_WRITE_ROLES } from "@/lib/auth/roles";
 import {
   createReservation,
   confirmReservation,
@@ -25,6 +26,8 @@ const schema = z.object({
   platformFee: z.number().nonnegative().default(0),
   hostTax: z.number().nonnegative().default(0),
   otherCharges: z.number().nonnegative().default(0),
+  internalNotes: z.string().max(2000).optional(),
+  notifyGuest: z.boolean().default(true),
 });
 
 export async function POST(request: Request) {
@@ -36,8 +39,11 @@ export async function POST(request: Request) {
     );
   }
 
-  const { user } = await getCurrentAdminUser();
+  const auth = await guardApi(BOOKING_WRITE_ROLES, "You don't have permission to add bookings.");
+  if ("error" in auth) return auth.error;
+  const { user, scope } = auth;
   const data = parsed.data;
+  if (!inScope(scope, data.propertyId)) return outOfScope();
   const checkIn = new Date(`${data.checkIn}T00:00:00.000Z`);
   const checkOut = new Date(`${data.checkOut}T00:00:00.000Z`);
 
@@ -79,8 +85,15 @@ export async function POST(request: Request) {
       },
     });
 
+    if (data.internalNotes?.trim()) {
+      await db.reservation.update({
+        where: { id: result.reservation.id },
+        data: { internalNotes: data.internalNotes.trim() },
+      });
+    }
+
     if (data.status === "CONFIRMED") {
-      await confirmReservation(result.reservation.id);
+      await confirmReservation(result.reservation.id, { notifyGuest: data.notifyGuest });
     }
 
     await db.auditLog.create({

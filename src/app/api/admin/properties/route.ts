@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { getCurrentAdminUser } from "@/lib/auth/current-user";
+import { guardApi } from "@/lib/auth/guards";
+import { SETTINGS_ROLES } from "@/lib/auth/roles";
 
 const schema = z.object({
   name: z.string().min(2, "Give the property a name."),
@@ -37,7 +38,9 @@ export async function POST(request: Request) {
     );
   }
   const data = parsed.data;
-  const { user } = await getCurrentAdminUser();
+  const auth = await guardApi(SETTINGS_ROLES, "Only admins can add properties.");
+  if ("error" in auth) return auth.error;
+  const { user } = auth;
 
   const baseSlug = slugify(data.name);
   let slug = baseSlug;

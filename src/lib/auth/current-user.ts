@@ -3,6 +3,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
+import type { RoleName } from "@prisma/client";
 import { ADMIN_ROLES, STAKEHOLDER_ROLES } from "@/lib/auth/session-shared";
 
 // Demo fallback is off by default. Real deployments should never set this -
@@ -10,7 +11,9 @@ import { ADMIN_ROLES, STAKEHOLDER_ROLES } from "@/lib/auth/session-shared";
 // src/proxy.ts enforces the same flag before these ever run, but this is the
 // authoritative check: it re-verifies the session against the database and
 // the required role, rather than trusting the JWT's claims alone.
-const DEMO_FALLBACK_ENABLED = process.env.ALLOW_DEMO_FALLBACK === "true";
+// Never in production: it signs every visitor in as the first super admin.
+const DEMO_FALLBACK_ENABLED =
+  process.env.ALLOW_DEMO_FALLBACK === "true" && process.env.NODE_ENV !== "production";
 
 export const getCurrentAdminUser = cache(async () => {
   const session = await getSession();
@@ -32,6 +35,13 @@ export const getCurrentAdminUser = cache(async () => {
 
   return { user: fallback, isDemoFallback: true };
 });
+
+/** Page guard: sends anyone outside `roles` back to the admin home. */
+export async function requireAdminRole(roles: RoleName[]) {
+  const result = await getCurrentAdminUser();
+  if (!roles.includes(result.user.role)) redirect("/admin");
+  return result;
+}
 
 export const getCurrentStakeholder = cache(async () => {
   const session = await getSession();
