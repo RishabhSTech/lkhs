@@ -386,11 +386,18 @@ export async function upsertBookingFromEmail(args: {
             checkOut,
             adults: extraction.guestsCount ?? existing.adults,
             status: "CONFIRMED",
-            nightlyRate: new Prisma.Decimal(pricing.nightlyRate),
             nights: nights.length,
-            subtotal: new Prisma.Decimal(pricing.subtotal),
-            total: new Prisma.Decimal(pricing.total),
-            rawData,
+            // A follow-up email with no host amount (e.g. Agoda's short
+            // "New booking confirmed") must not overwrite the amount we
+            // already took from the first email with a rate-card guess.
+            ...(extraction.amountTotal || datesChanged
+              ? {
+                  nightlyRate: new Prisma.Decimal(pricing.nightlyRate),
+                  subtotal: new Prisma.Decimal(pricing.subtotal),
+                  total: new Prisma.Decimal(pricing.total),
+                  rawData,
+                }
+              : {}),
           },
         });
       });
