@@ -65,7 +65,7 @@ export default async function ReservationsPage({
     ],
   };
 
-  const [rows, properties, arrivals, inhouse, departures, pending] = await Promise.all([
+  const [rows, properties, arrivals, inhouse, departures, pending, matching] = await Promise.all([
     db.reservation.findMany({
       where,
       include: {
@@ -80,6 +80,13 @@ export default async function ReservationsPage({
     db.reservation.count({ where: viewWhere.inhouse }),
     db.reservation.count({ where: viewWhere.departures }),
     db.reservation.count({ where: viewWhere.pending }),
+    // Every booking matching the filters (not just the loaded page); cancelled
+    // ones never bring in money, so they stay out of the total.
+    db.reservation.aggregate({
+      where: { AND: [where, { status: { not: "CANCELLED" } }] },
+      _sum: { total: true },
+      _count: { _all: true },
+    }),
   ]);
   const hasMore = rows.length > limit;
   const reservations = rows.slice(0, limit);
@@ -132,6 +139,7 @@ export default async function ReservationsPage({
           filters={{ q, view, propertyId, status, source, limit }}
           counts={{ arrivals, inhouse, departures, pending }}
           hasMore={hasMore}
+          matchingTotal={{ count: matching._count._all, amount: Number(matching._sum.total ?? 0) }}
           today={toISODate(today)}
           canWrite={canWrite}
           selected={

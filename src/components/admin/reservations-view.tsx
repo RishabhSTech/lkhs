@@ -98,6 +98,7 @@ export function ReservationsView({
   filters,
   counts,
   hasMore,
+  matchingTotal,
   selected,
   today,
   canWrite,
@@ -107,11 +108,21 @@ export function ReservationsView({
   filters: { q?: string; view: ReservationViewKey; propertyId?: string; status?: string; source?: string; limit: number };
   counts: Record<"arrivals" | "inhouse" | "departures" | "pending", number>;
   hasMore: boolean;
+  /** All bookings matching the filters, cancelled excluded. */
+  matchingTotal: { count: number; amount: number };
   selected: ReservationDetail | null;
   today: string;
   canWrite: boolean;
 }) {
   const router = useRouter();
+
+  // Totals for the rows on screen; cancelled bookings bring in no money.
+  const counted = reservations.filter((r) => r.status !== "CANCELLED");
+  const shownTotal = counted.reduce((sum, r) => sum + r.total, 0);
+  const cancelledShown = reservations.length - counted.length;
+  const totalLabel = `Total · ${counted.length} ${counted.length === 1 ? "booking" : "bookings"}${
+    cancelledShown ? ` (excl. ${cancelledShown} cancelled)` : ""
+  }`;
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { openBooking } = useQuickAdd();
@@ -310,6 +321,21 @@ export function ReservationsView({
                   </tr>
                 ))}
               </tbody>
+              <tfoot>
+                <tr className="border-t-2 border-border bg-muted/40">
+                  <td colSpan={6} className="px-4 py-3 text-sm font-semibold text-foreground">
+                    {totalLabel}
+                    {hasMore && (
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">
+                        All {matchingTotal.count} matching: {formatINR(matchingTotal.amount)}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right text-sm font-semibold tabular-nums text-foreground">
+                    {formatINR(shownTotal)}
+                  </td>
+                </tr>
+              </tfoot>
             </table>
           </div>
 
@@ -358,6 +384,19 @@ export function ReservationsView({
               );
             })}
           </ul>
+
+          {/* Phone total */}
+          <div className="mt-3 rounded-xl border border-border bg-muted/40 px-4 py-3 lg:hidden">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-sm font-semibold text-foreground">{totalLabel}</span>
+              <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground">{formatINR(shownTotal)}</span>
+            </div>
+            {hasMore && (
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                All {matchingTotal.count} matching: {formatINR(matchingTotal.amount)}
+              </p>
+            )}
+          </div>
 
           {hasMore && (
             <div className="mt-4 flex justify-center">
