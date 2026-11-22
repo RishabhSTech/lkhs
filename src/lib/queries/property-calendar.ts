@@ -4,6 +4,7 @@ import {
   endOfMonthUTC, startOfMonthUTC, toISODate, toUTCDate,
 } from "@/lib/dates";
 import { buildQuote } from "@/lib/pricing/engine";
+import { operatingProperty } from "@/lib/property/back-office";
 
 export type PropertyDay = {
   date: string;
@@ -130,6 +131,7 @@ export async function getPropertyMonth(propertyId: string, month: Date) {
 /** Ordered property list so the calendar can step between them with arrows. */
 export async function getPropertyNavigation() {
   return db.property.findMany({
+    where: operatingProperty,
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   });

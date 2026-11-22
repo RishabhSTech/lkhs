@@ -4,6 +4,7 @@ import { buildPL, PL_TRANSACTION_SELECT } from "@/lib/finance/calculations";
 import { buildPortfolioReportPdf, buildTransactionsReportPdf } from "@/lib/finance/pdf";
 import { guardApi } from "@/lib/auth/guards";
 import { FINANCE_ROLES } from "@/lib/auth/roles";
+import { onOperatingProperty, operatingProperty } from "@/lib/property/back-office";
 
 function toCsv(rows: (string | number)[][]) {
   return rows
@@ -31,7 +32,7 @@ export async function GET(request: Request) {
 
   if (type === "transactions") {
     const txs = await db.transaction.findMany({
-      where: propertyId ? { propertyId } : {},
+      where: { ...(propertyId ? { propertyId } : {}), ...onOperatingProperty },
       include: {
         category: true,
         property: { select: { name: true } },
@@ -83,6 +84,7 @@ export async function GET(request: Request) {
   }
 
   const properties = await db.property.findMany({
+    where: operatingProperty,
     include: { transactions: { select: PL_TRANSACTION_SELECT } },
     orderBy: { name: "asc" },
   });

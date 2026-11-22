@@ -151,6 +151,7 @@ export default async function AdminPropertyPage({
                 propertyId={property.id}
                 propertyName={property.name}
                 status={property.status}
+                excludeFromBackOffice={property.excludeFromBackOffice}
               />
               <Button
                 render={<Link href={`/stays/${property.slug}`} target="_blank" />}

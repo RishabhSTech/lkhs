@@ -97,15 +97,22 @@ export default async function PropertiesPage() {
                       {property.locationArea}, {property.city}
                     </p>
                   </div>
-                  <Badge
-                    className={
-                      property.status === "ACTIVE"
-                        ? "border-chart-1/25 bg-chart-1/10 text-chart-1"
-                        : "border-chart-4/25 bg-chart-4/10 text-chart-4"
-                    }
-                  >
-                    {property.status.toLowerCase()}
-                  </Badge>
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <Badge
+                      className={
+                        property.status === "ACTIVE"
+                          ? "border-chart-1/25 bg-chart-1/10 text-chart-1"
+                          : "border-chart-4/25 bg-chart-4/10 text-chart-4"
+                      }
+                    >
+                      {property.status.toLowerCase()}
+                    </Badge>
+                    {property.excludeFromBackOffice && (
+                      <Badge variant="outline" className="text-muted-foreground">
+                        hidden from back office
+                      </Badge>
+                    )}
+                  </div>
                 </div>
 
                 <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2.5 border-t border-border pt-3 text-sm">

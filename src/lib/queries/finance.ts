@@ -8,6 +8,7 @@ import {
   buildChannelProfitability, buildMonthlySeries, buildPL,
   PL_TRANSACTION_SELECT, type TxWithCategory,
 } from "@/lib/finance/calculations";
+import { onOperatingProperty, operatingProperty } from "@/lib/property/back-office";
 
 export type PropertyFinance = Awaited<ReturnType<typeof getPropertyFinance>>;
 
@@ -85,6 +86,7 @@ export async function getPortfolioFinance(monthsBack = 6) {
   const monthEnd = endOfMonthUTC(today);
 
   const properties = await db.property.findMany({
+    where: operatingProperty,
     include: {
       transactions: { select: PL_TRANSACTION_SELECT },
     },
@@ -138,6 +140,7 @@ export async function getExpenses(options?: {
   return db.transaction.findMany({
     where: {
       type: { in: ["EXPENSE", "INVESTMENT", "DEPOSIT_OUT"] },
+      ...onOperatingProperty,
       ...(options?.propertyId
         ? { propertyId: options.propertyId }
         : options?.propertyIds

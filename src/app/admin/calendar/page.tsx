@@ -31,7 +31,8 @@ export default async function CalendarPage({
 
   // Per-property month view
   if (isMonthView && navigation.length > 0) {
-    const activeId = propertyId && inScope(scope, propertyId) ? propertyId : navigation[0]?.id;
+    // Only properties on the navigation list - retired ones are left out.
+    const activeId = propertyId && navigation.some((p) => p.id === propertyId) ? propertyId : navigation[0].id;
     const month = monthParam
       ? parseISODate(`${monthParam}-01`)
       : todayUTC();

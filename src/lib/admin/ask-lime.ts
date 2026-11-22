@@ -1,5 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
+import { onOperatingProperty, onOperatingUnit, operatingProperty } from "@/lib/property/back-office";
 import {
   addDays, endOfMonthUTC, startOfMonthUTC, todayUTC,
 } from "@/lib/dates";
@@ -58,7 +59,7 @@ export async function askLime(question: string): Promise<AskLimeAnswer> {
 
 async function arrivals(date: Date, label: string): Promise<AskLimeAnswer> {
   const reservations = await db.reservation.findMany({
-    where: { checkIn: date, status: { in: ["CONFIRMED", "COMPLETED"] } },
+    where: { checkIn: date, status: { in: ["CONFIRMED", "COMPLETED"] }, ...onOperatingProperty },
     include: {
       guest: { select: { name: true } },
       property: { select: { name: true } },
@@ -84,6 +85,7 @@ async function arrivals(date: Date, label: string): Promise<AskLimeAnswer> {
 
 async function propertyPLs() {
   const properties = await db.property.findMany({
+    where: operatingProperty,
     select: { name: true, transactions: { select: PL_TRANSACTION_SELECT } },
   });
 
@@ -140,7 +142,7 @@ async function budgetStatus(): Promise<AskLimeAnswer> {
   const monthEnd = endOfMonthUTC(today);
 
   const budgets = await db.budget.findMany({
-    where: { month: monthStart },
+    where: { month: monthStart, ...onOperatingProperty },
     include: {
       property: { select: { name: true } },
       category: { select: { name: true } },
@@ -214,6 +216,7 @@ async function spendByCategory(q: string): Promise<AskLimeAnswer> {
     where: {
       type: "EXPENSE",
       date: { gte: from, lte: to },
+      ...onOperatingProperty,
       ...(categoryMatch
         ? { category: { name: { equals: categoryMatch, mode: "insensitive" } } }
         : {}),
@@ -270,6 +273,7 @@ async function revenueSummary(q: string): Promise<AskLimeAnswer> {
   const to = endOfMonthUTC(anchor);
 
   const properties = await db.property.findMany({
+    where: operatingProperty,
     include: {
       transactions: {
         where: { date: { gte: from, lte: to } },
@@ -314,7 +318,7 @@ async function revenueSummary(q: string): Promise<AskLimeAnswer> {
 
 async function pricingRecommendation(): Promise<AskLimeAnswer> {
   const today = todayUTC();
-  const unitCount = await db.unit.count();
+  const unitCount = await db.unit.count({ where: onOperatingProperty });
 
   // Look at the next Friday/Saturday pair.
   const daysToFriday = (5 - today.getUTCDay() + 7) % 7 || 7;
@@ -322,7 +326,7 @@ async function pricingRecommendation(): Promise<AskLimeAnswer> {
   const sunday = addDays(friday, 2);
 
   const booked = await db.inventoryNight.count({
-    where: { date: { gte: friday, lt: sunday }, reservationId: { not: null } },
+    where: { date: { gte: friday, lt: sunday }, reservationId: { not: null }, ...onOperatingUnit },
   });
   const capacity = unitCount * 2;
   const occupancy = capacity > 0 ? (booked / capacity) * 100 : 0;

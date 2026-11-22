@@ -4,6 +4,7 @@ import { ExpenseList } from "@/components/admin/expense-list";
 import { Plus } from "lucide-react";
 import { db } from "@/lib/db";
 import { propertyScopeFilter, requireAdminPage, scopeFilter } from "@/lib/auth/guards";
+import { onOperatingProperty, operatingProperty } from "@/lib/property/back-office";
 import { EXPENSE_SUBMIT_ROLES, FINANCE_ROLES } from "@/lib/auth/roles";
 import { getExpenses } from "@/lib/queries/finance";
 import { formatINR } from "@/lib/format";
@@ -29,12 +30,13 @@ export default async function ExpensesPage({
 
   const [expenses, properties, pendingCount] = await Promise.all([
     getExpenses({ propertyId, propertyIds: scope ?? undefined, status, createdById }),
-    db.property.findMany({ where: propertyScopeFilter(scope), select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    db.property.findMany({ where: { ...propertyScopeFilter(scope), ...operatingProperty }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
     db.transaction.count({
       where: {
         type: { in: ["EXPENSE", "INVESTMENT", "DEPOSIT_OUT"] },
         status: "PENDING",
         ...scopeFilter(scope),
+        ...onOperatingProperty,
         ...(createdById ? { createdById } : {}),
       },
     }),

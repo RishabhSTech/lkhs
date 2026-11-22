@@ -7,6 +7,7 @@ import {
 import {
   buildMonthlySeries, buildPL, type TxWithCategory,
 } from "@/lib/finance/calculations";
+import { onOperatingProperty, onOperatingUnit } from "@/lib/property/back-office";
 
 /**
  * The admin layout (top-bar bell) and the dashboard page (Alerts panel)
@@ -52,29 +53,30 @@ export async function getPortfolioKpis(): Promise<PortfolioKpis> {
     pendingPayments,
   ] = await Promise.all([
     db.transaction.aggregate({
-      where: { type: "REVENUE", date: today },
+      where: { type: "REVENUE", date: today, ...onOperatingProperty },
       _sum: { amount: true },
     }),
-    db.unit.count(),
+    db.unit.count({ where: onOperatingProperty }),
     db.inventoryNight.count({
-      where: { date: { gte: monthStart, lte: monthEnd }, reservationId: { not: null } },
+      where: { date: { gte: monthStart, lte: monthEnd }, reservationId: { not: null }, ...onOperatingUnit },
     }),
     db.reservation.findMany({
       where: {
         status: { in: ["CONFIRMED", "COMPLETED"] },
         checkIn: { gte: monthStart, lte: monthEnd },
+        ...onOperatingProperty,
       },
       select: { subtotal: true, nights: true },
     }),
     db.reservation.count({
-      where: { checkIn: today, status: { in: ["CONFIRMED", "COMPLETED"] } },
+      where: { checkIn: today, status: { in: ["CONFIRMED", "COMPLETED"] }, ...onOperatingProperty },
     }),
     db.reservation.count({
-      where: { checkOut: today, status: { in: ["CONFIRMED", "COMPLETED"] } },
+      where: { checkOut: today, status: { in: ["CONFIRMED", "COMPLETED"] }, ...onOperatingProperty },
     }),
-    db.maintenanceTask.count({ where: { status: { in: ["OPEN", "IN_PROGRESS"] } } }),
+    db.maintenanceTask.count({ where: { status: { in: ["OPEN", "IN_PROGRESS"] }, ...onOperatingProperty } }),
     db.transaction.aggregate({
-      where: { status: { in: ["PENDING", "OVERDUE"] }, type: "EXPENSE" },
+      where: { status: { in: ["PENDING", "OVERDUE"] }, type: "EXPENSE", ...onOperatingProperty },
       _sum: { amount: true },
     }),
   ]);
@@ -111,7 +113,7 @@ export async function getRevenueSeries(monthsBack = 6) {
   const from = startOfMonthUTC(addMonths(today, -(monthsBack - 1)));
 
   const txs = (await db.transaction.findMany({
-    where: { date: { gte: from } },
+    where: { date: { gte: from }, ...onOperatingProperty },
     include: { category: true },
   })) as TxWithCategory[];
 
@@ -128,11 +130,12 @@ export async function getOccupancySeries(monthsBack = 6) {
   const rangeEnd = endOfMonthUTC(today);
 
   const [unitCount, nights] = await Promise.all([
-    db.unit.count(),
+    db.unit.count({ where: onOperatingProperty }),
     db.inventoryNight.findMany({
       where: {
         date: { gte: rangeStart, lte: rangeEnd },
         reservationId: { not: null },
+        ...onOperatingUnit,
       },
       select: { date: true },
     }),
@@ -162,7 +165,7 @@ export async function getOccupancySeries(monthsBack = 6) {
 export async function getUpcomingReservations(limit = 6) {
   const today = todayUTC();
   return db.reservation.findMany({
-    where: { checkIn: { gte: today }, status: "CONFIRMED" },
+    where: { checkIn: { gte: today }, status: "CONFIRMED", ...onOperatingProperty },
     include: {
       property: { select: { name: true } },
       guest: { select: { name: true } },
@@ -176,21 +179,21 @@ export async function getTodayOperations() {
   const today = todayUTC();
   const [arrivals, departures, cleaning] = await Promise.all([
     db.reservation.findMany({
-      where: { checkIn: today, status: { in: ["CONFIRMED", "COMPLETED"] } },
+      where: { checkIn: today, status: { in: ["CONFIRMED", "COMPLETED"] }, ...onOperatingProperty },
       include: {
         property: { select: { name: true } },
         guest: { select: { name: true, phone: true } },
       },
     }),
     db.reservation.findMany({
-      where: { checkOut: today, status: { in: ["CONFIRMED", "COMPLETED"] } },
+      where: { checkOut: today, status: { in: ["CONFIRMED", "COMPLETED"] }, ...onOperatingProperty },
       include: {
         property: { select: { name: true } },
         guest: { select: { name: true } },
       },
     }),
     db.cleaningTask.findMany({
-      where: { status: { not: "READY" }, scheduledDate: { lte: today } },
+      where: { status: { not: "READY" }, scheduledDate: { lte: today }, ...onOperatingProperty },
       include: {
         property: { select: { name: true } },
         assignedTo: { select: { name: true } },
@@ -205,6 +208,7 @@ export async function getTodayOperations() {
 
 export async function getChannelHealth() {
   const channelProperties = await db.channelProperty.findMany({
+    where: onOperatingProperty,
     include: {
       channel: true,
       property: { select: { name: true } },
@@ -243,6 +247,7 @@ export async function getCurrentMonthPL() {
   const txs = (await db.transaction.findMany({
     where: {
       date: { gte: startOfMonthUTC(today), lte: endOfMonthUTC(today) },
+      ...onOperatingProperty,
     },
     include: { category: true },
   })) as TxWithCategory[];

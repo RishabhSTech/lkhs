@@ -9,6 +9,7 @@ import { CLEANING_STAFF_ROLES } from "@/lib/auth/roles";
 import { getUnreadNotifications } from "@/lib/queries/admin-metrics";
 import { getExpenseCategories } from "@/lib/queries/finance";
 import { db } from "@/lib/db";
+import { operatingProperty } from "@/lib/property/back-office";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +35,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const [notifications, properties, categories, staff] = await Promise.all([
     scope ? Promise.resolve([]) : getUnreadNotifications(),
     db.property.findMany({
-      where: propertyScopeFilter(scope),
+      where: { ...propertyScopeFilter(scope), ...operatingProperty },
       select: {
         id: true,
         name: true,

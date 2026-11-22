@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { addDays, toISODate, toUTCDate } from "@/lib/dates";
+import { onOperatingProperty, onOperatingUnit } from "@/lib/property/back-office";
 
 export type CalendarBlock = {
   reservationId: string | null;
@@ -31,12 +32,13 @@ export async function getCalendarData(from: Date, days: number) {
   const end = addDays(start, days);
 
   const units = await db.unit.findMany({
+    where: onOperatingProperty,
     include: { property: { select: { id: true, name: true } } },
     orderBy: [{ property: { name: "asc" } }, { name: "asc" }],
   });
 
   const nights = await db.inventoryNight.findMany({
-    where: { date: { gte: start, lt: end } },
+    where: { date: { gte: start, lt: end }, ...onOperatingUnit },
     include: {
       reservation: {
         include: { guest: { select: { name: true } } },

@@ -6,6 +6,7 @@ import { RevenueChart } from "@/components/charts/revenue-chart";
 import { ChannelProfitTable } from "@/components/admin/channel-profit-table";
 import { Badge } from "@/components/ui/badge";
 import { db } from "@/lib/db";
+import { onOperatingProperty } from "@/lib/property/back-office";
 import { getPortfolioFinance } from "@/lib/queries/finance";
 import { SOURCE_LABELS, sourceBadgeClass } from "@/lib/admin/sources";
 import { formatDateLong, formatINR, formatINRCompact } from "@/lib/format";
@@ -20,7 +21,7 @@ export default async function RevenuePage() {
   const [finance, recentRevenue] = await Promise.all([
     getPortfolioFinance(12),
     db.transaction.findMany({
-      where: { type: "REVENUE" },
+      where: { type: "REVENUE", ...onOperatingProperty },
       include: {
         property: { select: { id: true, name: true } },
         reservation: {

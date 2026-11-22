@@ -11,6 +11,7 @@ import { propertyScopeFilter, requireAdminPage, scopeFilter } from "@/lib/auth/g
 import { CLEANING_MANAGE_ROLES, CLEANING_STAFF_ROLES } from "@/lib/auth/roles";
 import { addDays, toISODate, todayUTC } from "@/lib/dates";
 import { syncTurnoverTasks } from "@/lib/operations/turnovers";
+import { onOperatingProperty, operatingProperty } from "@/lib/property/back-office";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,7 @@ export default async function OperationsPage() {
       where: {
         AND: [
           scopeFilter(scope),
+          onOperatingProperty,
           { OR: [{ status: { not: "READY" } }, { completedAt: { gte: weekAgo } }, { scheduledDate: { gte: weekAgo } }] },
           ...(isCleaner ? [{ OR: [{ assignedToId: user.id }, { assignedToId: null }] }] : []),
         ],
@@ -45,7 +47,7 @@ export default async function OperationsPage() {
       take: 300,
     }),
     db.reservation.findMany({
-      where: { ...scopeFilter(scope), status: { in: ["CONFIRMED", "PENDING"] }, checkIn: { gte: addDays(today, -7) } },
+      where: { ...scopeFilter(scope), ...onOperatingProperty, status: { in: ["CONFIRMED", "PENDING"] }, checkIn: { gte: addDays(today, -7) } },
       select: { propertyId: true, checkIn: true, guest: { select: { name: true } } },
       orderBy: { checkIn: "asc" },
       take: 500,
@@ -53,14 +55,14 @@ export default async function OperationsPage() {
     isCleaner
       ? Promise.resolve([])
       : db.maintenanceTask.findMany({
-          where: scopeFilter(scope),
+          where: { ...scopeFilter(scope), ...onOperatingProperty },
           include: {
             property: { select: { name: true } },
             assignedTo: { select: { id: true, name: true } },
           },
           orderBy: [{ status: "asc" }, { createdAt: "desc" }],
         }),
-    db.property.findMany({ where: propertyScopeFilter(scope), select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    db.property.findMany({ where: { ...propertyScopeFilter(scope), ...operatingProperty }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
     db.user.findMany({
       where: { role: { in: CLEANING_STAFF_ROLES } },
       select: {

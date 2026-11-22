@@ -264,6 +264,11 @@ model Property {
   checkInTo        String? @default("9:00 pm")
   checkOutBy       String? @default("11:00 am")
 
+  // Retired from day-to-day running: left out of finance, the calendar,
+  // dashboards and operations, while the public listing is untouched
+  // (that is governed by `status` alone).
+  excludeFromBackOffice Boolean @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -287,6 +292,7 @@ model Property {
   propertyAssignments PropertyAssignment[]
 
   @@index([status])
+  @@index([excludeFromBackOffice])
 }
 
 model PropertyImage {

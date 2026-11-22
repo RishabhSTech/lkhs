@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { addDays, todayUTC } from "@/lib/dates";
+import { onOperatingProperty } from "@/lib/property/back-office";
 
 /** How far ahead turnover tasks are created from confirmed checkouts. */
 const HORIZON_DAYS = 14;
@@ -28,6 +29,8 @@ export async function syncTurnoverTasks() {
       where: {
         status: { in: ["CONFIRMED", "COMPLETED"] },
         checkOut: { gte: addDays(today, -1), lte: horizon },
+        // Retired properties get no new turnover tasks.
+        ...onOperatingProperty,
       },
       select: { id: true, propertyId: true, checkOut: true },
     }),

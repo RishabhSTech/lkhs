@@ -19,6 +19,7 @@ const patchSchema = z.object({
   basePrice: z.number().positive("Base price must be greater than zero.").optional(),
   cleaningFee: z.number().min(0).optional(),
   status: z.enum(["ACTIVE", "INACTIVE", "MAINTENANCE"]).optional(),
+  excludeFromBackOffice: z.boolean().optional(),
 });
 
 type RouteParams = { params: Promise<{ id: string }> };
@@ -32,11 +33,11 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       { status: 400 },
     );
   }
-  const { name, slug, tagline, description, basePrice, cleaningFee, status } = parsed.data;
+  const { name, slug, tagline, description, basePrice, cleaningFee, status, excludeFromBackOffice } = parsed.data;
   if (
     name === undefined && slug === undefined && tagline === undefined &&
     description === undefined && basePrice === undefined && cleaningFee === undefined &&
-    status === undefined
+    status === undefined && excludeFromBackOffice === undefined
   ) {
     return NextResponse.json({ error: "Nothing to update." }, { status: 400 });
   }
@@ -65,6 +66,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         ...(basePrice !== undefined && { basePrice }),
         ...(cleaningFee !== undefined && { cleaningFee }),
         ...(status !== undefined && { status }),
+        ...(excludeFromBackOffice !== undefined && { excludeFromBackOffice }),
       },
     });
   } catch (err) {
@@ -85,7 +87,9 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       entityId: property.id,
       summary: status !== undefined
         ? `${property.name} status changed to ${status}`
-        : `Details updated for ${property.name}`,
+        : excludeFromBackOffice !== undefined
+          ? `${property.name} ${excludeFromBackOffice ? "excluded from" : "restored to"} back-office operations`
+          : `Details updated for ${property.name}`,
     },
   });
 
