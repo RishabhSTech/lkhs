@@ -19,6 +19,13 @@ export function isEmail(identifier: string) {
   return identifier.includes("@");
 }
 
+/** Phones auto-capitalise the first letter and autofill can add a trailing
+ * space - "Rishabh@x.com " must be the same account as "rishabh@x.com". */
+export function normalizeIdentifier(identifier: string) {
+  const trimmed = identifier.trim();
+  return isEmail(trimmed) ? trimmed.toLowerCase() : trimmed;
+}
+
 export async function requestOtp(identifier: string) {
   const code = generateCode();
   const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60_000);
@@ -88,11 +95,14 @@ export async function findOrCreateUser(
   name?: string,
   avatarUrl?: string | null,
 ) {
+  identifier = normalizeIdentifier(identifier);
+  // Case-insensitive so accounts saved before normalisation (or by an admin
+  // typing "Name@Domain.com") still match.
   const where = isEmail(identifier)
-    ? { email: identifier }
+    ? { email: { equals: identifier, mode: "insensitive" as const } }
     : { phone: identifier };
 
-  const existing = await db.user.findFirst({ where });
+  const existing = await db.user.findFirst({ where, orderBy: { createdAt: "asc" } });
   const user = existing
     ? !existing.avatarUrl && avatarUrl
       ? await db.user.update({ where: { id: existing.id }, data: { avatarUrl } })

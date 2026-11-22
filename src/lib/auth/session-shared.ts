@@ -7,10 +7,13 @@ import type { RoleName } from "@prisma/client";
 import { FINANCE_ROLES } from "@/lib/auth/roles";
 
 export const SESSION_COOKIE = "lk_session";
-export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
+// Staff use this as a phone app and expect to stay signed in until they tap
+// "Sign out" - a year, renewed on use (proxy.ts), means an account that's
+// opened at least once every six months never gets logged out.
+export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 365; // 1 year
 // Once a session's remaining life drops below this, proxy.ts re-signs it -
 // sliding expiration so an actively-browsing user is never cut off by the
-// fixed 30-day timer set at login (there was previously no renewal at all).
+// fixed timer set at login (there was previously no renewal at all).
 export const SESSION_RENEWAL_THRESHOLD_SECONDS = SESSION_TTL_SECONDS / 2;
 
 export function secretKey() {

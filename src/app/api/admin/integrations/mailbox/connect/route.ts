@@ -52,6 +52,8 @@ export async function POST(request: Request) {
           status: "CONNECTED",
           connectedAt: new Date(),
           disconnectedAt: null,
+          consecutiveFailures: 0,
+          lastError: null,
         },
       })
     : await db.mailboxIntegration.create({

@@ -27,6 +27,8 @@ export function MailboxConnectionCard({
     status: string;
     connectedAt: string | null;
     lastSyncAt: string | null;
+    lastError: string | null;
+    consecutiveFailures: number;
   } | null;
 }) {
   const router = useRouter();
@@ -123,6 +125,12 @@ export function MailboxConnectionCard({
             {integration!.connectedAt && ` · connected ${new Date(integration!.connectedAt).toLocaleDateString()}`}
             {integration!.lastSyncAt && ` · last synced ${new Date(integration!.lastSyncAt).toLocaleString()}`}
           </p>
+          {integration!.consecutiveFailures > 0 && integration!.lastError && (
+            <p className="w-full text-xs text-destructive">
+              Last {integration!.consecutiveFailures === 1 ? "attempt" : `${integration!.consecutiveFailures} attempts`} failed:{" "}
+              {integration!.lastError}. Retrying automatically.
+            </p>
+          )}
           <div className="ml-auto flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={syncNow} disabled={syncing}>
               {syncing ? <Loader2 className="animate-spin" /> : <RefreshCw />}

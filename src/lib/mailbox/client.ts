@@ -17,8 +17,49 @@ function makeClient(creds: ImapCredentials, extra?: Partial<ConstructorParameter
     secure: creds.secure,
     auth: { user: creds.user, pass: creds.pass },
     logger: false,
+    // Node tries each of the host's addresses (IPv6 + IPv4) but by default
+    // gives every attempt only 250ms before moving on. From a far-away
+    // worker the TLS handshake to Hostinger can take longer than that, so a
+    // healthy server would fail with an AggregateError whose message is
+    // empty - the "Could not connect to ...: ." alert.
+    tls: { autoSelectFamilyAttemptTimeout: 5000 } as Record<string, unknown>,
     ...extra,
   });
+}
+
+type ImapLikeError = Error & {
+  code?: string;
+  authenticationFailed?: boolean;
+  responseText?: string;
+  errors?: unknown[];
+};
+
+/** True when the server rejected the username/password - retrying won't help. */
+export function isImapAuthFailure(error: unknown): boolean {
+  return !!error && typeof error === "object" && (error as ImapLikeError).authenticationFailed === true;
+}
+
+/**
+ * Human-readable reason for an IMAP failure. Node reports a failed
+ * multi-address connect as an AggregateError with an EMPTY message, and
+ * imapflow puts the server's own words in responseText, so error.message
+ * alone is often blank or just "Command failed".
+ */
+export function describeImapError(error: unknown): string {
+  if (!(error instanceof Error)) return "unknown error";
+  const err = error as ImapLikeError;
+  const parts: string[] = [];
+  if (err.authenticationFailed) parts.push("the mailbox rejected the email/password");
+  if (err.message) parts.push(err.message);
+  if (err.responseText && err.responseText !== err.message) parts.push(err.responseText);
+  if (err.code) parts.push(`(${err.code})`);
+  if (Array.isArray(err.errors)) {
+    const inner = err.errors
+      .map((e) => (e && typeof e === "object" ? ((e as ImapLikeError).code ?? (e as Error).message) : String(e)))
+      .filter(Boolean);
+    if (inner.length) parts.push(`network: ${[...new Set(inner)].join(", ")}`);
+  }
+  return parts.join(" ").trim() || "connection failed with no reason given (network timeout?)";
 }
 
 /**
@@ -32,7 +73,7 @@ export async function testImapLogin(creds: ImapCredentials): Promise<{ ok: true 
     await client.connect();
     return { ok: true };
   } catch (error) {
-    return { ok: false, error: error instanceof Error ? error.message : "Could not connect to the mailbox." };
+    return { ok: false, error: describeImapError(error) };
   }
 }
 

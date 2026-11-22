@@ -714,6 +714,11 @@ model MailboxIntegration {
   connectedAt       DateTime?
   disconnectedAt    DateTime?
   lastSyncAt        DateTime?
+  // Polls that failed in a row for a network-type reason. Reset on the next
+  // good poll; the team is alerted once when it reaches a threshold instead
+  // of the mailbox being switched off on the first blip.
+  consecutiveFailures Int                   @default(0)
+  lastError         String?
   createdAt         DateTime                @default(now())
   updatedAt         DateTime                @updatedAt
 }

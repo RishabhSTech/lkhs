@@ -74,6 +74,8 @@ export default async function IntegrationsPage() {
                   status: integration.status,
                   connectedAt: integration.connectedAt?.toISOString() ?? null,
                   lastSyncAt: integration.lastSyncAt?.toISOString() ?? null,
+                  lastError: integration.lastError,
+                  consecutiveFailures: integration.consecutiveFailures,
                 }
               : null
           }

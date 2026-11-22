@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { requestOtp } from "@/lib/auth/otp";
+import { normalizeIdentifier, requestOtp } from "@/lib/auth/otp";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({ identifier: z.string().min(5) });
@@ -19,15 +19,16 @@ export async function POST(request: Request) {
     );
   }
 
+  const identifier = normalizeIdentifier(parsed.data.identifier);
   const identifierLimited = await checkRateLimit(request, {
     bucket: "otp-identifier",
     limit: 5,
     windowSeconds: 900,
-    key: parsed.data.identifier.trim().toLowerCase(),
+    key: identifier.toLowerCase(),
   });
   if (identifierLimited) return identifierLimited;
 
-  const { devCode } = await requestOtp(parsed.data.identifier);
+  const { devCode } = await requestOtp(identifier);
 
   // devCode is only non-null when the channel has no live delivery adapter
   // yet (see requestOtp) - otherwise the guest actually receives the code

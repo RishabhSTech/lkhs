@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { addDays, eachNight, parseISODate } from "@/lib/dates";
 import { buildQuote } from "@/lib/pricing/engine";
 import { alertTeam } from "@/lib/notifications/alert";
-import { fetchNewMessages, type ImapCredentials } from "@/lib/mailbox/client";
+import { describeImapError, fetchNewMessages, isImapAuthFailure, type ImapCredentials } from "@/lib/mailbox/client";
 import { sourceFromAddress } from "@/lib/mailbox/parse-email";
 import { extractBookingInfo, type ExtractedBookingInfo } from "@/lib/mailbox/extract-booking-info";
 import { matchPropertyByHint } from "@/lib/mailbox/match-property";
@@ -15,6 +15,10 @@ const CONFIDENCE_THRESHOLD_FOR_AUTO_BOOKING = 0.6;
 // can't permanently skip an email; ProcessedEmailMessage dedupe handles the
 // overlap.
 const SEARCH_WINDOW_DAYS = 2;
+// Polls run every 5 minutes, so 6 failures in a row = ~30 minutes of the
+// mailbox being unreachable before anyone is alerted. One-off network blips
+// recover on their own.
+const FAILURES_BEFORE_ALERT = 6;
 
 const OTA_LABELS: Record<string, string> = {
   AIRBNB: "Airbnb",
@@ -56,14 +60,41 @@ export async function runMailboxPoll(): Promise<PollSummary> {
   try {
     messages = await fetchNewMessages(creds, since);
   } catch (error) {
-    await db.mailboxIntegration.update({ where: { id: integration.id }, data: { status: "ERROR" } });
-    await alertTeam({
-      type: "OTA_SYNC_FAILED",
-      title: "Mailbox OTA sync is broken",
-      body: `Could not connect to ${integration.email} (${integration.imapHost}): ${error instanceof Error ? error.message : "unknown error"}. Reconnect it from Settings → Integrations.`,
-      severity: "CRITICAL",
-      link: "/admin/settings/integrations",
+    const reason = describeImapError(error);
+    console.error(`[mailbox] poll failed for ${integration.email}: ${reason}`);
+
+    if (isImapAuthFailure(error)) {
+      // Wrong/changed password - retrying every 5 minutes would only risk the
+      // mailbox host locking the account, so stop until someone reconnects.
+      await db.mailboxIntegration.update({
+        where: { id: integration.id },
+        data: { status: "ERROR", lastError: reason, consecutiveFailures: { increment: 1 } },
+      });
+      await alertTeam({
+        type: "OTA_SYNC_FAILED",
+        title: "Mailbox OTA sync is broken",
+        body: `${integration.email} (${integration.imapHost}) rejected the login: ${reason}. Update the password in Settings → Integrations.`,
+        severity: "CRITICAL",
+        link: "/admin/settings/integrations",
+      });
+      return summary;
+    }
+
+    // Network-type failure: stay CONNECTED so the next poll retries, and only
+    // alert once it has been failing for a while.
+    const updated = await db.mailboxIntegration.update({
+      where: { id: integration.id },
+      data: { lastError: reason, consecutiveFailures: { increment: 1 } },
     });
+    if (updated.consecutiveFailures === FAILURES_BEFORE_ALERT) {
+      await alertTeam({
+        type: "OTA_SYNC_FAILED",
+        title: "Mailbox OTA sync is not reaching the mail server",
+        body: `Could not reach ${integration.email} (${integration.imapHost}) for the last ${FAILURES_BEFORE_ALERT} attempts: ${reason}. It keeps retrying automatically every 5 minutes.`,
+        severity: "WARNING",
+        link: "/admin/settings/integrations",
+      });
+    }
     return summary;
   }
 
@@ -152,7 +183,10 @@ export async function runMailboxPoll(): Promise<PollSummary> {
     }
   }
 
-  await db.mailboxIntegration.update({ where: { id: integration.id }, data: { lastSyncAt: new Date(), status: "CONNECTED" } });
+  await db.mailboxIntegration.update({
+    where: { id: integration.id },
+    data: { lastSyncAt: new Date(), status: "CONNECTED", consecutiveFailures: 0, lastError: null },
+  });
   return summary;
 }
 

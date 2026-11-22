@@ -12,7 +12,16 @@ const OAUTH_ERRORS: Record<string, string> = {
   google_not_configured: "Google sign-in isn't set up yet. Use a one-time code instead.",
   google_state_mismatch: "That Google sign-in took too long or didn't come from this site. Please try again.",
   google_failed: "Google sign-in didn't go through. Please try again or use a one-time code.",
+  network: "The connection dropped while signing you in. Check your signal and try again.",
 };
+
+// Safari reports a request that never got a response as "Load failed"
+// (Chrome: "Failed to fetch") - a TypeError, not an error from our server.
+// On phones that usually means the app was backgrounded (switching to Mail
+// to read the code) or the signal dropped mid-request.
+function isNetworkError(err: unknown) {
+  return err instanceof TypeError;
+}
 
 export function SignInForm() {
   const router = useRouter();
@@ -22,6 +31,7 @@ export function SignInForm() {
   const [code, setCode] = useState("");
   const [devCode, setDevCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [codeMaybeSent, setCodeMaybeSent] = useState(false);
   const [error, setError] = useState<string | null>(
     () => OAUTH_ERRORS[searchParams.get("error") ?? ""] ?? null,
   );
@@ -30,6 +40,7 @@ export function SignInForm() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setCodeMaybeSent(false);
     try {
       const res = await fetch("/api/auth/otp", {
         method: "POST",
@@ -41,6 +52,13 @@ export function SignInForm() {
       setDevCode(data.devCode ?? null);
       setStep("code");
     } catch (err) {
+      if (isNetworkError(err)) {
+        // The request may well have reached us and sent the email before
+        // the connection died - let them use that code instead of being stuck.
+        setCodeMaybeSent(true);
+        setError("The connection dropped before we heard back. If a code arrived, tap \"I have a code\" - otherwise try again.");
+        return;
+      }
       setError(err instanceof Error ? err.message : "Could not send a code.");
     } finally {
       setLoading(false);
@@ -62,6 +80,15 @@ export function SignInForm() {
       router.push(data.redirectTo);
       router.refresh();
     } catch (err) {
+      if (isNetworkError(err)) {
+        // The code may have been accepted (and consumed) with only the reply
+        // lost, so re-sending it would say "invalid". Reload /signin instead:
+        // it forwards straight to the dashboard if the session cookie landed.
+        // A full load (not router.push) so the server re-reads the cookie.
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+        window.location.assign("/signin?error=network");
+        return;
+      }
       setError(err instanceof Error ? err.message : "Could not verify that code.");
       setLoading(false);
     }
@@ -97,6 +124,10 @@ export function SignInForm() {
                 onChange={(e) => setIdentifier(e.target.value)}
                 placeholder="you@example.com"
                 autoComplete="email"
+                inputMode="email"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 required
               />
             </div>
@@ -107,6 +138,22 @@ export function SignInForm() {
               {loading && <Loader2 className="animate-spin" />}
               Send me a code
             </Button>
+
+            {codeMaybeSent && (
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                className="w-full"
+                onClick={() => {
+                  setError(null);
+                  setCodeMaybeSent(false);
+                  setStep("code");
+                }}
+              >
+                I have a code
+              </Button>
+            )}
           </form>
         </div>
       ) : (

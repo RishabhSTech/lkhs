@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { findOrCreateUser, verifyOtp } from "@/lib/auth/otp";
+import { findOrCreateUser, normalizeIdentifier, verifyOtp } from "@/lib/auth/otp";
 import { createSession, redirectPathForRole } from "@/lib/auth/session";
 
 const schema = z.object({
@@ -21,12 +21,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Enter the six-digit code we sent you." }, { status: 400 });
   }
 
-  const result = await verifyOtp(parsed.data.identifier, parsed.data.code);
+  const identifier = normalizeIdentifier(parsed.data.identifier);
+  const result = await verifyOtp(identifier, parsed.data.code);
   if (!result.ok) {
     return NextResponse.json({ error: REASONS[result.reason] }, { status: 400 });
   }
 
-  const user = await findOrCreateUser(parsed.data.identifier, parsed.data.name);
+  const user = await findOrCreateUser(identifier, parsed.data.name);
   await createSession({
     userId: user.id,
     role: user.role,
