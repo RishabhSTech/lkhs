@@ -3,7 +3,7 @@
 import {
   Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
-import { formatINRCompact, formatMonth } from "@/lib/format";
+import { formatBucket, formatINRCompact } from "@/lib/format";
 import { ChartTooltip } from "@/components/charts/chart-tooltip";
 
 export type RevenuePoint = {
@@ -32,7 +32,8 @@ export function RevenueChart({ data }: { data: RevenuePoint[] }) {
           />
           <XAxis
             dataKey="month"
-            tickFormatter={(m: string) => formatMonth(`${m}-01`)}
+            minTickGap={16}
+            tickFormatter={(m: string) => formatBucket(m)}
             tickLine={false}
             axisLine={false}
             tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
@@ -46,7 +47,7 @@ export function RevenueChart({ data }: { data: RevenuePoint[] }) {
             tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
           />
           <Tooltip
-            content={<ChartTooltip labelFormatter={(l) => formatMonth(`${l}-01`)} />}
+            content={<ChartTooltip labelFormatter={(l) => formatBucket(String(l), true)} />}
             cursor={{ stroke: "var(--border)", strokeWidth: 1 }}
           />
           <Legend

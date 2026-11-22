@@ -7,6 +7,9 @@ import { ChannelProfitTable } from "@/components/admin/channel-profit-table";
 import { Badge } from "@/components/ui/badge";
 import { db } from "@/lib/db";
 import { onOperatingProperty } from "@/lib/property/back-office";
+import { PeriodPicker } from "@/components/admin/period-picker";
+import { parsePeriod, periodDateFilter, periodQuery } from "@/lib/finance/period";
+import { toISODate } from "@/lib/dates";
 import { getPortfolioFinance } from "@/lib/queries/finance";
 import { SOURCE_LABELS, sourceBadgeClass } from "@/lib/admin/sources";
 import { formatDateLong, formatINR, formatINRCompact } from "@/lib/format";
@@ -16,12 +19,14 @@ import { FINANCE_ROLES } from "@/lib/auth/roles";
 
 export const dynamic = "force-dynamic";
 
-export default async function RevenuePage() {
+export default async function RevenuePage({ searchParams }: PageProps<"/admin/finance/revenue">) {
   await requirePortfolioAccess(FINANCE_ROLES);
+  const period = parsePeriod(await searchParams);
+  const query = periodQuery(period);
   const [finance, recentRevenue] = await Promise.all([
-    getPortfolioFinance(12),
+    getPortfolioFinance(period),
     db.transaction.findMany({
-      where: { type: "REVENUE", ...onOperatingProperty },
+      where: { type: "REVENUE", date: periodDateFilter(period), ...onOperatingProperty },
       include: {
         property: { select: { id: true, name: true } },
         reservation: {
@@ -29,14 +34,14 @@ export default async function RevenuePage() {
         },
       },
       orderBy: { date: "desc" },
-      take: 40,
+      take: 200,
     }),
   ]);
 
   return (
     <AdminPage>
       <Link
-        href="/admin/finance"
+        href={`/admin/finance?${query}`}
         className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-brand-blue"
       >
         <ArrowLeft className="size-4" />
@@ -50,22 +55,32 @@ export default async function RevenuePage() {
         />
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="mt-5">
+        <PeriodPicker
+          key={query}
+          kind={period.kind}
+          from={toISODate(period.from)}
+          to={toISODate(period.to)}
+          label={period.label}
+        />
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <KpiCard
           label="Gross revenue"
-          value={formatINRCompact(finance.lifetime.grossRevenue)}
+          value={formatINRCompact(finance.period.grossRevenue)}
         />
         <KpiCard
           label="Channel fees"
-          value={formatINRCompact(finance.lifetime.otaFees)}
+          value={formatINRCompact(finance.period.otaFees)}
         />
         <KpiCard
           label="Payment fees"
-          value={formatINRCompact(finance.lifetime.paymentFees)}
+          value={formatINRCompact(finance.period.paymentFees)}
         />
         <KpiCard
           label="Net revenue"
-          value={formatINRCompact(finance.lifetime.netRevenue)}
+          value={formatINRCompact(finance.period.netRevenue)}
         />
       </div>
 
@@ -74,7 +89,7 @@ export default async function RevenuePage() {
           Revenue over time
         </h2>
         <div className="mt-4">
-          <RevenueChart data={finance.monthlySeries} />
+          <RevenueChart data={finance.series} />
         </div>
       </section>
 
@@ -95,13 +110,13 @@ export default async function RevenuePage() {
                 className="flex items-center justify-between gap-3 py-2.5 text-sm first:pt-0 last:pb-0"
               >
                 <Link
-                  href={`/admin/finance/property/${p.id}`}
+                  href={`/admin/finance/property/${p.id}?${query}`}
                   className="text-foreground hover:text-brand-azure"
                 >
                   {p.name}
                 </Link>
                 <span className="font-medium tabular-nums text-foreground">
-                  {formatINRCompact(p.lifetime.grossRevenue)}
+                  {formatINRCompact(p.period.grossRevenue)}
                 </span>
               </li>
             ))}
@@ -111,8 +126,12 @@ export default async function RevenuePage() {
 
       <section className="mt-5 rounded-xl border border-border bg-card p-5">
         <h2 className="text-sm font-semibold text-foreground">
-          Recent revenue transactions
+          Revenue transactions
         </h2>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          {period.label}
+          {recentRevenue.length === 200 ? " · latest 200 shown" : ` · ${recentRevenue.length} entries`}
+        </p>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

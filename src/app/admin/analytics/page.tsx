@@ -3,39 +3,56 @@ import { KpiCard } from "@/components/admin/kpi-card";
 import { RevenueChart } from "@/components/charts/revenue-chart";
 import { OccupancyChart } from "@/components/charts/occupancy-chart";
 import { ChannelProfitTable } from "@/components/admin/channel-profit-table";
-import {
-  getOccupancySeries, getPortfolioKpis, getRevenueSeries,
-} from "@/lib/queries/admin-metrics";
+import { PeriodPicker } from "@/components/admin/period-picker";
+import { getPeriodStayMetrics } from "@/lib/queries/admin-metrics";
 import { getPortfolioFinance } from "@/lib/queries/finance";
+import { parsePeriod, periodQuery } from "@/lib/finance/period";
+import { toISODate } from "@/lib/dates";
 import { formatINR, formatINRCompact, formatPercent } from "@/lib/format";
 import { requirePortfolioAccess } from "@/lib/auth/guards";
 import { OFFICE_ROLES } from "@/lib/auth/roles";
 
 export const dynamic = "force-dynamic";
 
-export default async function AnalyticsPage() {
+export default async function AnalyticsPage({ searchParams }: PageProps<"/admin/analytics">) {
   await requirePortfolioAccess(OFFICE_ROLES);
-  const [kpis, revenue, occupancy, finance] = await Promise.all([
-    getPortfolioKpis(),
-    getRevenueSeries(12),
-    getOccupancySeries(12),
-    getPortfolioFinance(12),
+  // Analytics opens on the year; Finance on the month.
+  const period = parsePeriod(await searchParams, "year");
+  const query = periodQuery(period);
+  const [stays, finance] = await Promise.all([
+    getPeriodStayMetrics(period),
+    getPortfolioFinance(period),
   ]);
 
   return (
     <AdminPage>
       <PageHeader
         title="Analytics"
-        description="Twelve-month view across the portfolio."
+        description="How the portfolio performed over the selected period."
       />
 
-      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <KpiCard label="Occupancy" value={formatPercent(kpis.occupancyPercent)} />
-        <KpiCard label="ADR" value={formatINR(kpis.adr)} />
-        <KpiCard label="RevPAR" value={formatINR(kpis.revPar)} />
+      <div className="mt-5">
+        <PeriodPicker
+          key={query}
+          kind={period.kind}
+          from={toISODate(period.from)}
+          to={toISODate(period.to)}
+          label={period.label}
+        />
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <KpiCard
-          label="Lifetime revenue"
-          value={formatINRCompact(finance.lifetime.grossRevenue)}
+          label="Occupancy"
+          value={formatPercent(stays.occupancyPercent)}
+          hint={`${stays.nightsSold} of ${stays.availableNights} nights sold`}
+        />
+        <KpiCard label="ADR" value={formatINR(stays.adr)} hint="Average room rate per sold night" />
+        <KpiCard label="RevPAR" value={formatINR(stays.revPar)} hint="Room revenue per available night" />
+        <KpiCard
+          label="Revenue"
+          value={formatINRCompact(finance.period.grossRevenue)}
+          hint={period.label}
         />
       </div>
 
@@ -43,9 +60,9 @@ export default async function AnalyticsPage() {
         <h2 className="text-sm font-semibold text-foreground">
           Revenue vs expenses
         </h2>
-        <p className="mt-0.5 text-xs text-muted-foreground">Last twelve months</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">{period.label} · by {period.bucket}</p>
         <div className="mt-4">
-          <RevenueChart data={revenue} />
+          <RevenueChart data={finance.series} />
         </div>
       </section>
 
@@ -56,7 +73,7 @@ export default async function AnalyticsPage() {
             Share of available nights sold
           </p>
           <div className="mt-4">
-            <OccupancyChart data={occupancy} />
+            <OccupancyChart data={stays.occupancySeries} />
           </div>
         </section>
 
@@ -98,17 +115,17 @@ export default async function AnalyticsPage() {
                 <tr key={p.id}>
                   <td className="py-2.5 font-medium text-foreground">{p.name}</td>
                   <td className="py-2.5 tabular-nums text-muted-foreground">
-                    {formatINRCompact(p.lifetime.grossRevenue)}
+                    {formatINRCompact(p.period.grossRevenue)}
                   </td>
                   <td className="py-2.5 tabular-nums text-muted-foreground">
                     {formatINRCompact(
-                      p.lifetime.operatingExpenses +
-                        p.lifetime.otaFees +
-                        p.lifetime.paymentFees,
+                      p.period.operatingExpenses +
+                        p.period.otaFees +
+                        p.period.paymentFees,
                     )}
                   </td>
                   <td className="py-2.5 font-medium tabular-nums text-foreground">
-                    {formatINRCompact(p.lifetime.netOperatingIncome)}
+                    {formatINRCompact(p.period.netOperatingIncome)}
                   </td>
                   <td className="py-2.5 tabular-nums text-foreground">
                     {formatPercent(p.capital.capitalRecoveredPercent)}

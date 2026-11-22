@@ -63,11 +63,12 @@ export async function buildPortfolioReportPdf(
     operatingExpenses: number;
     netOperatingIncome: number;
   }[],
+  periodLabel?: string,
 ): Promise<Buffer> {
   const doc = new PDFDocument({ margin: 40, size: "A4", layout: "landscape" });
   const bufferPromise = streamToBuffer(doc);
 
-  header(doc, "Portfolio P&L");
+  header(doc, periodLabel ? `Portfolio P&L · ${periodLabel}` : "Portfolio P&L");
 
   table(
     doc,
@@ -107,11 +108,12 @@ export async function buildTransactionsReportPdf(
     status: string;
     amount: number;
   }[],
+  periodLabel?: string,
 ): Promise<Buffer> {
   const doc = new PDFDocument({ margin: 40, size: "A4", layout: "landscape" });
   const bufferPromise = streamToBuffer(doc);
 
-  header(doc, "Transactions");
+  header(doc, periodLabel ? `Transactions · ${periodLabel}` : "Transactions");
 
   table(
     doc,

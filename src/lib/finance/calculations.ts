@@ -5,6 +5,7 @@ import type {
   TransactionCategory,
   TransactionType,
 } from "@prisma/client";
+import { bucketKey, periodBuckets, type Period } from "@/lib/finance/period";
 
 /**
  * Every figure here is derived from Transaction rows - nothing is read from a
@@ -149,7 +150,9 @@ export function buildCapitalPosition(txs: PLInput[]): CapitalPosition {
     totalFundsDeployed,
     cumulativeNetEarnings,
     capitalRecoveredPercent: Math.max(0, capitalRecoveredPercent),
-    remainingToRecover: Math.max(0, totalFundsDeployed - cumulativeNetEarnings),
+    // Nothing deployed means nothing to recover - a loss isn't capital.
+    remainingToRecover:
+      totalFundsDeployed > 0 ? Math.max(0, totalFundsDeployed - cumulativeNetEarnings) : 0,
     roiPercent: capitalRecoveredPercent,
   };
 }
@@ -254,6 +257,31 @@ export function buildMonthlySeries(
     const pl = buildPL(inMonth);
     return {
       month: monthStart.toISOString().slice(0, 7),
+      revenue: pl.grossRevenue,
+      expenses: pl.operatingExpenses + pl.otaFees + pl.paymentFees,
+      net: pl.netOperatingIncome,
+    };
+  });
+}
+
+/**
+ * Revenue/expense/net per bucket across a reporting period - days for short
+ * windows, months for long ones. `month` holds the bucket key ("2026-11-23"
+ * or "2026-11") so the existing chart shape is unchanged.
+ */
+export function buildPeriodSeries(txs: PLInput[], period: Period): MonthlySeriesPoint[] {
+  const byKey = new Map<string, PLInput[]>();
+  for (const t of txs) {
+    const key = bucketKey(new Date(t.date), period.bucket);
+    const list = byKey.get(key);
+    if (list) list.push(t);
+    else byKey.set(key, [t]);
+  }
+  return periodBuckets(period).map((start) => {
+    const key = bucketKey(start, period.bucket);
+    const pl = buildPL(byKey.get(key) ?? []);
+    return {
+      month: key,
       revenue: pl.grossRevenue,
       expenses: pl.operatingExpenses + pl.otaFees + pl.paymentFees,
       net: pl.netOperatingIncome,

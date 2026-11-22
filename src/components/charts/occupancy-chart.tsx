@@ -3,7 +3,7 @@
 import {
   Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
-import { formatMonth, formatPercent } from "@/lib/format";
+import { formatBucket, formatPercent } from "@/lib/format";
 import { ChartTooltip } from "@/components/charts/chart-tooltip";
 
 export function OccupancyChart({
@@ -18,7 +18,8 @@ export function OccupancyChart({
           <CartesianGrid vertical={false} stroke="var(--border)" />
           <XAxis
             dataKey="month"
-            tickFormatter={(m: string) => formatMonth(`${m}-01`)}
+            minTickGap={16}
+            tickFormatter={(m: string) => formatBucket(m)}
             tickLine={false}
             axisLine={false}
             tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
@@ -36,7 +37,7 @@ export function OccupancyChart({
             cursor={{ fill: "var(--muted)", opacity: 0.5 }}
             content={
               <ChartTooltip
-                labelFormatter={(l) => formatMonth(`${l}-01`)}
+                labelFormatter={(l) => formatBucket(String(l), true)}
                 valueFormatter={(v) => formatPercent(v)}
               />
             }

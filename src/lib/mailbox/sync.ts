@@ -8,6 +8,35 @@ import { sourceFromAddress } from "@/lib/mailbox/parse-email";
 import { extractBookingInfo, type ExtractedBookingInfo } from "@/lib/mailbox/extract-booking-info";
 import { matchPropertyByHint } from "@/lib/mailbox/match-property";
 import { decrypt } from "@/lib/mailbox/crypto";
+import { postBookingFinancials } from "@/lib/booking/create-reservation";
+
+/**
+ * Booking money posted automatically (revenue, commission, fees) carries no
+ * createdById; anything finance staff entered by hand does and is left alone.
+ */
+const AUTO_POSTED = { createdById: null } as const;
+
+/** Rebuilds a booking's auto-posted finance entries from its current amounts. */
+async function repostBookingFinancials(
+  tx: Prisma.TransactionClient,
+  r: {
+    id: string; propertyId: string; source: BookingSource; checkIn: Date; total: Prisma.Decimal;
+    platformFee: Prisma.Decimal; hostTax: Prisma.Decimal; otherCharges: Prisma.Decimal; hasCustomFinancials: boolean;
+  },
+) {
+  await tx.transaction.deleteMany({ where: { reservationId: r.id, ...AUTO_POSTED } });
+  await postBookingFinancials(tx, {
+    propertyId: r.propertyId,
+    reservationId: r.id,
+    total: Number(r.total),
+    source: r.source,
+    date: r.checkIn,
+    platformFee: Number(r.platformFee),
+    hostTax: Number(r.hostTax),
+    otherCharges: Number(r.otherCharges),
+    hasCustomFinancials: r.hasCustomFinancials,
+  });
+}
 
 const CONFIDENCE_THRESHOLD_FOR_AUTO_BOOKING = 0.6;
 // How far back to search on a poll - deliberately wider than the 5-minute
@@ -317,6 +346,8 @@ export async function upsertBookingFromEmail(args: {
     await db.$transaction([
       db.inventoryNight.deleteMany({ where: { reservationId: existing.id } }),
       db.reservation.update({ where: { id: existing.id }, data: { status: "CANCELLED" } }),
+      // The OTA cancelled, so the payout we auto-posted will never arrive.
+      db.transaction.deleteMany({ where: { reservationId: existing.id, ...AUTO_POSTED } }),
     ]);
     await recordProcessed(args, existing.id, null);
     await alertTeam({
@@ -413,7 +444,7 @@ export async function upsertBookingFromEmail(args: {
           await tx.inventoryNight.deleteMany({ where: { reservationId: existing.id } });
           await tx.inventoryNight.createMany({ data: nights.map((date) => ({ unitId, date, reservationId: existing.id })) });
         }
-        await tx.reservation.update({
+        const updated = await tx.reservation.update({
           where: { id: existing.id },
           data: {
             checkIn,
@@ -429,11 +460,16 @@ export async function upsertBookingFromEmail(args: {
                   nightlyRate: new Prisma.Decimal(pricing.nightlyRate),
                   subtotal: new Prisma.Decimal(pricing.subtotal),
                   total: new Prisma.Decimal(pricing.total),
+                  // An emailed amount is the host payout - commission is
+                  // already taken, so none is deducted again.
+                  hasCustomFinancials: Boolean(extraction.amountTotal),
+                  ...(extraction.amountTotal ? { platformFee: new Prisma.Decimal(0) } : {}),
                   rawData,
                 }
               : {}),
           },
         });
+        await repostBookingFinancials(tx, updated);
       });
       await recordProcessed(args, existing.id, null);
     } else {
@@ -457,6 +493,10 @@ export async function upsertBookingFromEmail(args: {
             taxes: new Prisma.Decimal(pricing.taxes),
             discount: new Prisma.Decimal(pricing.discount),
             total: new Prisma.Decimal(pricing.total),
+            // An emailed amount is the host payout (commission already taken);
+            // without one the rate-card quote is guest-facing, so the usual
+            // commission estimate applies.
+            hasCustomFinancials: Boolean(extraction.amountTotal),
             internalNotes,
             rawData,
             reservationGuests: {
@@ -470,6 +510,7 @@ export async function upsertBookingFromEmail(args: {
           },
         });
         await tx.inventoryNight.createMany({ data: nights.map((date) => ({ unitId, date, reservationId: reservation.id })) });
+        await repostBookingFinancials(tx, reservation);
         return reservation;
       });
       await recordProcessed(args, created.id, null);

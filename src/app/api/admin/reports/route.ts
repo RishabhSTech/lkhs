@@ -5,6 +5,7 @@ import { buildPortfolioReportPdf, buildTransactionsReportPdf } from "@/lib/finan
 import { guardApi } from "@/lib/auth/guards";
 import { FINANCE_ROLES } from "@/lib/auth/roles";
 import { onOperatingProperty, operatingProperty } from "@/lib/property/back-office";
+import { parsePeriod, periodDateFilter, periodParams } from "@/lib/finance/period";
 
 function toCsv(rows: (string | number)[][]) {
   return rows
@@ -29,10 +30,14 @@ export async function GET(request: Request) {
   const type = params.get("type") ?? "portfolio";
   const format = params.get("format") ?? "csv";
   const propertyId = params.get("property");
+  // Same period as the screen the export was started from (defaults to this month).
+  const period = parsePeriod(Object.fromEntries(params));
+  const date = periodDateFilter(period);
+  const suffix = Object.values(periodParams(period)).slice(1).join("_");
 
   if (type === "transactions") {
     const txs = await db.transaction.findMany({
-      where: { ...(propertyId ? { propertyId } : {}), ...onOperatingProperty },
+      where: { ...(propertyId ? { propertyId } : {}), date, ...onOperatingProperty },
       include: {
         category: true,
         property: { select: { name: true } },
@@ -52,11 +57,12 @@ export async function GET(request: Request) {
           status: t.status,
           amount: Number(t.amount),
         })),
+        period.label,
       );
       return new NextResponse(new Uint8Array(pdf), {
         headers: {
           "Content-Type": "application/pdf",
-          "Content-Disposition": `attachment; filename="lime-kraft-transactions.pdf"`,
+          "Content-Disposition": `attachment; filename="lime-kraft-transactions-${suffix}.pdf"`,
         },
       });
     }
@@ -78,14 +84,14 @@ export async function GET(request: Request) {
     return new NextResponse(csv, {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="lime-kraft-transactions.csv"`,
+        "Content-Disposition": `attachment; filename="lime-kraft-transactions-${suffix}.csv"`,
       },
     });
   }
 
   const properties = await db.property.findMany({
     where: operatingProperty,
-    include: { transactions: { select: PL_TRANSACTION_SELECT } },
+    include: { transactions: { where: { date }, select: PL_TRANSACTION_SELECT } },
     orderBy: { name: "asc" },
   });
   const portfolioRows = properties.map((p) => {
@@ -103,11 +109,11 @@ export async function GET(request: Request) {
   });
 
   if (format === "pdf") {
-    const pdf = await buildPortfolioReportPdf(portfolioRows);
+    const pdf = await buildPortfolioReportPdf(portfolioRows, period.label);
     return new NextResponse(new Uint8Array(pdf), {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="lime-kraft-portfolio.pdf"`,
+        "Content-Disposition": `attachment; filename="lime-kraft-portfolio-${suffix}.pdf"`,
       },
     });
   }
@@ -129,7 +135,7 @@ export async function GET(request: Request) {
   return new NextResponse(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="lime-kraft-portfolio.csv"`,
+      "Content-Disposition": `attachment; filename="lime-kraft-portfolio-${suffix}.csv"`,
     },
   });
 }

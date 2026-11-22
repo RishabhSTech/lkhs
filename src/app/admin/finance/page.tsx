@@ -6,7 +6,10 @@ import { RevenueChart } from "@/components/charts/revenue-chart";
 import { ChannelProfitTable } from "@/components/admin/channel-profit-table";
 import { Button } from "@/components/ui/button";
 import { QuickAddButton } from "@/components/admin/quick-add";
+import { PeriodPicker } from "@/components/admin/period-picker";
 import { getPortfolioFinance } from "@/lib/queries/finance";
+import { parsePeriod, periodQuery } from "@/lib/finance/period";
+import { toISODate } from "@/lib/dates";
 import { formatINR, formatINRCompact, formatPercent } from "@/lib/format";
 
 import { requirePortfolioAccess } from "@/lib/auth/guards";
@@ -14,9 +17,13 @@ import { FINANCE_ROLES } from "@/lib/auth/roles";
 
 export const dynamic = "force-dynamic";
 
-export default async function FinanceOverviewPage() {
+export default async function FinanceOverviewPage({ searchParams }: PageProps<"/admin/finance">) {
   await requirePortfolioAccess(FINANCE_ROLES);
-  const finance = await getPortfolioFinance();
+  const period = parsePeriod(await searchParams);
+  const query = periodQuery(period);
+  const finance = await getPortfolioFinance(period);
+  const pl = finance.period;
+  const expenses = pl.operatingExpenses + pl.otaFees + pl.paymentFees;
 
   return (
     <AdminPage>
@@ -37,8 +44,8 @@ export default async function FinanceOverviewPage() {
               All expenses
             </Button>
             <Button
-              // eslint-disable-next-line @next/next/no-html-link-for-pages -- file download, not a page route
-              render={<a href="/api/admin/reports?type=portfolio" />}
+               
+              render={<a href={`/api/admin/reports?type=portfolio&${query}`} />}
               variant="outline"
               size="sm"
             >
@@ -46,8 +53,8 @@ export default async function FinanceOverviewPage() {
               Export CSV
             </Button>
             <Button
-              // eslint-disable-next-line @next/next/no-html-link-for-pages -- file download, not a page route
-              render={<a href="/api/admin/reports?type=portfolio&format=pdf" />}
+               
+              render={<a href={`/api/admin/reports?type=portfolio&format=pdf&${query}`} />}
               variant="outline"
               size="sm"
             >
@@ -58,50 +65,37 @@ export default async function FinanceOverviewPage() {
         }
       />
 
-      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="mt-5">
+        <PeriodPicker
+          key={query}
+          kind={period.kind}
+          from={toISODate(period.from)}
+          to={toISODate(period.to)}
+          label={period.label}
+        />
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <KpiCard label="Revenue" value={formatINRCompact(pl.grossRevenue)} hint={`Gross, all channels · ${period.label}`} />
+        <KpiCard label="Expenses" value={formatINRCompact(expenses)} hint="Operating + channel + payment fees" />
+        <KpiCard
+          label="Net operating income"
+          value={formatINRCompact(pl.netOperatingIncome)}
+          hint={pl.grossRevenue > 0 ? `${formatPercent((pl.netOperatingIncome / pl.grossRevenue) * 100)} margin` : undefined}
+          tone={pl.netOperatingIncome < 0 ? "critical" : "default"}
+        />
+        <KpiCard label="Net revenue" value={formatINRCompact(pl.netRevenue)} hint="Revenue after channel + payment fees" />
+        <KpiCard label="Operating expenses" value={formatINRCompact(pl.operatingExpenses)} />
+        <KpiCard label="Channel fees" value={formatINRCompact(pl.otaFees + pl.paymentFees)} />
         <KpiCard
           label="Funds deployed"
           value={formatINRCompact(finance.capital.totalFundsDeployed)}
-          hint="Setup capital + refundable deposits"
-        />
-        <KpiCard
-          label="Total revenue"
-          value={formatINRCompact(finance.lifetime.grossRevenue)}
-          hint="Gross, all channels"
-        />
-        <KpiCard
-          label="Total expenses"
-          value={formatINRCompact(
-            finance.lifetime.operatingExpenses +
-              finance.lifetime.otaFees +
-              finance.lifetime.paymentFees,
-          )}
-          hint="Operating + channel + payment fees"
-        />
-        <KpiCard
-          label="Net operating income"
-          value={formatINRCompact(finance.lifetime.netOperatingIncome)}
-          hint="Lifetime, all properties"
-        />
-        <KpiCard
-          label="This month revenue"
-          value={formatINRCompact(finance.currentMonth.grossRevenue)}
-        />
-        <KpiCard
-          label="This month expenses"
-          value={formatINRCompact(finance.currentMonth.operatingExpenses)}
-        />
-        <KpiCard
-          label="This month net"
-          value={formatINRCompact(finance.currentMonth.netOperatingIncome)}
-          tone={
-            finance.currentMonth.netOperatingIncome < 0 ? "critical" : "default"
-          }
+          hint="Lifetime · setup capital + deposits"
         />
         <KpiCard
           label="Capital recovered"
           value={formatPercent(finance.capital.capitalRecoveredPercent)}
-          hint={`${formatINRCompact(finance.capital.remainingToRecover)} remaining`}
+          hint={`Lifetime · ${formatINRCompact(finance.capital.remainingToRecover)} remaining`}
         />
       </div>
 
@@ -110,10 +104,10 @@ export default async function FinanceOverviewPage() {
           Revenue vs expenses
         </h2>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          Portfolio-wide, last six months
+          Portfolio-wide, {period.label} · by {period.bucket}
         </p>
         <div className="mt-4">
-          <RevenueChart data={finance.monthlySeries} />
+          <RevenueChart data={finance.series} />
         </div>
       </section>
 
@@ -137,7 +131,7 @@ export default async function FinanceOverviewPage() {
                 Property performance
               </h2>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Net operating income, lifetime
+                Net operating income, {period.label}
               </p>
             </div>
           </div>
@@ -146,7 +140,7 @@ export default async function FinanceOverviewPage() {
             {finance.perProperty.map((p) => (
               <li key={p.id} className="py-3 first:pt-0 last:pb-0">
                 <Link
-                  href={`/admin/finance/property/${p.id}`}
+                  href={`/admin/finance/property/${p.id}?${query}`}
                   className="group flex items-center justify-between gap-3"
                 >
                   <div className="min-w-0">
@@ -154,13 +148,13 @@ export default async function FinanceOverviewPage() {
                       {p.name}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {formatPercent(p.capital.capitalRecoveredPercent)} of{" "}
-                      {formatINRCompact(p.capital.totalFundsDeployed)} recovered
+                      {formatINRCompact(p.period.grossRevenue)} revenue ·{" "}
+                      {formatPercent(p.capital.capitalRecoveredPercent)} capital recovered
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     <span className="text-sm font-medium tabular-nums text-foreground">
-                      {formatINR(p.lifetime.netOperatingIncome)}
+                      {formatINR(p.period.netOperatingIncome)}
                     </span>
                     <ArrowUpRight className="size-3.5 text-muted-foreground" />
                   </div>

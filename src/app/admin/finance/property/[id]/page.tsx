@@ -12,6 +12,9 @@ import { QuickAddButton } from "@/components/admin/quick-add";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
 import { getPropertyFinance } from "@/lib/queries/finance";
+import { PeriodPicker } from "@/components/admin/period-picker";
+import { parsePeriod, periodQuery } from "@/lib/finance/period";
+import { toISODate } from "@/lib/dates";
 import { formatINR, formatINRCompact, formatPercent } from "@/lib/format";
 
 import { requirePortfolioAccess } from "@/lib/auth/guards";
@@ -21,13 +24,16 @@ export const dynamic = "force-dynamic";
 
 export default async function PropertyFinancePage({
   params,
+  searchParams,
 }: PageProps<"/admin/finance/property/[id]">) {
   const { id } = await params;
+  const period = parsePeriod(await searchParams);
+  const query = periodQuery(period);
   await requirePortfolioAccess(FINANCE_ROLES);
   if (!id) notFound();
 
   const [finance, budgetCategories] = await Promise.all([
-    getPropertyFinance(id).catch(() => null),
+    getPropertyFinance(id, period).catch(() => null),
     db.transactionCategory.findMany({
       where: { group: { in: ["RECURRING_EXPENSE", "ONE_TIME_EXPENSE"] } },
       select: { id: true, name: true },
@@ -36,13 +42,13 @@ export default async function PropertyFinancePage({
   ]);
   if (!finance) notFound();
 
-  const { property, lifetime, currentMonth, capital, channels, breakEven } =
-    finance;
+  const { property, lifetime, capital, channels, breakEven } = finance;
+  const pl = finance.period;
 
   return (
     <AdminPage>
       <Link
-        href="/admin/finance"
+        href={`/admin/finance?${query}`}
         className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-brand-blue"
       >
         <ArrowLeft className="size-4" />
@@ -71,25 +77,36 @@ export default async function PropertyFinancePage({
         />
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="mt-5">
+        <PeriodPicker
+          key={query}
+          kind={period.kind}
+          from={toISODate(period.from)}
+          to={toISODate(period.to)}
+          label={period.label}
+        />
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <KpiCard
           label="Total funds deployed"
           value={formatINRCompact(capital.totalFundsDeployed)}
         />
         <KpiCard
-          label="Total revenue"
-          value={formatINRCompact(lifetime.grossRevenue)}
+          label="Revenue"
+          value={formatINRCompact(pl.grossRevenue)}
+          hint={period.label}
         />
         <KpiCard
-          label="Total expenses"
-          value={formatINRCompact(
-            lifetime.operatingExpenses + lifetime.otaFees + lifetime.paymentFees,
-          )}
+          label="Expenses"
+          value={formatINRCompact(pl.operatingExpenses + pl.otaFees + pl.paymentFees)}
+          hint={period.label}
         />
         <KpiCard
           label="Net operating income"
-          value={formatINRCompact(lifetime.netOperatingIncome)}
-          tone={lifetime.netOperatingIncome < 0 ? "critical" : "default"}
+          value={formatINRCompact(pl.netOperatingIncome)}
+          hint={period.label}
+          tone={pl.netOperatingIncome < 0 ? "critical" : "default"}
         />
         <KpiCard
           label="ROI"
@@ -102,13 +119,13 @@ export default async function PropertyFinancePage({
           hint={`${formatINRCompact(capital.remainingToRecover)} to go`}
         />
         <KpiCard
-          label="This month revenue"
-          value={formatINRCompact(currentMonth.grossRevenue)}
+          label="Lifetime revenue"
+          value={formatINRCompact(lifetime.grossRevenue)}
         />
         <KpiCard
-          label="This month net"
-          value={formatINRCompact(currentMonth.netOperatingIncome)}
-          tone={currentMonth.netOperatingIncome < 0 ? "critical" : "default"}
+          label="Lifetime net"
+          value={formatINRCompact(lifetime.netOperatingIncome)}
+          tone={lifetime.netOperatingIncome < 0 ? "critical" : "default"}
         />
       </div>
 
@@ -117,9 +134,9 @@ export default async function PropertyFinancePage({
           <h2 className="text-sm font-semibold text-foreground">
             Revenue vs expenses
           </h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">Last six months</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{period.label} · by {period.bucket}</p>
           <div className="mt-4">
-            <RevenueChart data={finance.monthlySeries} />
+            <RevenueChart data={finance.series} />
           </div>
         </section>
 
@@ -128,8 +145,8 @@ export default async function PropertyFinancePage({
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
         <PLStatement
-          title="Profit & loss - this month"
-          pl={currentMonth}
+          title={`Profit & loss - ${period.label}`}
+          pl={pl}
           channels={channels}
         />
 

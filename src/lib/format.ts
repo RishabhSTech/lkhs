@@ -67,3 +67,16 @@ export function formatMonth(date: Date | string) {
     year: "numeric",
   });
 }
+
+/** Chart bucket labels: "2026-11-23" → "23 Nov", "2026-11" → "Nov 2026". */
+export function formatBucket(key: string, long = false) {
+  if (key.length === 10) {
+    return new Date(`${key}T00:00:00Z`).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      ...(long ? { year: "numeric" } : {}),
+      timeZone: "UTC",
+    });
+  }
+  return formatMonth(`${key}-01`);
+}

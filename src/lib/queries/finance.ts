@@ -1,18 +1,19 @@
 import "server-only";
 import { db } from "@/lib/db";
 import {
-  addMonths, endOfMonthUTC, startOfMonthUTC, todayUTC,
+  endOfMonthUTC, startOfMonthUTC, todayUTC,
 } from "@/lib/dates";
 import {
   buildBreakEven, buildBudgetVariance, buildCapitalPosition,
-  buildChannelProfitability, buildMonthlySeries, buildPL,
+  buildChannelProfitability, buildPeriodSeries, buildPL,
   PL_TRANSACTION_SELECT, type TxWithCategory,
 } from "@/lib/finance/calculations";
 import { onOperatingProperty, operatingProperty } from "@/lib/property/back-office";
+import type { Period } from "@/lib/finance/period";
 
 export type PropertyFinance = Awaited<ReturnType<typeof getPropertyFinance>>;
 
-export async function getPropertyFinance(propertyId: string, monthsBack = 6) {
+export async function getPropertyFinance(propertyId: string, period: Period) {
   const today = todayUTC();
   const monthStart = startOfMonthUTC(today);
   const monthEnd = endOfMonthUTC(today);
@@ -47,18 +48,17 @@ export async function getPropertyFinance(propertyId: string, monthsBack = 6) {
     include: { category: true },
   });
 
-  const months = Array.from({ length: monthsBack }, (_, i) =>
-    startOfMonthUTC(addMonths(today, -(monthsBack - 1 - i))),
-  );
+  const periodTxs = allTxs.filter((t) => t.date >= period.from && t.date <= period.to);
 
   return {
     property,
     lifetime: buildPL(allTxs),
-    currentMonth: buildPL(monthTxs),
+    period: buildPL(periodTxs),
     capital: buildCapitalPosition(allTxs),
-    channels: buildChannelProfitability(allTxs),
+    channels: buildChannelProfitability(periodTxs),
+    // Break-even and budgets are inherently monthly - always the current month.
     breakEven: buildBreakEven(monthTxs, monthlyFixedCosts),
-    monthlySeries: buildMonthlySeries(allTxs, months),
+    series: buildPeriodSeries(periodTxs, period),
     budgets: buildBudgetVariance(
       monthTxs,
       budgets.map((b) => ({
@@ -76,15 +76,16 @@ export async function getPropertyFinance(propertyId: string, monthsBack = 6) {
       status: r.status,
       nextRunDate: r.nextRunDate,
     })),
-    recentTransactions: allTxs.slice(0, 12),
+    recentTransactions: periodTxs.slice(0, 12),
   };
 }
 
-export async function getPortfolioFinance(monthsBack = 6) {
-  const today = todayUTC();
-  const monthStart = startOfMonthUTC(today);
-  const monthEnd = endOfMonthUTC(today);
-
+/**
+ * Portfolio P&L for a reporting period. Capital figures (funds deployed,
+ * recovery) are always lifetime - they only make sense over the whole life
+ * of the investment - everything else covers the period alone.
+ */
+export async function getPortfolioFinance(period: Period) {
   const properties = await db.property.findMany({
     where: operatingProperty,
     include: {
@@ -93,40 +94,26 @@ export async function getPortfolioFinance(monthsBack = 6) {
     orderBy: { name: "asc" },
   });
 
-  const perProperty = properties.map((p) => {
-    const txs = p.transactions;
-    const monthTxs = txs.filter((t) => {
-      const d = new Date(t.date);
-      return d >= monthStart && d <= monthEnd;
-    });
-    return {
-      id: p.id,
-      name: p.name,
-      locationArea: p.locationArea,
-      lifetime: buildPL(txs),
-      currentMonth: buildPL(monthTxs),
-      capital: buildCapitalPosition(txs),
-    };
-  });
+  const inPeriod = <T extends { date: Date }>(txs: T[]) =>
+    txs.filter((t) => t.date >= period.from && t.date <= period.to);
+
+  const perProperty = properties.map((p) => ({
+    id: p.id,
+    name: p.name,
+    locationArea: p.locationArea,
+    period: buildPL(inPeriod(p.transactions)),
+    capital: buildCapitalPosition(p.transactions),
+  }));
 
   const allTxs = properties.flatMap((p) => p.transactions);
-
-  const months = Array.from({ length: monthsBack }, (_, i) =>
-    startOfMonthUTC(addMonths(today, -(monthsBack - 1 - i))),
-  );
+  const periodTxs = inPeriod(allTxs);
 
   return {
     perProperty,
-    lifetime: buildPL(allTxs),
-    currentMonth: buildPL(
-      allTxs.filter((t) => {
-        const d = new Date(t.date);
-        return d >= monthStart && d <= monthEnd;
-      }),
-    ),
+    period: buildPL(periodTxs),
     capital: buildCapitalPosition(allTxs),
-    channels: buildChannelProfitability(allTxs),
-    monthlySeries: buildMonthlySeries(allTxs, months),
+    channels: buildChannelProfitability(periodTxs),
+    series: buildPeriodSeries(periodTxs, period),
   };
 }
 
@@ -135,6 +122,7 @@ export async function getExpenses(options?: {
   propertyIds?: string[];
   status?: string;
   createdById?: string;
+  period?: Period;
   limit?: number;
 }) {
   return db.transaction.findMany({
@@ -148,6 +136,7 @@ export async function getExpenses(options?: {
           : {}),
       ...(options?.status ? { status: options.status as never } : {}),
       ...(options?.createdById ? { createdById: options.createdById } : {}),
+      ...(options?.period ? { date: { gte: options.period.from, lte: options.period.to } } : {}),
     },
     include: {
       category: true,

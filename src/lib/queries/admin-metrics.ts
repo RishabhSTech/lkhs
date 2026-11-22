@@ -8,6 +8,9 @@ import {
   buildMonthlySeries, buildPL, type TxWithCategory,
 } from "@/lib/finance/calculations";
 import { onOperatingProperty, onOperatingUnit } from "@/lib/property/back-office";
+import {
+  bucketKey, dayCount, periodBuckets, periodDateFilter, type Period,
+} from "@/lib/finance/period";
 
 /**
  * The admin layout (top-bar bell) and the dashboard page (Alerts panel)
@@ -253,4 +256,59 @@ export async function getCurrentMonthPL() {
   })) as TxWithCategory[];
 
   return buildPL(txs);
+}
+
+export type PeriodStayMetrics = {
+  occupancyPercent: number;
+  adr: number;
+  revPar: number;
+  nightsSold: number;
+  availableNights: number;
+  occupancySeries: { month: string; occupancy: number }[];
+};
+
+/**
+ * Occupancy, ADR and RevPAR over a reporting period, counted from the nights
+ * actually sold inside it - a stay straddling the boundary only contributes
+ * its in-period nights, at its average nightly room rate.
+ */
+export async function getPeriodStayMetrics(period: Period): Promise<PeriodStayMetrics> {
+  const [unitCount, nights] = await Promise.all([
+    db.unit.count({ where: onOperatingProperty }),
+    db.inventoryNight.findMany({
+      where: { date: periodDateFilter(period), reservationId: { not: null }, ...onOperatingUnit },
+      select: { date: true, reservation: { select: { subtotal: true, nights: true } } },
+    }),
+  ]);
+
+  const soldByBucket = new Map<string, number>();
+  let roomRevenue = 0;
+  for (const n of nights) {
+    const key = bucketKey(n.date, period.bucket);
+    soldByBucket.set(key, (soldByBucket.get(key) ?? 0) + 1);
+    if (n.reservation && n.reservation.nights > 0) {
+      roomRevenue += Number(n.reservation.subtotal) / n.reservation.nights;
+    }
+  }
+
+  const occupancySeries = periodBuckets(period).map((start) => {
+    const key = bucketKey(start, period.bucket);
+    // Days of this bucket that fall inside the period (custom ranges can
+    // start or end mid-month).
+    const bucketEnd = period.bucket === "day" ? start : endOfMonthUTC(start);
+    const from = start < period.from ? period.from : start;
+    const to = bucketEnd > period.to ? period.to : bucketEnd;
+    const available = unitCount * dayCount(from, to);
+    return { month: key, occupancy: available > 0 ? ((soldByBucket.get(key) ?? 0) / available) * 100 : 0 };
+  });
+
+  const availableNights = unitCount * dayCount(period.from, period.to);
+  return {
+    occupancyPercent: availableNights > 0 ? (nights.length / availableNights) * 100 : 0,
+    adr: nights.length > 0 ? roomRevenue / nights.length : 0,
+    revPar: availableNights > 0 ? roomRevenue / availableNights : 0,
+    nightsSold: nights.length,
+    availableNights,
+    occupancySeries,
+  };
 }
