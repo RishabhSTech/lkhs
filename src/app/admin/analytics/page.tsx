@@ -52,7 +52,11 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/admin/
         <KpiCard
           label="Revenue"
           value={formatINRCompact(finance.period.grossRevenue)}
-          hint={period.label}
+          hint={
+            finance.upcomingRevenue > 0
+              ? `${formatINRCompact(finance.period.grossRevenue - finance.upcomingRevenue)} earned · ${formatINRCompact(finance.upcomingRevenue)} upcoming`
+              : period.label
+          }
         />
       </div>
 

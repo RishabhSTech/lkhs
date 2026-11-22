@@ -29,7 +29,7 @@ export default async function FinanceOverviewPage({ searchParams }: PageProps<"/
     <AdminPage>
       <PageHeader
         title="Finance"
-        description="Every figure below is computed from transaction records."
+        description="Every figure is computed from transaction records. Booking revenue counts on its check-in date."
         actions={
           <>
             <QuickAddButton kind="expense">
@@ -76,7 +76,7 @@ export default async function FinanceOverviewPage({ searchParams }: PageProps<"/
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <KpiCard label="Revenue" value={formatINRCompact(pl.grossRevenue)} hint={`Gross, all channels · ${period.label}`} />
+        <KpiCard label="Revenue" value={formatINRCompact(pl.grossRevenue)} hint={finance.upcomingRevenue > 0 ? `${formatINRCompact(pl.grossRevenue - finance.upcomingRevenue)} earned · ${formatINRCompact(finance.upcomingRevenue)} upcoming` : `Gross, all channels · ${period.label}`} />
         <KpiCard label="Expenses" value={formatINRCompact(expenses)} hint="Operating + channel + payment fees" />
         <KpiCard
           label="Net operating income"

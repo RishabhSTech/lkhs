@@ -11,6 +11,17 @@ import {
 import { onOperatingProperty, operatingProperty } from "@/lib/property/back-office";
 import type { Period } from "@/lib/finance/period";
 
+/**
+ * Revenue is recognised on the check-in date. Within a period, stays whose
+ * check-in is still ahead of today are "upcoming" - booked, not yet earned.
+ */
+function upcomingRevenue(txs: { type: string; amount: unknown; date: Date }[]) {
+  const today = todayUTC();
+  return txs
+    .filter((t) => t.type === "REVENUE" && t.date > today)
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+}
+
 export type PropertyFinance = Awaited<ReturnType<typeof getPropertyFinance>>;
 
 export async function getPropertyFinance(propertyId: string, period: Period) {
@@ -54,6 +65,7 @@ export async function getPropertyFinance(propertyId: string, period: Period) {
     property,
     lifetime: buildPL(allTxs),
     period: buildPL(periodTxs),
+    upcomingRevenue: upcomingRevenue(periodTxs),
     capital: buildCapitalPosition(allTxs),
     channels: buildChannelProfitability(periodTxs),
     // Break-even and budgets are inherently monthly - always the current month.
@@ -111,6 +123,7 @@ export async function getPortfolioFinance(period: Period) {
   return {
     perProperty,
     period: buildPL(periodTxs),
+    upcomingRevenue: upcomingRevenue(periodTxs),
     capital: buildCapitalPosition(allTxs),
     channels: buildChannelProfitability(periodTxs),
     series: buildPeriodSeries(periodTxs, period),

@@ -69,6 +69,11 @@ export default async function RevenuePage({ searchParams }: PageProps<"/admin/fi
         <KpiCard
           label="Gross revenue"
           value={formatINRCompact(finance.period.grossRevenue)}
+          hint={
+            finance.upcomingRevenue > 0
+              ? `${formatINRCompact(finance.period.grossRevenue - finance.upcomingRevenue)} earned · ${formatINRCompact(finance.upcomingRevenue)} upcoming`
+              : "Counted on check-in date"
+          }
         />
         <KpiCard
           label="Channel fees"

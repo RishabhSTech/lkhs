@@ -95,7 +95,7 @@ export default async function PropertyFinancePage({
         <KpiCard
           label="Revenue"
           value={formatINRCompact(pl.grossRevenue)}
-          hint={period.label}
+          hint={finance.upcomingRevenue > 0 ? `${formatINRCompact(pl.grossRevenue - finance.upcomingRevenue)} earned · ${formatINRCompact(finance.upcomingRevenue)} upcoming` : period.label}
         />
         <KpiCard
           label="Expenses"
