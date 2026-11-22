@@ -134,3 +134,26 @@ export function bucketKey(date: Date, bucket: Period["bucket"]) {
 export function periodDateFilter(period: Period) {
   return { gte: period.from, lte: period.to };
 }
+
+/** Parses a "YYYY-MM-DD" URL param, or null if missing/invalid. */
+export function parseDateParam(value: string | undefined): Date | null {
+  return validDate(value);
+}
+
+export type DatePreset = { key: string; label: string; from: string; to: string };
+
+/** Quick ranges for list filters, relative to `today` ("YYYY-MM-DD"). */
+export function datePresets(today: string): DatePreset[] {
+  const t = parseISODate(today);
+  const month = (offset: number) => {
+    const from = startOfMonthUTC(addMonths(startOfMonthUTC(t), offset));
+    return { from: toISODate(from), to: toISODate(endOfMonthUTC(from)) };
+  };
+  const year = t.getUTCFullYear();
+  return [
+    { key: "this-month", label: "This month", ...month(0) },
+    { key: "last-month", label: "Last month", ...month(-1) },
+    { key: "next-month", label: "Next month", ...month(1) },
+    { key: "this-year", label: "This year", from: `${year}-01-01`, to: `${year}-12-31` },
+  ];
+}

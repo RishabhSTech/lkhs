@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { TransactionType } from "@prisma/client";
 import { parseISODate, toISODate } from "@/lib/dates";
 import { buildCapitalPosition, buildPeriodSeries, type PLTransaction } from "./calculations";
-import { parsePeriod, periodBuckets, periodParams } from "./period";
+import { datePresets, parseDateParam, parsePeriod, periodBuckets, periodParams } from "./period";
 
 const TODAY = parseISODate("2026-11-23");
 const iso = (d: Date) => toISODate(d);
@@ -93,5 +93,26 @@ describe("buildCapitalPosition", () => {
     const position = buildCapitalPosition([tx("EXPENSE", 25_000, "2026-11-10")]);
     expect(position.totalFundsDeployed).toBe(0);
     expect(position.remainingToRecover).toBe(0);
+  });
+});
+
+describe("datePresets", () => {
+  it("builds month and year ranges around today, across year ends", () => {
+    const byKey = Object.fromEntries(datePresets("2026-12-15").map((p) => [p.key, [p.from, p.to]]));
+    expect(byKey["this-month"]).toEqual(["2026-12-01", "2026-12-31"]);
+    expect(byKey["last-month"]).toEqual(["2026-11-01", "2026-11-30"]);
+    expect(byKey["next-month"]).toEqual(["2027-01-01", "2027-01-31"]);
+    expect(byKey["this-year"]).toEqual(["2026-01-01", "2026-12-31"]);
+  });
+
+  it("does not skip short months from the 31st", () => {
+    const byKey = Object.fromEntries(datePresets("2026-03-31").map((p) => [p.key, [p.from, p.to]]));
+    expect(byKey["last-month"]).toEqual(["2026-02-01", "2026-02-28"]);
+  });
+
+  it("rejects invalid date params", () => {
+    expect(parseDateParam("2026-02-30")).toBeNull();
+    expect(parseDateParam(undefined)).toBeNull();
+    expect(parseDateParam("2026-11-05")?.toISOString().slice(0, 10)).toBe("2026-11-05");
   });
 });

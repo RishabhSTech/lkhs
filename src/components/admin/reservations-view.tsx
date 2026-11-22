@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/site/empty-state";
 import { ResponsiveSheet } from "@/components/admin/responsive-sheet";
 import { NativeSelect } from "@/components/admin/form-fields";
+import { DateRangeFilter } from "@/components/admin/date-range-filter";
 import { useQuickAdd } from "@/components/admin/quick-add";
 import type { BookingRecord } from "@/components/admin/booking-sheet";
 import {
@@ -105,7 +106,11 @@ export function ReservationsView({
 }: {
   reservations: ReservationRow[];
   properties: { id: string; name: string }[];
-  filters: { q?: string; view: ReservationViewKey; propertyId?: string; status?: string; source?: string; limit: number };
+  filters: {
+    q?: string; view: ReservationViewKey; propertyId?: string; status?: string; source?: string; limit: number;
+    /** Check-in range, "YYYY-MM-DD". */
+    from?: string; to?: string;
+  };
   counts: Record<"arrivals" | "inhouse" | "departures" | "pending", number>;
   hasMore: boolean;
   /** All bookings matching the filters, cancelled excluded. */
@@ -259,6 +264,25 @@ export function ReservationsView({
             ))}
           </NativeSelect>
         </div>
+        <DateRangeFilter
+          key={`${filters.from ?? ""}_${filters.to ?? ""}`}
+          from={filters.from}
+          to={filters.to}
+          today={today}
+          label="Filter by check-in date"
+          onChange={(range) =>
+            pushParams((p) => {
+              p.delete("limit");
+              if (range) {
+                p.set("from", range.from);
+                p.set("to", range.to);
+              } else {
+                p.delete("from");
+                p.delete("to");
+              }
+            })
+          }
+        />
       </div>
 
       {reservations.length === 0 ? (

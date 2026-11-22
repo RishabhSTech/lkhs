@@ -8,6 +8,7 @@ import { requireAdminPage, inScope, scopeFilter, propertyScopeFilter } from "@/l
 import { BOOKING_WRITE_ROLES, OFFICE_ROLES } from "@/lib/auth/roles";
 import { addDays, toISODate, todayUTC } from "@/lib/dates";
 import { SOURCE_LABELS, STATUS_LABELS } from "@/lib/admin/sources";
+import { parseDateParam } from "@/lib/finance/period";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,10 @@ export default async function ReservationsPage({
   const view: ReservationViewKey = VIEWS.has(str("view") as ReservationViewKey) ? (str("view") as ReservationViewKey) : "all";
   const limit = Math.min(400, Math.max(PAGE_SIZE, Number(str("limit")) || PAGE_SIZE));
   const selectedId = str("id");
+  // Check-in date range (inclusive) - the same date Finance counts revenue on.
+  let fromDate = parseDateParam(str("from"));
+  let toDate = parseDateParam(str("to"));
+  if (fromDate && toDate && fromDate > toDate) [fromDate, toDate] = [toDate, fromDate];
 
   const today = todayUTC();
   const tomorrow = addDays(today, 1);
@@ -51,6 +56,9 @@ export default async function ReservationsPage({
       propertyId ? { propertyId } : {},
       status ? { status } : {},
       source ? { source } : {},
+      fromDate || toDate
+        ? { checkIn: { ...(fromDate ? { gte: fromDate } : {}), ...(toDate ? { lte: toDate } : {}) } }
+        : {},
       q
         ? {
             OR: [
@@ -136,7 +144,11 @@ export default async function ReservationsPage({
             total: Number(r.total),
           }))}
           properties={properties}
-          filters={{ q, view, propertyId, status, source, limit }}
+          filters={{
+            q, view, propertyId, status, source, limit,
+            from: fromDate ? toISODate(fromDate) : undefined,
+            to: toDate ? toISODate(toDate) : undefined,
+          }}
           counts={{ arrivals, inhouse, departures, pending }}
           hasMore={hasMore}
           matchingTotal={{ count: matching._count._all, amount: Number(matching._sum.total ?? 0) }}
