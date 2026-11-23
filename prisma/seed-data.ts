@@ -1084,7 +1084,7 @@ export const TRANSACTION_CATEGORY_DEFS: {
     group: "ONE_TIME_EXPENSE",
     names: [
       "Emergency Repair", "Replacement", "Plumbing", "Electrical",
-      "Appliance Repair", "Deep Cleaning", "Host Tax", "Miscellaneous",
+      "Appliance Repair", "Deep Cleaning", "Host Tax", "Items Ordered for Guests", "Miscellaneous",
     ],
   },
   { group: "REVENUE", names: ["Accommodation", "Extra Guest", "Late Checkout"] },
