@@ -66,6 +66,8 @@ function tx(
     reservationId: null,
     recurringExpenseId: null,
     createdById: null,
+    paidBy: null,
+    reimbursedAt: null,
     createdAt: new Date("2026-06-15"),
     updatedAt: new Date("2026-06-15"),
     category: categoryRow,

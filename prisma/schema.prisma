@@ -824,6 +824,13 @@ enum TransactionType {
   REFUND
 }
 
+/// Team members who sometimes pay for expenses personally and get reimbursed.
+enum ExpensePayer {
+  AASHISH
+  RISHABH
+  PIYA
+}
+
 enum TransactionStatus {
   PENDING
   PAID
@@ -861,6 +868,10 @@ model Transaction {
   reservationId      String?
   recurringExpenseId String?
   createdById        String?
+  // Who paid out of their own pocket (null = the business account paid), and
+  // when they were paid back. Drives the reimbursements panel on Expenses.
+  paidBy             ExpensePayer?
+  reimbursedAt       DateTime?
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
 
@@ -873,6 +884,7 @@ model Transaction {
   @@index([propertyId, date])
   @@index([type])
   @@index([status])
+  @@index([paidBy, reimbursedAt])
 }
 
 enum RecurringExpenseStatus {

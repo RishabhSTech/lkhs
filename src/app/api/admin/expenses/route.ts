@@ -8,6 +8,7 @@ import { getCurrentAdminUser } from "@/lib/auth/current-user";
 import { getPropertyScope, inScope, outOfScope } from "@/lib/auth/guards";
 import { EXPENSE_SUBMIT_ROLES, FINANCE_ROLES } from "@/lib/auth/roles";
 import { formatINR } from "@/lib/format";
+import { PAYER_VALUES } from "@/lib/finance/payers";
 
 const schema = z.object({
   propertyId: z.string().min(1),
@@ -19,6 +20,8 @@ const schema = z.object({
   paymentMethod: z.enum(["CASH", "UPI", "BANK_TRANSFER", "CARD", "OTHER"]).default("BANK_TRANSFER"),
   status: z.enum(["PENDING", "PAID", "OVERDUE", "APPROVED"]).default("PAID"),
   receiptUrl: z.string().refine(isOwnStorageUrl, "Attach the receipt again.").optional(),
+  // Who paid personally; omitted/null = paid from the business account.
+  paidBy: z.enum(PAYER_VALUES).nullable().optional(),
 });
 
 export async function POST(request: Request) {
@@ -87,6 +90,7 @@ export async function POST(request: Request) {
       status: data.status,
       frequency: data.frequency,
       receiptUrl: data.receiptUrl || null,
+      paidBy: data.paidBy ?? null,
       createdById: user.id,
     },
   });

@@ -8,6 +8,7 @@ import { getCurrentAdminUser } from "@/lib/auth/current-user";
 import { getPropertyScope, inScope, outOfScope } from "@/lib/auth/guards";
 import { EXPENSE_SUBMIT_ROLES, FINANCE_ROLES } from "@/lib/auth/roles";
 import { formatINR } from "@/lib/format";
+import { PAYER_LABELS, PAYER_VALUES } from "@/lib/finance/payers";
 
 const EXPENSE_TYPES = ["EXPENSE", "INVESTMENT", "DEPOSIT_OUT"] as const;
 
@@ -20,6 +21,9 @@ const patchSchema = z.object({
   paymentMethod: z.enum(["CASH", "UPI", "BANK_TRANSFER", "CARD", "OTHER"]).optional(),
   status: z.enum(["PENDING", "PAID", "OVERDUE", "APPROVED"]).optional(),
   receiptUrl: z.string().refine(isOwnStorageUrl, "Attach the receipt again.").nullable().optional(),
+  paidBy: z.enum(PAYER_VALUES).nullable().optional(),
+  /** Finance only: true marks the payer as paid back, false undoes it. */
+  reimbursed: z.boolean().optional(),
 });
 
 /**
@@ -72,6 +76,21 @@ export async function PATCH(request: Request, { params }: RouteContext<"/api/adm
   if (!isFinance && data.status && data.status !== "PENDING") {
     return NextResponse.json({ error: "Only finance can approve expenses." }, { status: 403 });
   }
+  if (data.reimbursed !== undefined && !isFinance) {
+    return NextResponse.json({ error: "Only finance can record reimbursements." }, { status: 403 });
+  }
+  const paidBy = data.paidBy === undefined ? expense.paidBy : data.paidBy;
+  if (data.reimbursed && !paidBy) {
+    return NextResponse.json({ error: "Set who paid before marking it reimbursed." }, { status: 400 });
+  }
+  // Nobody to pay back once it's on the business account; a different payer
+  // starts unpaid.
+  const reimbursedAt =
+    data.reimbursed !== undefined
+      ? data.reimbursed ? (expense.reimbursedAt ?? new Date()) : null
+      : !paidBy || paidBy !== expense.paidBy
+        ? null
+        : undefined;
 
   let type = expense.type;
   if (data.categoryId && data.categoryId !== expense.categoryId) {
@@ -106,19 +125,25 @@ export async function PATCH(request: Request, { params }: RouteContext<"/api/adm
       paymentMethod: data.paymentMethod,
       status: data.status,
       receiptUrl: data.receiptUrl === undefined ? undefined : data.receiptUrl || null,
+      paidBy: data.paidBy,
+      reimbursedAt,
     },
   });
 
   const approved = data.status && data.status !== expense.status && expense.status === "PENDING";
+  const reimbursement =
+    data.reimbursed !== undefined && paidBy
+      ? ` ${data.reimbursed ? "reimbursed to" : "reimbursement undone for"} ${PAYER_LABELS[paidBy]}`
+      : null;
   await db.auditLog.create({
     data: {
       userId: user.id,
       userName: user.name,
-      action: approved ? "EXPENSE_APPROVED" : "EXPENSE_UPDATED",
+      action: approved ? "EXPENSE_APPROVED" : reimbursement ? "EXPENSE_REIMBURSED" : "EXPENSE_UPDATED",
       entityType: "Transaction",
       entityId: id,
       summary: `${expense.property.name} · ${expense.category.name} ${formatINR(Number(updated.amount))}${
-        approved ? ` marked ${updated.status.toLowerCase()}` : " edited"
+        approved ? ` marked ${updated.status.toLowerCase()}` : (reimbursement ?? " edited")
       }`,
     },
   });

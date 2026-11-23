@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, CheckCircle2, FileText, Info, Loader2, Paperclip, Trash2, X } from "lucide-react";
+import { Camera, CheckCircle2, FileText, HandCoins, Info, Loader2, Paperclip, Trash2, Undo2, X } from "lucide-react";
 import { toast } from "sonner";
 import type { RoleName } from "@prisma/client";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,8 @@ import {
 import { FINANCE_ROLES } from "@/lib/auth/roles";
 import { formatDateLong, formatINR } from "@/lib/format";
 import { safeHttpUrl } from "@/lib/safe-url";
+import { PAYERS, PAYER_LABELS } from "@/lib/finance/payers";
+import type { ExpensePayer } from "@prisma/client";
 
 export type ExpenseCategoryOption = {
   id: string;
@@ -35,6 +37,10 @@ export type ExpenseRecord = {
   receiptUrl: string | null;
   createdById: string | null;
   createdByName: string | null;
+  /** Who paid personally; null = business account. */
+  paidBy: ExpensePayer | null;
+  /** ISO timestamp the payer was paid back. */
+  reimbursedAt: string | null;
 };
 
 const GROUP_LABELS: Record<string, string> = {
@@ -58,6 +64,10 @@ const STATUS_OPTIONS = [
   { value: "PENDING", label: "Pending" },
   { value: "APPROVED", label: "Approved" },
   { value: "OVERDUE", label: "Overdue" },
+];
+const PAID_BY_OPTIONS: { value: ExpensePayer | ""; label: string }[] = [
+  { value: "", label: "Business account" },
+  ...PAYERS,
 ];
 const FREQUENCY_OPTIONS = [
   { value: "ONE_TIME", label: "One-time" },
@@ -90,13 +100,13 @@ export function ExpenseSheet({
   expense?: ExpenseRecord | null;
 }) {
   const router = useRouter();
-  const [busy, setBusy] = useState<null | "save" | "delete" | "approve" | "paid">(null);
+  const [busy, setBusy] = useState<null | "save" | "delete" | "approve" | "paid" | "reimburse" | "unreimburse">(null);
   const isFinance = FINANCE_ROLES.includes(role);
   const isEdit = Boolean(expense);
   const readOnly =
     isEdit && !isFinance && !(expense!.createdById === userId && expense!.status === "PENDING");
 
-  async function mutate(kind: "delete" | "approve" | "paid") {
+  async function mutate(kind: "delete" | "approve" | "paid" | "reimburse" | "unreimburse") {
     if (!expense) return;
     if (kind === "delete" && !window.confirm("Delete this expense? It comes off the property's P&L.")) return;
     setBusy(kind);
@@ -104,11 +114,25 @@ export function ExpenseSheet({
       const res = await fetch(`/api/admin/expenses/${expense.id}`, {
         method: kind === "delete" ? "DELETE" : "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: kind === "delete" ? undefined : JSON.stringify({ status: kind === "approve" ? "APPROVED" : "PAID" }),
+        body:
+          kind === "delete"
+            ? undefined
+            : kind === "reimburse" || kind === "unreimburse"
+              ? JSON.stringify({ reimbursed: kind === "reimburse" })
+              : JSON.stringify({ status: kind === "approve" ? "APPROVED" : "PAID" }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "That didn't work.");
-      toast.success(kind === "delete" ? "Expense deleted" : kind === "approve" ? "Expense approved" : "Marked as paid");
+      const payer = expense.paidBy ? PAYER_LABELS[expense.paidBy] : "";
+      toast.success(
+        {
+          delete: "Expense deleted",
+          approve: "Expense approved",
+          paid: "Marked as paid",
+          reimburse: `Marked as reimbursed to ${payer}`,
+          unreimburse: `${payer} is owed this again`,
+        }[kind],
+      );
       onOpenChange(false);
       router.refresh();
     } catch (err) {
@@ -162,6 +186,52 @@ export function ExpenseSheet({
       </div>
     ) : null;
 
+  // Who's owed this, and a one-tap way for finance to settle it.
+  const reimbursementBanner =
+    isEdit && expense!.paidBy ? (
+      <div
+        className={
+          expense!.reimbursedAt
+            ? "flex items-center gap-3 rounded-xl border border-chart-1/25 bg-chart-1/8 p-3"
+            : "flex items-center gap-3 rounded-xl border border-chart-3/25 bg-chart-3/8 p-3"
+        }
+      >
+        <HandCoins className={expense!.reimbursedAt ? "size-5 shrink-0 text-chart-1" : "size-5 shrink-0 text-chart-3"} />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium text-foreground">
+            {expense!.reimbursedAt
+              ? `Reimbursed to ${PAYER_LABELS[expense!.paidBy]}`
+              : `${PAYER_LABELS[expense!.paidBy]} paid this · ${formatINR(expense!.amount)} owed`}
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {expense!.reimbursedAt
+              ? `Paid back ${formatDateLong(expense!.reimbursedAt)}`
+              : expense!.status === "PENDING"
+                ? "Owed once the expense is approved."
+                : "Out of their own pocket - not yet paid back."}
+          </p>
+        </div>
+        {isFinance && expense!.status !== "PENDING" && (
+          <Button
+            type="button"
+            size="sm"
+            variant={expense!.reimbursedAt ? "outline" : "default"}
+            disabled={busy !== null}
+            onClick={() => mutate(expense!.reimbursedAt ? "unreimburse" : "reimburse")}
+          >
+            {busy === "reimburse" || busy === "unreimburse" ? (
+              <Loader2 className="animate-spin" />
+            ) : expense!.reimbursedAt ? (
+              <Undo2 />
+            ) : (
+              <CheckCircle2 />
+            )}
+            {expense!.reimbursedAt ? "Undo" : "Mark reimbursed"}
+          </Button>
+        )}
+      </div>
+    ) : null;
+
   return (
     <ResponsiveSheet
       open={open}
@@ -185,7 +255,12 @@ export function ExpenseSheet({
         categories={categories}
         defaultPropertyId={defaultPropertyId}
         expense={expense ?? null}
-        banner={pendingBanner}
+        banner={
+          <>
+            {pendingBanner}
+            {reimbursementBanner}
+          </>
+        }
         onSaving={(saving) => setBusy(saving ? "save" : null)}
         onSaved={() => {
           onOpenChange(false);
@@ -224,6 +299,7 @@ function ExpenseFields({
   const [categoryId, setCategoryId] = useState(expense?.categoryId ?? "");
   const [date, setDate] = useState(expense?.date ?? todayISO());
   const [paymentMethod, setPaymentMethod] = useState(expense?.paymentMethod ?? "UPI");
+  const [paidBy, setPaidBy] = useState<ExpensePayer | "">(expense?.paidBy ?? "");
   const [status, setStatus] = useState(expense?.status ?? "PAID");
   const [frequency, setFrequency] = useState("ONE_TIME");
   const [description, setDescription] = useState(expense?.description ?? "");
@@ -306,6 +382,7 @@ function ExpenseFields({
           date,
           description,
           paymentMethod,
+          paidBy: paidBy || null,
           receiptUrl: expense ? receiptUrl : receiptUrl ?? undefined,
           ...(isFinance ? { status } : {}),
           ...(!expense && isFinance ? { frequency } : {}),
@@ -382,6 +459,13 @@ function ExpenseFields({
 
         <Field label="Paid via">
           <ChipGroup ariaLabel="Payment method" value={paymentMethod} onChange={setPaymentMethod} options={PAYMENT_OPTIONS} />
+        </Field>
+
+        <Field
+          label="Paid by"
+          hint={paidBy ? `${PAYER_LABELS[paidBy]} gets this back - it shows under Reimbursements until marked paid.` : undefined}
+        >
+          <ChipGroup ariaLabel="Paid by" value={paidBy} onChange={setPaidBy} options={PAID_BY_OPTIONS} />
         </Field>
 
         {isFinance && (

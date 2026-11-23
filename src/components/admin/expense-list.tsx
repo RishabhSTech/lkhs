@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Paperclip, Plus } from "lucide-react";
+import { Paperclip, Plus, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/site/empty-state";
@@ -12,6 +12,8 @@ import { useNavigate } from "@/components/admin/navigation-progress";
 import type { ExpenseRecord } from "@/components/admin/expense-sheet";
 import { formatDateLong, formatINR } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { PAYER_LABELS } from "@/lib/finance/payers";
+import type { ExpensePayer } from "@prisma/client";
 
 export type ExpenseRow = ExpenseRecord & {
   propertyName: string;
@@ -53,7 +55,7 @@ export function ExpenseList({
 }: {
   expenses: ExpenseRow[];
   properties: { id: string; name: string }[];
-  filters: { propertyId?: string; status?: string };
+  filters: { propertyId?: string; status?: string; paidBy?: ExpensePayer; owedOnly?: boolean };
   pendingCount: number;
   showFilters: boolean;
 }) {
@@ -133,10 +135,43 @@ export function ExpenseList({
         </div>
       )}
 
+      {filters.paidBy && (
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-brand-blue/30 bg-brand-blue/5 px-4 py-2.5">
+          <p className="text-sm text-foreground">
+            {filters.owedOnly
+              ? `Showing what's owed to ${PAYER_LABELS[filters.paidBy]}`
+              : `Showing expenses paid by ${PAYER_LABELS[filters.paidBy]}`}
+            <span className="ml-1.5 font-semibold tabular-nums">
+              {formatINR(expenses.reduce((sum, e) => sum + e.amount, 0))}
+            </span>
+          </p>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              const params = new URLSearchParams(searchParams.toString());
+              params.delete("paidBy");
+              params.delete("owed");
+              navigate(`${pathname}${params.size ? `?${params}` : ""}`);
+            }}
+          >
+            <X />
+            Clear
+          </Button>
+        </div>
+      )}
+
       {expenses.length === 0 ? (
         <div className="mt-6">
           <EmptyState
-            title={filters.status === "PENDING" ? "Nothing waiting for approval" : "No expenses here yet"}
+            title={
+              filters.paidBy && filters.owedOnly
+                ? `Nothing owed to ${PAYER_LABELS[filters.paidBy]}`
+                : filters.status === "PENDING"
+                  ? "Nothing waiting for approval"
+                  : "No expenses here yet"
+            }
             description="Tap + to log one - snap the receipt and it's done."
           />
           <div className="mt-4 flex justify-center">
@@ -184,7 +219,18 @@ export function ExpenseList({
                       </span>
                       <span className="flex shrink-0 flex-col items-end gap-1">
                         <span className="text-sm font-semibold tabular-nums text-foreground">{formatINR(e.amount)}</span>
-                        <span className="flex gap-1">
+                        <span className="flex flex-wrap justify-end gap-1">
+                          {e.paidBy && (
+                            <Badge
+                              className={
+                                e.reimbursedAt
+                                  ? "border-border bg-muted text-muted-foreground"
+                                  : "border-chart-3/25 bg-chart-3/10 text-chart-3"
+                              }
+                            >
+                              {PAYER_LABELS[e.paidBy]} · {e.reimbursedAt ? "reimbursed" : "owed"}
+                            </Badge>
+                          )}
                           {e.type !== "EXPENSE" && (
                             <Badge className="border-border bg-muted text-muted-foreground">{TYPE_LABELS[e.type] ?? e.type}</Badge>
                           )}
