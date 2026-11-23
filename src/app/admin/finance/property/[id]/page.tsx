@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
 import { getPropertyFinance } from "@/lib/queries/finance";
 import { PeriodPicker } from "@/components/admin/period-picker";
-import { parsePeriod, periodQuery } from "@/lib/finance/period";
+import { PropertyExpenses } from "@/components/admin/property-expenses";
+import { parsePeriod, periodDateFilter, periodQuery } from "@/lib/finance/period";
 import { toISODate } from "@/lib/dates";
 import { formatINR, formatINRCompact, formatPercent } from "@/lib/format";
 
@@ -32,8 +33,19 @@ export default async function PropertyFinancePage({
   await requirePortfolioAccess(FINANCE_ROLES);
   if (!id) notFound();
 
-  const [finance, budgetCategories] = await Promise.all([
+  const [finance, expenses, budgetCategories] = await Promise.all([
     getPropertyFinance(id, period).catch(() => null),
+    // Every expense dated in the period - for a hidden property too, since
+    // this page is reached directly from it.
+    db.transaction.findMany({
+      where: {
+        propertyId: id,
+        type: { in: ["EXPENSE", "INVESTMENT", "DEPOSIT_OUT"] },
+        date: periodDateFilter(period),
+      },
+      include: { category: { select: { name: true } }, createdBy: { select: { name: true } } },
+      orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+    }),
     db.transactionCategory.findMany({
       where: { group: { in: ["RECURRING_EXPENSE", "ONE_TIME_EXPENSE"] } },
       select: { id: true, name: true },
@@ -193,6 +205,31 @@ export default async function PropertyFinancePage({
 
           <BudgetTable budgets={finance.budgets} propertyId={property.id} categories={budgetCategories} />
         </div>
+      </div>
+
+      <div className="mt-5">
+        <PropertyExpenses
+          propertyId={property.id}
+          periodLabel={period.label}
+          channelFees={pl.otaFees + pl.paymentFees}
+          expenses={expenses.map((e) => ({
+            id: e.id,
+            propertyId: e.propertyId,
+            categoryId: e.categoryId,
+            categoryName: e.category.name,
+            type: e.type,
+            amount: Number(e.amount),
+            date: toISODate(e.date),
+            paymentMethod: e.paymentMethod,
+            status: e.status,
+            description: e.description,
+            receiptUrl: e.receiptUrl,
+            createdById: e.createdById,
+            createdByName: e.createdBy?.name ?? null,
+            paidBy: e.paidBy,
+            reimbursedAt: e.reimbursedAt?.toISOString() ?? null,
+          }))}
+        />
       </div>
 
       <section className="mt-5 rounded-xl border border-border bg-card p-5">
