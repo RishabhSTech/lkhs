@@ -484,3 +484,64 @@
     opacity: 0.6;
   }
 }
+
+/* ── Back office palette ───────────────────────────────────────────────
+   Staff spend hours in here on their phones, many of them not "computer
+   people". So: warm paper instead of blue-white, a quieter slate-navy
+   instead of the saturated brand blue, cards that float on soft shadow
+   instead of being boxed in by borders, and sentence-case labels instead
+   of tiny tracked capitals. Scoped with :has() so the guest site keeps
+   its own look, and so sheets/dialogs (portalled outside .admin-app)
+   pick it up too. */
+:root:has(.admin-app) {
+  --background: #f7f5f0;
+  --foreground: #26292e;
+  --card: #fffefb;
+  --card-foreground: #26292e;
+  --popover: #fffefb;
+  --popover-foreground: #26292e;
+  --primary: #2f4a6d;
+  --primary-foreground: #ffffff;
+  --secondary: #efebe3;
+  --secondary-foreground: #2f4a6d;
+  --muted: #f0ede6;
+  --muted-foreground: #6b675f;
+  --accent: #ece7dd;
+  --accent-foreground: #26292e;
+  --destructive: #b4483c;
+  --border: #e8e3d9;
+  --input: #dcd5c8;
+  --ring: #7b96b8;
+  --radius: 0.875rem;
+
+  --sidebar: #f0ece4;
+  --sidebar-foreground: #3a3e44;
+  --sidebar-primary: #2f4a6d;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e4ded2;
+  --sidebar-accent-foreground: #1f2329;
+  --sidebar-border: #e2dccf;
+  --sidebar-ring: #7b96b8;
+}
+
+@utility soft-card {
+  border-radius: 1.125rem;
+  background-color: var(--card);
+  box-shadow:
+    0 1px 2px rgba(70, 58, 38, 0.05),
+    0 6px 20px -12px rgba(70, 58, 38, 0.16);
+}
+
+.admin-app .uppercase,
+:is([data-slot="dialog-content"], [data-slot="sheet-content"], [data-slot="drawer-content"]) .uppercase {
+  text-transform: none;
+  letter-spacing: 0;
+}
+.admin-app :is(h1, h2, h3) {
+  text-wrap: balance;
+}
+.admin-app .label-eyebrow {
+  font-size: 0.8125rem;
+  letter-spacing: 0;
+  text-transform: none;
+}

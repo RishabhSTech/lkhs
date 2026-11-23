@@ -109,7 +109,7 @@ export function ExpenseList({
               onClick={() => setParam("status", t.value)}
               className={cn(
                 "h-9 shrink-0 rounded-full border px-3.5 text-sm font-medium whitespace-nowrap transition-colors",
-                active ? "border-brand-blue bg-brand-blue text-white" : "border-border bg-card text-foreground",
+                active ? "border-primary bg-primary text-white" : "border-border bg-card text-foreground",
               )}
             >
               {t.label}
@@ -136,7 +136,7 @@ export function ExpenseList({
       )}
 
       {filters.paidBy && (
-        <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-brand-blue/30 bg-brand-blue/5 px-4 py-2.5">
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-2.5">
           <p className="text-sm text-foreground">
             {filters.owedOnly
               ? `Showing what's owed to ${PAYER_LABELS[filters.paidBy]}`
@@ -186,7 +186,7 @@ export function ExpenseList({
           {[...groups].map(([month, rows]) => (
             <section key={month}>
               <div className="flex items-baseline justify-between px-1 pb-2">
-                <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                <h2 className="text-[0.8125rem] font-semibold text-muted-foreground">
                   {new Date(`${month}-01T00:00:00Z`).toLocaleDateString("en-IN", {
                     month: "long",
                     year: "numeric",
@@ -197,7 +197,7 @@ export function ExpenseList({
                   {formatINR(rows.reduce((s, r) => s + r.amount, 0))}
                 </span>
               </div>
-              <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+              <ul className="divide-y divide-border overflow-hidden soft-card">
                 {rows.map((e) => (
                   <li key={e.id}>
                     <button

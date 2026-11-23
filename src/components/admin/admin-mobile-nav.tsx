@@ -7,6 +7,7 @@ import type { RoleName } from "@prisma/client";
 import { LogOut, MoreHorizontal, Plus } from "lucide-react";
 import { ResponsiveSheet } from "@/components/admin/responsive-sheet";
 import { useQuickAdd } from "@/components/admin/quick-add";
+import { PushAlertButton } from "@/components/admin/push-alert-button";
 import { isActivePath, mobileTabsFor, visibleNavFor, type MobileTab } from "@/lib/admin/nav";
 import { cn } from "@/lib/utils";
 
@@ -30,15 +31,16 @@ export function AdminMobileNav({ role, userName, scoped }: { role: RoleName; use
             <Tab key={t.href} tab={t} active={isActivePath(pathname, t.href, t.exact)} />
           ))}
           {showPlus && (
-            <li className="flex items-start justify-center">
+            <li className="flex flex-col items-center">
               <button
                 type="button"
                 onClick={openMenu}
                 aria-label="Add new"
-                className="-mt-4 grid size-14 place-items-center rounded-full bg-brand-blue text-white shadow-lg shadow-brand-blue/30 ring-4 ring-background transition-transform active:scale-95"
+                className="-mt-4 grid size-14 place-items-center rounded-full bg-primary text-white shadow-lg shadow-primary/25 ring-4 ring-background transition-transform active:scale-95"
               >
                 <Plus className="size-6" strokeWidth={2.5} />
               </button>
+              <span className="mt-0.5 text-xs font-medium text-primary">Add</span>
             </li>
           )}
           {tabs.right.map((t) => (
@@ -49,7 +51,7 @@ export function AdminMobileNav({ role, userName, scoped }: { role: RoleName; use
               <button
                 type="button"
                 onClick={() => setMoreOpen(true)}
-                className="flex h-full w-full flex-col items-center justify-center gap-1 text-[0.6875rem] font-medium text-muted-foreground"
+                className="flex h-full w-full flex-col items-center justify-center gap-1 text-xs font-medium text-muted-foreground"
               >
                 <MoreHorizontal className="size-[1.375rem]" />
                 More
@@ -69,10 +71,8 @@ export function AdminMobileNav({ role, userName, scoped }: { role: RoleName; use
                   href={item.href}
                   onClick={() => setMoreOpen(false)}
                   className={cn(
-                    "flex aspect-[5/4] flex-col items-center justify-center gap-2 rounded-xl border px-2 text-center text-xs font-medium",
-                    active
-                      ? "border-brand-blue bg-brand-blue/8 text-brand-blue"
-                      : "border-border bg-card text-foreground",
+                    "flex aspect-[5/4] flex-col items-center justify-center gap-2 rounded-2xl px-2 text-center text-[0.8125rem] font-medium transition-colors",
+                    active ? "bg-primary/10 text-primary" : "bg-muted/70 text-foreground active:bg-muted",
                   )}
                 >
                   <item.icon className="size-5" />
@@ -82,7 +82,11 @@ export function AdminMobileNav({ role, userName, scoped }: { role: RoleName; use
             );
           })}
         </ul>
-        <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-3 py-3">
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl bg-muted/70 px-4 py-3">
+          <span className="text-sm font-medium text-foreground">Alerts on this phone</span>
+          <PushAlertButton />
+        </div>
+        <div className="mt-2 flex items-center justify-between gap-3 rounded-2xl bg-muted/70 px-4 py-3">
           <span className="min-w-0">
             <span className="block truncate text-sm font-medium text-foreground">{userName}</span>
             <span className="block text-xs capitalize text-muted-foreground">
@@ -111,14 +115,14 @@ function Tab({ tab, active }: { tab: MobileTab; active: boolean }) {
         href={tab.href}
         aria-current={active ? "page" : undefined}
         className={cn(
-          "flex h-full flex-col items-center justify-center gap-1 text-[0.6875rem] font-medium transition-colors",
-          active ? "text-brand-blue dark:text-sidebar-primary" : "text-muted-foreground",
+          "flex h-full flex-col items-center justify-center gap-1 text-xs font-medium transition-colors",
+          active ? "text-primary dark:text-sidebar-primary" : "text-muted-foreground",
         )}
       >
         <span
           className={cn(
             "grid h-7 w-12 place-items-center rounded-full transition-colors",
-            active && "bg-brand-blue/10 dark:bg-sidebar-primary/15",
+            active && "bg-primary/10 dark:bg-sidebar-primary/15",
           )}
         >
           <tab.icon className="size-[1.375rem]" />

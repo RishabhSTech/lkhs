@@ -59,7 +59,7 @@ export function PropertyMonthCalendar({
   return (
     <div className="space-y-4">
       {/* Property stepper */}
-      <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3">
+      <div className="flex items-center justify-between gap-3 soft-card p-3">
         <Button
           variant="ghost"
           size="icon-sm"
@@ -219,7 +219,7 @@ function MonthGrid({
   const leadingBlanks = (firstDay.getUTCDay() + 6) % 7;
 
   return (
-    <section className="rounded-xl border border-border bg-card p-3 sm:p-4">
+    <section className="soft-card p-3 sm:p-4">
       {unitName && (
         <h3 className="mb-3 text-sm font-medium text-foreground">{unitName}</h3>
       )}
@@ -271,7 +271,7 @@ function MonthGrid({
                   "text-xs font-semibold",
                   isToday &&
                     !booked &&
-                    "grid size-5 place-items-center rounded-full bg-brand-azure text-white",
+                    "grid size-5 place-items-center rounded-full bg-primary text-white",
                 )}
               >
                 {date.getUTCDate()}

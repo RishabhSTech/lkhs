@@ -182,14 +182,14 @@ export function PricingRuleEditor({
 
           <div className="space-y-4">
             <div>
-              <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <Label className="mb-1.5 text-[0.8125rem] font-semibold text-muted-foreground">
                 Name
               </Label>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Weekend premium" />
             </div>
 
             <div>
-              <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <Label className="mb-1.5 text-[0.8125rem] font-semibold text-muted-foreground">
                 Applies when
               </Label>
               <select value={type} onChange={(e) => setType(e.target.value as typeof type)} className={selectClass}>
@@ -204,13 +204,13 @@ export function PricingRuleEditor({
             {NEEDS_DATE_RANGE.has(type) && (
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                  <Label className="mb-1.5 text-[0.8125rem] font-semibold text-muted-foreground">
                     From
                   </Label>
                   <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                 </div>
                 <div>
-                  <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                  <Label className="mb-1.5 text-[0.8125rem] font-semibold text-muted-foreground">
                     To
                   </Label>
                   <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
@@ -220,7 +220,7 @@ export function PricingRuleEditor({
 
             {NEEDS_MIN_NIGHTS.has(type) && (
               <div>
-                <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                <Label className="mb-1.5 text-[0.8125rem] font-semibold text-muted-foreground">
                   {type === "LONG_STAY" ? "Minimum nights to qualify" : "Days before check-in"}
                 </Label>
                 <Input type="number" min={1} value={minNights} onChange={(e) => setMinNights(e.target.value)} placeholder={type === "LONG_STAY" ? "7" : "3"} />
@@ -229,7 +229,7 @@ export function PricingRuleEditor({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                <Label className="mb-1.5 text-[0.8125rem] font-semibold text-muted-foreground">
                   Adjustment
                 </Label>
                 <select
@@ -242,7 +242,7 @@ export function PricingRuleEditor({
                 </select>
               </div>
               <div>
-                <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                <Label className="mb-1.5 text-[0.8125rem] font-semibold text-muted-foreground">
                   Value (+/-)
                 </Label>
                 <Input

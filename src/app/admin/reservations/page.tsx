@@ -122,9 +122,12 @@ export default async function ReservationsPage({
     <AdminPage>
       <PageHeader
         title="Bookings"
-        description={`${reservations.length}${hasMore ? "+" : ""} shown${q ? ` for "${q}"` : ""}`}
+        description={q ? `Results for "${q}"` : "Tap a booking to see details, call the guest or make changes."}
         actions={
-          <QuickAddButton kind="booking">
+          <QuickAddButton
+            kind="booking"
+            className="hidden h-8 items-center gap-1.5 rounded-md bg-primary px-3 text-[0.8125rem] font-semibold text-primary-foreground hover:bg-primary/90 lg:inline-flex [&_svg]:size-3.5"
+          >
             <Plus />
             Add booking
           </QuickAddButton>

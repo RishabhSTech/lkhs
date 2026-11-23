@@ -46,13 +46,13 @@ export function BasePricingEditor({
   return (
     <div className="grid gap-4 sm:grid-cols-3">
       <div>
-        <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+        <Label className="mb-1.5 text-[0.8125rem] font-semibold text-muted-foreground">
           Base rate / night
         </Label>
         <Input type="number" min={1} value={basePrice} onChange={(e) => setBasePrice(e.target.value)} />
       </div>
       <div>
-        <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+        <Label className="mb-1.5 text-[0.8125rem] font-semibold text-muted-foreground">
           Cleaning fee
         </Label>
         <Input type="number" min={0} value={cleaningFee} onChange={(e) => setCleaningFee(e.target.value)} />

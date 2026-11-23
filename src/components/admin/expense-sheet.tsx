@@ -428,7 +428,7 @@ function ExpenseFields({
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Property" required>
+          <Field label="Which property?" required>
             <NativeSelect value={propertyId} onChange={(e) => setPropertyId(e.target.value)}>
               <option value="">Choose property…</option>
               {properties.map((p) => (
@@ -438,7 +438,7 @@ function ExpenseFields({
               ))}
             </NativeSelect>
           </Field>
-          <Field label="Category" required>
+          <Field label="What was it for?" required>
             <NativeSelect value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
               <option value="">What was it for?</option>
               {grouped.map(([group, items]) => (
@@ -452,12 +452,12 @@ function ExpenseFields({
               ))}
             </NativeSelect>
           </Field>
-          <Field label="Date" required>
+          <Field label="When?" required>
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-11 text-base lg:h-10 lg:text-sm" />
           </Field>
         </div>
 
-        <Field label="Paid via">
+        <Field label="How was it paid?">
           <ChipGroup ariaLabel="Payment method" value={paymentMethod} onChange={setPaymentMethod} options={PAYMENT_OPTIONS} />
         </Field>
 
@@ -469,7 +469,7 @@ function ExpenseFields({
         </Field>
 
         {isFinance && (
-          <Field label="Status">
+          <Field label="Paid yet?">
             <ChipGroup ariaLabel="Status" value={status} onChange={setStatus} options={STATUS_OPTIONS} />
           </Field>
         )}
@@ -486,7 +486,7 @@ function ExpenseFields({
         <div>
           <span className="mb-1.5 block text-xs font-semibold text-muted-foreground">Receipt</span>
           {receiptUrl && safeReceipt ? (
-            <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-2.5">
+            <div className="flex items-center gap-3 soft-card p-2.5">
               {isImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={safeReceipt} alt="Receipt" className="size-14 shrink-0 rounded-lg object-cover" />
@@ -499,7 +499,7 @@ function ExpenseFields({
                 href={safeReceipt}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="min-w-0 flex-1 truncate text-sm font-medium text-brand-azure"
+                className="min-w-0 flex-1 truncate text-sm font-medium text-primary"
               >
                 {receiptName ?? "View receipt"}
               </a>
@@ -538,7 +538,7 @@ function ExpenseFields({
           )}
         </div>
 
-        <Field label="Note">
+        <Field label="Short note">
           <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}

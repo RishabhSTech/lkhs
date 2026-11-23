@@ -47,7 +47,7 @@ export function MailboxInboxFeed({ threads }: { threads: InboxThread[] }) {
   return (
     <ul className="space-y-3">
       {threads.map((thread) => (
-        <li key={thread.key} className="rounded-xl border border-border bg-card p-4">
+        <li key={thread.key} className="soft-card p-4">
           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-3">
             <div className="min-w-0">
               <p className="text-sm font-medium text-foreground">

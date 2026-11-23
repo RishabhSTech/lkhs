@@ -102,7 +102,7 @@ export function ChannelConnectList({
 
   return (
     <>
-      <section className="rounded-xl border border-border bg-card">
+      <section className="soft-card">
         <div className="border-b border-border p-5">
           <h2 className="text-sm font-semibold text-foreground">
             Properties on {channelName}
@@ -186,7 +186,7 @@ export function ChannelConnectList({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Plug className="size-4 text-brand-azure" />
+              <Plug className="size-4 text-primary" />
               Connect {editing?.name}
             </DialogTitle>
             <DialogDescription>
@@ -197,7 +197,7 @@ export function ChannelConnectList({
           <div className="space-y-4">
             {fields.map((field) => (
               <div key={field.key}>
-                <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                <Label className="mb-1.5 text-[0.8125rem] font-semibold text-muted-foreground">
                   {field.label}
                 </Label>
                 <Input

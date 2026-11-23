@@ -127,15 +127,15 @@ export default async function OperationsPage() {
   return (
     <AdminPage>
       <PageHeader
-        title={isCleaner ? `Hi ${user.name.split(" ")[0]}` : "Cleaning & upkeep"}
+        title={isCleaner ? `Hi ${user.name.split(" ")[0]}` : "Cleaning"}
         description={
           isCleaner
-            ? "Your turnovers. Tap the big button as you go."
-            : "Turnovers are created automatically from confirmed checkouts."
+            ? "Your cleanings for today. Tap the blue button as you go."
+            : "A cleaning is added by itself every time a guest checks out."
         }
         actions={
           canManage ? (
-            <QuickAddButton kind="cleaning" variant="outline">
+            <QuickAddButton kind="cleaning" variant="outline" className="hidden lg:inline-flex h-8 items-center gap-1.5 rounded-md border border-border px-3 text-[0.8125rem] font-semibold text-foreground hover:bg-muted [&_svg]:size-3.5">
               <Plus />
               Schedule cleaning
             </QuickAddButton>
@@ -148,15 +148,15 @@ export default async function OperationsPage() {
           tasksView
         ) : (
           <Tabs defaultValue="tasks">
-            <TabsList className="w-full lg:w-fit">
+            <TabsList variant="line" className="w-full border-b border-border lg:w-fit">
               <TabsTrigger value="tasks" className="flex-1 lg:flex-none lg:px-4">
-                Tasks
+                Cleanings
               </TabsTrigger>
               <TabsTrigger value="team" className="flex-1 lg:flex-none lg:px-4">
                 Team
               </TabsTrigger>
               <TabsTrigger value="maintenance" className="flex-1 lg:flex-none lg:px-4">
-                Maintenance
+                Repairs
               </TabsTrigger>
             </TabsList>
             <TabsContent value="tasks" className="mt-4">

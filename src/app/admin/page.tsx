@@ -2,11 +2,12 @@ import Link from "next/link";
 import { syncTurnoverTasks } from "@/lib/operations/turnovers";
 import { STAGE_LABEL } from "@/lib/operations/cleaning-stages";
 import {
-  AlertTriangle, ArrowUpRight, BedDouble, CalendarCheck, CalendarX, CircleDollarSign,
-  Percent, TrendingUp, Wallet, Wrench,
+  AlertTriangle, ArrowUpRight, CircleDollarSign,
+  Percent, Wallet, Wrench,
 } from "lucide-react";
 import { AdminPage, PageHeader } from "@/components/admin/page-header";
 import { KpiCard } from "@/components/admin/kpi-card";
+import { HomeQuickActions } from "@/components/admin/home-quick-actions";
 import { RevenueChart } from "@/components/charts/revenue-chart";
 import { OccupancyChart } from "@/components/charts/occupancy-chart";
 import { Badge } from "@/components/ui/badge";
@@ -57,7 +58,7 @@ export default async function AdminOverviewPage() {
     <AdminPage>
       <PageHeader
         title={`${greeting()}, ${user.name.split(" ")[0]} 👋`}
-        description="Here's how the portfolio is doing today."
+        description="Here's what's happening today."
         actions={
           <Button render={<Link href="/admin/calendar" />} variant="outline" size="sm" className="hidden sm:inline-flex">
             Open calendar
@@ -65,16 +66,18 @@ export default async function AdminOverviewPage() {
         }
       />
 
+      <HomeQuickActions />
+
       <Panel
         title="Today"
         className="mt-5"
-        action={{ href: "/admin/operations", label: "Cleaning tasks" }}
+        action={{ href: "/admin/operations", label: "Cleanings" }}
       >
         <div className="grid gap-5 sm:grid-cols-3 sm:gap-6">
           <OpsColumn
             title="Arriving"
             href="/admin/reservations?view=arrivals"
-            empty="No arrivals today."
+            empty="Nobody arrives today."
             items={operations.arrivals.map((r) => ({
               id: r.id,
               href: `/admin/reservations?view=arrivals&id=${r.id}`,
@@ -83,9 +86,9 @@ export default async function AdminOverviewPage() {
             }))}
           />
           <OpsColumn
-            title="Departing"
+            title="Leaving"
             href="/admin/reservations?view=departures"
-            empty="No departures today."
+            empty="Nobody leaves today."
             items={operations.departures.map((r) => ({
               id: r.id,
               href: `/admin/reservations?view=departures&id=${r.id}`,
@@ -94,9 +97,9 @@ export default async function AdminOverviewPage() {
             }))}
           />
           <OpsColumn
-            title="Cleaning queue"
+            title="To clean"
             href="/admin/operations"
-            empty="Every home is turned over."
+            empty="Every home is ready."
             items={operations.cleaning.map((c) => ({
               id: c.id,
               href: "/admin/operations",
@@ -109,74 +112,51 @@ export default async function AdminOverviewPage() {
 
       <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <KpiCard
-          label="Today's revenue"
+          label="Money in today"
           value={formatINR(kpis.todayRevenue)}
           icon={CircleDollarSign}
-          hint="Bookings checking in today"
+          hint="From guests arriving today"
         />
         <KpiCard
-          label="Occupancy"
+          label="How full this month"
           value={formatPercent(kpis.occupancyPercent)}
           icon={Percent}
-          hint="This month across all units"
+          hint="Nights booked out of all nights"
         />
         <KpiCard
-          label="ADR"
-          value={formatINR(kpis.adr)}
-          icon={TrendingUp}
-          hint="Average daily rate"
-        />
-        <KpiCard
-          label="RevPAR"
-          value={formatINR(kpis.revPar)}
-          icon={BedDouble}
-          hint="Revenue per available night"
-        />
-        <KpiCard
-          label="Arrivals"
-          value={String(kpis.arrivalsToday)}
-          icon={CalendarCheck}
-          hint="Checking in today"
-        />
-        <KpiCard
-          label="Departures"
-          value={String(kpis.departuresToday)}
-          icon={CalendarX}
-          hint="Checking out today"
-        />
-        <KpiCard
-          label="Open issues"
+          label="Repairs open"
           value={String(kpis.openIssues)}
           icon={Wrench}
           tone={kpis.openIssues > 3 ? "warning" : "default"}
-          hint="Maintenance tasks"
+          hint="Waiting to be fixed"
         />
         <KpiCard
-          label="Pending payments"
+          label="Bills to pay"
           value={formatINRCompact(kpis.pendingPaymentsAmount)}
           icon={Wallet}
           tone={kpis.pendingPaymentsAmount > 0 ? "warning" : "default"}
-          hint="Expenses awaiting payment"
+          hint="Expenses not paid yet"
         />
       </div>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-2">
+      {/* Charts are for the desk; on a phone they're on the Reports page. */}
+      <div className="mt-5 hidden gap-5 lg:grid lg:grid-cols-2">
         <Panel
-          title="Revenue vs expenses"
-          description="Last six months, from transaction records"
+          title="Money in vs money out"
+          description="The last six months"
         >
           <RevenueChart data={revenueSeries} />
         </Panel>
-        <Panel title="Occupancy" description="Share of available nights sold">
+        <Panel title="How full we were" description="Nights booked, month by month">
           <OccupancyChart data={occupancySeries} />
         </Panel>
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-3">
         <Panel
-          title="Upcoming bookings"
+          title="Coming up"
           className="lg:col-span-2"
-          action={{ href: "/admin/reservations", label: "All reservations" }}
+          action={{ href: "/admin/reservations", label: "See all" }}
         >
           {upcoming.length === 0 ? (
             <EmptyState
@@ -216,7 +196,7 @@ export default async function AdminOverviewPage() {
         </Panel>
 
         <div className="space-y-5">
-          <Panel title="Alerts">
+          <Panel title="Needs your attention">
             {alerts.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 Nothing needs your attention.
@@ -242,7 +222,7 @@ export default async function AdminOverviewPage() {
                       {alert.link && (
                         <Link
                           href={alert.link}
-                          className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-brand-azure hover:underline"
+                          className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
                         >
                           Review
                           <ArrowUpRight className="size-3" />
@@ -256,7 +236,8 @@ export default async function AdminOverviewPage() {
           </Panel>
 
           <Panel
-            title="Channel sync"
+            className="hidden lg:block"
+            title="Booking sites"
             action={{ href: "/admin/channels", label: "Manage" }}
           >
             <ul className="space-y-2.5">
@@ -300,7 +281,7 @@ function OpsColumn({
   return (
     <div>
       <Link href={href} className="flex items-baseline justify-between gap-2">
-        <h3 className="text-[0.6875rem] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
+        <h3 className="text-[0.8125rem] font-semibold text-muted-foreground">
           {title}
         </h3>
         <span className="text-sm font-semibold tabular-nums text-foreground">{items.length}</span>

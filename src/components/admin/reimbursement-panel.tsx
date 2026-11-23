@@ -98,7 +98,7 @@ export function ReimbursementPanel({
               key={card.payer}
               className={cn(
                 "flex flex-col rounded-xl border bg-card p-4 transition-colors",
-                isActive ? "border-brand-blue ring-1 ring-brand-blue" : "border-border",
+                isActive ? "border-primary ring-1 ring-primary" : "border-border",
               )}
             >
               <button
@@ -107,7 +107,7 @@ export function ReimbursementPanel({
                 aria-pressed={isActive}
                 className="-m-1 rounded-lg p-1 text-left"
               >
-                <span className="block text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                <span className="block text-[0.8125rem] font-semibold text-muted-foreground">
                   {card.label} is owed
                 </span>
                 <span

@@ -85,7 +85,7 @@ export function ResponsiveSheet({
     <div className="shrink-0 px-5 pt-5 pb-3 pr-12">
       {desktop === "side" ? (
         <>
-          <SheetTitle className="font-heading text-xl text-brand-blue">{title}</SheetTitle>
+          <SheetTitle className="font-heading text-xl text-primary">{title}</SheetTitle>
           {description && <SheetDescription className="mt-0.5 text-xs">{description}</SheetDescription>}
         </>
       ) : (

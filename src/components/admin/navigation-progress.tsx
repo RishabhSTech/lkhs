@@ -87,7 +87,7 @@ export function NavigationProgressProvider({ children }: { children: ReactNode }
           pending ? "opacity-100" : "opacity-0",
         )}
       >
-        <div className="nav-progress-bar h-full w-1/3 bg-brand-azure" />
+        <div className="nav-progress-bar h-full w-1/3 bg-primary" />
       </div>
       {children}
     </NavigationContext.Provider>

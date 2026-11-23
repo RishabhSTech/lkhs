@@ -85,7 +85,7 @@ export function CleaningTaskSheet({
       description={
         isEdit
           ? `${formatDateLong(task!.scheduledDate)}${task!.reservation ? ` · after ${task!.reservation.guestName}` : ""}`
-          : "For a one-off deep clean or anything outside a checkout."
+          : "For an extra or deep clean. Normal cleanings after a checkout are added for you."
       }
       size="sm"
       footer={
@@ -191,7 +191,7 @@ function TaskFields({
   return (
     <form id={FORM_ID} onSubmit={submit} className="space-y-5">
       {!task && (
-        <Field label="Property" required>
+        <Field label="Which property?" required>
           <NativeSelect value={propertyId} onChange={(e) => setPropertyId(e.target.value)}>
             <option value="">Choose property…</option>
             {properties.map((p) => (
@@ -204,7 +204,7 @@ function TaskFields({
       )}
 
       {task && (
-        <Field label="Stage">
+        <Field label="Where is it up to?">
           <ChipGroup
             ariaLabel="Cleaning stage"
             value={status}
@@ -216,7 +216,7 @@ function TaskFields({
 
       {canManage && (
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Date">
+          <Field label="Which day?">
             <Input
               type="date"
               value={scheduledDate}
@@ -224,7 +224,7 @@ function TaskFields({
               className={fieldControlClass}
             />
           </Field>
-          <Field label="Assigned to">
+          <Field label="Who cleans it?">
             <NativeSelect value={assignedToId} onChange={(e) => setAssignedToId(e.target.value)}>
               <option value="">Unassigned</option>
               {staff.map((s) => (
@@ -237,7 +237,7 @@ function TaskFields({
         </div>
       )}
 
-      <Field label="Notes" hint="Linen count, damage, missing items, anything the next person should know.">
+      <Field label="Notes" hint="Anything broken, missing or worth knowing for next time.">
         <Textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}

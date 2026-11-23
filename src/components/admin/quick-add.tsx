@@ -155,7 +155,7 @@ export function QuickAddProvider({ data, children }: { data: QuickAddData; child
               <button
                 type="button"
                 onClick={a.run}
-                className="flex w-full items-center gap-3.5 rounded-xl border border-border bg-card p-3.5 text-left transition-colors active:bg-muted"
+                className="flex w-full items-center gap-3.5 soft-card p-3.5 text-left transition-colors active:bg-muted"
               >
                 <span className={`grid size-11 shrink-0 place-items-center rounded-xl ${a.tone}`}>
                   <a.icon className="size-5" />
@@ -251,7 +251,7 @@ export function QuickAddButton({
         className ??
         (variant === "outline"
           ? "inline-flex h-8 items-center gap-1.5 rounded-md border border-border px-3 text-[0.8125rem] font-semibold text-foreground hover:bg-muted [&_svg]:size-3.5"
-          : "inline-flex h-8 items-center gap-1.5 rounded-md bg-primary px-3 text-[0.8125rem] font-semibold text-primary-foreground hover:bg-brand-blue-light [&_svg]:size-3.5")
+          : "inline-flex h-8 items-center gap-1.5 rounded-md bg-primary px-3 text-[0.8125rem] font-semibold text-primary-foreground hover:bg-primary/90 [&_svg]:size-3.5")
       }
     >
       {children}

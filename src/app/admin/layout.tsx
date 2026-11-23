@@ -69,7 +69,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
       }}
     >
       <NavigationProgressProvider>
-      <div className="admin-app flex min-h-svh bg-muted/30">
+      <div className="admin-app flex min-h-svh bg-background">
         <AdminSidebar role={user.role} userName={user.name} scoped={Boolean(scope)} />
 
         <div className="flex min-w-0 flex-1 flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0">

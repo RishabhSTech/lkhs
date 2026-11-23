@@ -63,7 +63,7 @@ export function BudgetForm({
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <Label className="mb-1.5 text-[0.8125rem] font-semibold text-muted-foreground">
                 Category
               </Label>
               <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className={selectClass}>
@@ -75,7 +75,7 @@ export function BudgetForm({
               </select>
             </div>
             <div>
-              <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <Label className="mb-1.5 text-[0.8125rem] font-semibold text-muted-foreground">
                 Budget amount (₹)
               </Label>
               <Input type="number" min={0} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="20000" />

@@ -82,7 +82,7 @@ export function BookingSheet({
       onOpenChange={onOpenChange}
       title={isEdit ? "Edit booking" : "Add booking"}
       description={
-        isEdit ? "Change the stay, guest, channel or money." : "Phone, walk-in, OTA or past bookings. Past dates are fine."
+        isEdit ? "Change the stay, guest, channel or money." : "Phone, walk-in, Airbnb or Booking.com - past dates are fine too."
       }
       size="lg"
       footer={
@@ -229,9 +229,9 @@ function BookingFields({
 
   return (
     <form id={FORM_ID} onSubmit={submit} className="space-y-6">
-      <FormSection title="Stay">
+      <FormSection title="Where and when">
         <div className={cn("grid gap-3", property && property.units.length > 1 && "sm:grid-cols-2")}>
-          <Field label="Property" required>
+          <Field label="Which property?" required>
             <NativeSelect value={propertyId} onChange={(e) => changeProperty(e.target.value)}>
               <option value="">Choose property…</option>
               {properties.map((p) => (
@@ -242,7 +242,7 @@ function BookingFields({
             </NativeSelect>
           </Field>
           {property && property.units.length > 1 && (
-            <Field label="Unit" required>
+            <Field label="Which room / unit" required>
               <NativeSelect value={unitId} onChange={(e) => setUnitId(e.target.value)}>
                 {property.units.map((u) => (
                   <option key={u.id} value={u.id}>
@@ -274,8 +274,8 @@ function BookingFields({
         </div>
       </FormSection>
 
-      <FormSection title="Guest">
-        <Field label="Name" required>
+      <FormSection title="Guest details">
+        <Field label="Guest name" required>
           <Input value={name} onChange={(e) => setName(e.target.value)} autoComplete="off" className={fieldControlClass} />
         </Field>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -301,24 +301,24 @@ function BookingFields({
         </div>
       </FormSection>
 
-      <FormSection title="Booking">
-        <Field label="Booked via">
+      <FormSection title="Payment">
+        <Field label="Where did this booking come from?">
           <ChipGroup ariaLabel="Booking source" value={source} onChange={setSource} options={SOURCE_OPTIONS} />
         </Field>
         {!booking && (
-          <Field label="Status">
+          <Field label="Has the guest paid?">
             <ChipGroup
               ariaLabel="Booking status"
               value={status}
               onChange={setStatus}
               options={[
-                { value: "CONFIRMED", label: "Confirmed" },
-                { value: "PENDING", label: "Request (unpaid)" },
+                { value: "CONFIRMED", label: "Yes, confirmed" },
+                { value: "PENDING", label: "Not yet" },
               ]}
             />
           </Field>
         )}
-        <Field label="Total booking amount (₹)" required>
+        <Field label="Total amount the guest pays (₹)" required>
           <Input
             inputMode="decimal"
             value={amount}
@@ -330,12 +330,12 @@ function BookingFields({
 
         {deductionsVisible ? (
           <div className="space-y-3 rounded-xl border border-border bg-muted/40 p-3">
-            <p className="text-xs text-muted-foreground">What the channel or taxman keeps from this booking.</p>
+            <p className="text-xs text-muted-foreground">Money the booking site or tax takes out. Leave at 0 if none.</p>
             <div className="grid grid-cols-3 gap-2">
-              <Field label="Platform fee">
+              <Field label="Site fee">
                 <Input inputMode="decimal" value={platformFee} onChange={(e) => setPlatformFee(e.target.value)} placeholder="0" className={fieldControlClass} />
               </Field>
-              <Field label="Host tax">
+              <Field label="Tax">
                 <Input inputMode="decimal" value={hostTax} onChange={(e) => setHostTax(e.target.value)} placeholder="0" className={fieldControlClass} />
               </Field>
               <Field label="Other">
@@ -343,7 +343,7 @@ function BookingFields({
               </Field>
             </div>
             <div className="flex items-baseline justify-between border-t border-border pt-2 text-sm">
-              <span className="text-muted-foreground">You receive</span>
+              <span className="text-muted-foreground">We get</span>
               <span className="font-semibold tabular-nums text-foreground">{formatINR(Math.max(0, gross - deductions))}</span>
             </div>
           </div>
@@ -351,17 +351,17 @@ function BookingFields({
           <button
             type="button"
             onClick={() => setShowDeductions(true)}
-            className="flex items-center gap-1 text-sm font-medium text-brand-azure"
+            className="flex items-center gap-1 text-sm font-medium text-primary"
           >
             <ChevronDown className="size-4" />
-            Add fees or taxes
+            Booking site took a fee?
           </button>
         )}
       </FormSection>
 
       {!booking && (
-        <FormSection title="Extras">
-          <Field label="Internal note" hint="Only the team sees this.">
+        <FormSection title="Anything else?">
+          <Field label="Note for the team" hint="Guests never see this.">
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}

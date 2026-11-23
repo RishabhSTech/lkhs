@@ -43,7 +43,7 @@ export default async function RevenuePage({ searchParams }: PageProps<"/admin/fi
     <AdminPage>
       <Link
         href={`/admin/finance?${query}`}
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-brand-blue"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
       >
         <ArrowLeft className="size-4" />
         Back to finance
@@ -90,7 +90,7 @@ export default async function RevenuePage({ searchParams }: PageProps<"/admin/fi
         />
       </div>
 
-      <section className="mt-5 rounded-xl border border-border bg-card p-5">
+      <section className="mt-5 soft-card p-5">
         <h2 className="text-sm font-semibold text-foreground">
           Revenue over time
         </h2>
@@ -100,14 +100,14 @@ export default async function RevenuePage({ searchParams }: PageProps<"/admin/fi
       </section>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
-        <section className="rounded-xl border border-border bg-card p-5">
+        <section className="soft-card p-5">
           <h2 className="text-sm font-semibold text-foreground">By channel</h2>
           <div className="mt-4">
             <ChannelProfitTable channels={finance.channels} />
           </div>
         </section>
 
-        <section className="rounded-xl border border-border bg-card p-5">
+        <section className="soft-card p-5">
           <h2 className="text-sm font-semibold text-foreground">By property</h2>
           <ul className="mt-4 divide-y divide-border">
             {finance.perProperty.map((p) => (
@@ -116,7 +116,7 @@ export default async function RevenuePage({ searchParams }: PageProps<"/admin/fi
                   href={`/admin/finance/property/${p.id}?${query}`}
                   className="group -mx-2 flex items-center justify-between gap-3 rounded-md px-2 py-2 text-sm transition-colors hover:bg-muted/50"
                 >
-                  <span className="text-foreground group-hover:text-brand-azure">{p.name}</span>
+                  <span className="text-foreground group-hover:text-primary">{p.name}</span>
                   <span className="font-medium tabular-nums text-foreground">
                     {formatINRCompact(p.period.grossRevenue)}
                   </span>
@@ -127,7 +127,7 @@ export default async function RevenuePage({ searchParams }: PageProps<"/admin/fi
         </section>
       </div>
 
-      <section className="mt-5 rounded-xl border border-border bg-card p-5">
+      <section className="mt-5 soft-card p-5">
         <h2 className="text-sm font-semibold text-foreground">
           Revenue transactions
         </h2>

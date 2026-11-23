@@ -19,23 +19,18 @@ export function KpiCard({
   return (
     <div
       className={cn(
-        "group relative overflow-hidden rounded-xl border border-border bg-card p-4 transition-colors hover:border-ring/40",
+        "group relative overflow-hidden soft-card p-4",
         className,
       )}
+      // A gentle wash instead of a hard coloured rule when something needs a look.
+      style={
+        tone === "critical"
+          ? { backgroundColor: "color-mix(in oklch, var(--destructive) 7%, var(--card))" }
+          : tone === "warning"
+            ? { backgroundColor: "color-mix(in oklch, var(--chart-4) 9%, var(--card))" }
+            : undefined
+      }
     >
-      {/* Left rule carries tone without tinting the whole tile. */}
-      <span
-        aria-hidden
-        className={cn(
-          "absolute inset-y-0 left-0 w-0.5",
-          tone === "critical"
-            ? "bg-destructive"
-            : tone === "warning"
-              ? "bg-chart-4"
-              : "bg-transparent",
-        )}
-      />
-
       <div className="flex items-start justify-between gap-2">
         <p className="label-eyebrow leading-tight">{label}</p>
         {Icon && (

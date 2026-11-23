@@ -43,7 +43,7 @@ export function AdminSidebar({
     <aside className="hidden w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
       <div className="px-4 py-4">
         <Link href={scoped ? "/admin/reservations" : "/admin"}>
-          <LogoStacked tone="light" />
+          <LogoStacked tone="dark" />
         </Link>
       </div>
 

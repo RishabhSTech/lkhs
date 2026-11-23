@@ -63,7 +63,7 @@ export default async function GuestsPage() {
         <EmptyState className="mt-6" title="No guests yet" />
       ) : (
         <>
-          <div className="mt-6 hidden overflow-x-auto rounded-xl border border-border bg-card lg:block">
+          <div className="mt-6 hidden overflow-x-auto soft-card lg:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-left">
@@ -110,7 +110,7 @@ export default async function GuestsPage() {
           <ul className="mt-6 space-y-2.5 lg:hidden">
             {rows.map((g) => (
               <li key={g.id}>
-                <Link href={g.href} className="block rounded-xl border border-border bg-card p-4 transition-colors active:bg-muted/60">
+                <Link href={g.href} className="block soft-card p-4 transition-colors active:bg-muted/60">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="truncate font-medium text-foreground">{g.name}</p>

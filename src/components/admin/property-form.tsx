@@ -71,7 +71,7 @@ export function PropertyForm() {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-5 rounded-xl border border-border bg-card p-6">
+    <form onSubmit={submit} className="space-y-5 soft-card p-6">
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Name" required>
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Palasia Loft" required />
@@ -175,9 +175,9 @@ function Field({
 }) {
   return (
     <div className={className}>
-      <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+      <Label className="mb-1.5 text-[0.8125rem] font-semibold text-muted-foreground">
         {label}
-        {required && <span className="text-brand-azure"> *</span>}
+        {required && <span className="text-primary"> *</span>}
       </Label>
       {children}
     </div>

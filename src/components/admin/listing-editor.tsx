@@ -589,7 +589,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-border bg-card p-5">
+    <section className="soft-card p-5">
       <h2 className="text-sm font-semibold text-foreground">{title}</h2>
       {description && (
         <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
@@ -608,7 +608,7 @@ function Field({
 }) {
   return (
     <div>
-      <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+      <Label className="mb-1.5 text-[0.8125rem] font-semibold text-muted-foreground">
         {label}
       </Label>
       {children}

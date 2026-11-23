@@ -15,7 +15,7 @@ export function BudgetTable({
   const overCount = budgets.filter((b) => b.isOverBudget).length;
 
   return (
-    <section className="rounded-xl border border-border bg-card p-5">
+    <section className="soft-card p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold text-foreground">

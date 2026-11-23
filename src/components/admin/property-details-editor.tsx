@@ -62,13 +62,13 @@ export function PropertyDetailsEditor({
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+          <Label className="mb-1.5 text-[0.8125rem] font-semibold text-muted-foreground">
             Title
           </Label>
           <Input value={name} onChange={(e) => setName(e.target.value)} />
         </div>
         <div>
-          <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+          <Label className="mb-1.5 text-[0.8125rem] font-semibold text-muted-foreground">
             Slug
           </Label>
           <Input
@@ -84,7 +84,7 @@ export function PropertyDetailsEditor({
       </div>
 
       <div>
-        <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+        <Label className="mb-1.5 text-[0.8125rem] font-semibold text-muted-foreground">
           Tagline
         </Label>
         <Input
@@ -96,7 +96,7 @@ export function PropertyDetailsEditor({
       </div>
 
       <div>
-        <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+        <Label className="mb-1.5 text-[0.8125rem] font-semibold text-muted-foreground">
           Description
         </Label>
         <RichTextEditor

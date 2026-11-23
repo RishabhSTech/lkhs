@@ -125,7 +125,7 @@ export function ReviewRow({ review }: { review: AdminReview }) {
           <p className="mt-0.5 text-xs text-muted-foreground">
             <Link
               href={`/admin/properties/${review.propertyId}`}
-              className="hover:text-brand-azure"
+              className="hover:text-primary"
             >
               {review.propertyName}
             </Link>{" "}
@@ -154,7 +154,7 @@ export function ReviewRow({ review }: { review: AdminReview }) {
             </Badge>
           )}
           {review.featuredOnHome && (
-            <Badge className="border-brand-azure/25 bg-brand-azure/10 text-brand-azure">
+            <Badge className="border-primary/25 bg-primary/10 text-primary">
               <Home className="size-3" />
               on homepage
             </Badge>

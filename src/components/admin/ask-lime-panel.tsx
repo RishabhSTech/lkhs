@@ -58,8 +58,8 @@ export function AskLimePanel() {
       />
       <SheetContent side="right" className="w-full sm:max-w-md">
         <SheetHeader>
-          <SheetTitle className="flex items-center gap-2 font-heading text-xl text-brand-blue">
-            <Sparkles className="size-4 text-brand-azure" />
+          <SheetTitle className="flex items-center gap-2 font-heading text-xl text-primary">
+            <Sparkles className="size-4 text-primary" />
             Ask Lime
           </SheetTitle>
           <SheetDescription>
@@ -147,7 +147,7 @@ export function AskLimePanel() {
           )}
 
           <div>
-            <p className="text-[0.6875rem] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
+            <p className="text-[0.8125rem] font-semibold text-muted-foreground">
               Try asking
             </p>
             <ul className="mt-2 space-y-1.5">

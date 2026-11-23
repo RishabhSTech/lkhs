@@ -61,7 +61,7 @@ export default async function PropertyFinancePage({
     <AdminPage>
       <Link
         href={`/admin/finance?${query}`}
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-brand-blue"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
       >
         <ArrowLeft className="size-4" />
         Back to finance
@@ -142,7 +142,7 @@ export default async function PropertyFinancePage({
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
-        <section className="rounded-xl border border-border bg-card p-5">
+        <section className="soft-card p-5">
           <h2 className="text-sm font-semibold text-foreground">
             Revenue vs expenses
           </h2>
@@ -163,7 +163,7 @@ export default async function PropertyFinancePage({
         />
 
         <div className="space-y-5">
-          <section className="rounded-xl border border-border bg-card p-5">
+          <section className="soft-card p-5">
             <h2 className="text-sm font-semibold text-foreground">Break-even</h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
               Monthly revenue needed to cover fixed and variable costs
@@ -232,7 +232,7 @@ export default async function PropertyFinancePage({
         />
       </div>
 
-      <section className="mt-5 rounded-xl border border-border bg-card p-5">
+      <section className="mt-5 soft-card p-5">
         <h2 className="text-sm font-semibold text-foreground">
           Channel profitability
         </h2>
@@ -241,14 +241,14 @@ export default async function PropertyFinancePage({
         </div>
       </section>
 
-      <section className="mt-5 rounded-xl border border-border bg-card p-5">
+      <section className="mt-5 soft-card p-5">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold text-foreground">
             Recurring expenses
           </h2>
           <Link
             href="/admin/finance/expenses"
-            className="text-xs font-medium text-brand-azure hover:underline"
+            className="text-xs font-medium text-primary hover:underline"
           >
             Manage
           </Link>

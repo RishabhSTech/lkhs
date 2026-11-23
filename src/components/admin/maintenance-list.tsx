@@ -34,7 +34,7 @@ export function MaintenanceList({
   const closed = tasks.filter((t) => !(t.status === "OPEN" || t.status === "IN_PROGRESS"));
 
   const list = (items: MaintenanceRecord[]) => (
-    <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+    <ul className="divide-y divide-border overflow-hidden soft-card">
       {items.map((task) => (
         <li key={task.id}>
           <button
@@ -86,7 +86,7 @@ export function MaintenanceList({
 
       {closed.length > 0 && (
         <details className="group">
-          <summary className="cursor-pointer list-none px-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+          <summary className="cursor-pointer list-none px-1 text-[0.8125rem] font-semibold text-muted-foreground">
             Resolved ({closed.length})
           </summary>
           <div className="mt-2">{list(closed.slice(0, 30))}</div>

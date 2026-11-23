@@ -45,13 +45,13 @@ export default async function PricingPage() {
           return (
             <section
               key={property.id}
-              className="rounded-xl border border-border bg-card"
+              className="soft-card"
             >
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-5">
                 <div>
                   <Link
                     href={`/admin/properties/${property.id}`}
-                    className="font-heading text-lg text-brand-blue hover:text-brand-azure"
+                    className="font-heading text-lg text-primary hover:text-primary"
                   >
                     {property.name}
                   </Link>
@@ -104,7 +104,7 @@ export default async function PricingPage() {
                         <span
                           className={
                             night.price !== night.basePrice
-                              ? "font-medium tabular-nums text-brand-azure"
+                              ? "font-medium tabular-nums text-primary"
                               : "tabular-nums text-foreground"
                           }
                         >

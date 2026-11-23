@@ -112,7 +112,7 @@ export default async function ChannelGuidePage({
         />
 
         <aside className="space-y-5">
-          <section className="rounded-xl border border-border bg-card p-5">
+          <section className="soft-card p-5">
             <h2 className="text-sm font-semibold text-foreground">
               How to connect
             </h2>
@@ -135,14 +135,14 @@ export default async function ChannelGuidePage({
             </ol>
           </section>
 
-          <section className="rounded-xl border border-border bg-card p-5">
+          <section className="soft-card p-5">
             <h2 className="text-sm font-semibold text-foreground">Commission</h2>
             <p className="mt-1.5 text-sm text-muted-foreground">
               {guide.commission}
             </p>
             <Link
               href="/admin/finance"
-              className="mt-3 inline-block text-xs font-medium text-brand-azure hover:underline"
+              className="mt-3 inline-block text-xs font-medium text-primary hover:underline"
             >
               See what each channel actually nets →
             </Link>

@@ -98,7 +98,7 @@ export function MailboxConnectionCard({
   }
 
   return (
-    <section className="rounded-xl border border-border bg-card p-5">
+    <section className="soft-card p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted">
@@ -151,13 +151,13 @@ export function MailboxConnectionCard({
         <div className="mt-4 space-y-4 border-t border-border pt-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <Label className="mb-1.5 text-[0.8125rem] font-semibold text-muted-foreground">
                 Mailbox email
               </Label>
               <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="homestay@limekraftgroup.com" />
             </div>
             <div>
-              <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <Label className="mb-1.5 text-[0.8125rem] font-semibold text-muted-foreground">
                 Mailbox password
               </Label>
               <Input
@@ -168,13 +168,13 @@ export function MailboxConnectionCard({
               />
             </div>
             <div>
-              <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <Label className="mb-1.5 text-[0.8125rem] font-semibold text-muted-foreground">
                 IMAP host
               </Label>
               <Input value={host} onChange={(e) => setHost(e.target.value)} />
             </div>
             <div>
-              <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <Label className="mb-1.5 text-[0.8125rem] font-semibold text-muted-foreground">
                 Port
               </Label>
               <Input value={port} onChange={(e) => setPort(e.target.value)} inputMode="numeric" />

@@ -59,7 +59,7 @@ export function AdminTopBar({
             className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-full border border-border bg-card px-3.5 text-sm text-muted-foreground transition-colors hover:border-brand-mist sm:max-w-sm sm:rounded-lg lg:h-9"
           >
             <Search className="size-4 shrink-0" />
-            <span className="flex-1 truncate text-left">Search guests, bookings…</span>
+            <span className="flex-1 truncate text-left">Search</span>
             <kbd className="hidden rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[0.625rem] sm:block">
               ⌘K
             </kbd>
@@ -73,8 +73,14 @@ export function AdminTopBar({
               New
             </Button>
           )}
-          <PushAlertButton />
-          {FINANCE_ROLES.includes(role) && !scoped && <AskLimePanel />}
+          <span className="hidden lg:contents">
+            <PushAlertButton />
+          </span>
+          {FINANCE_ROLES.includes(role) && !scoped && (
+            <span className="hidden lg:contents">
+              <AskLimePanel />
+            </span>
+          )}
 
           <Popover>
             <PopoverTrigger
@@ -82,7 +88,7 @@ export function AdminTopBar({
                 <Button variant="ghost" size="icon-sm" className="relative">
                   <Bell />
                   {notifications.length > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 grid size-4 place-items-center rounded-full bg-brand-azure text-[0.5625rem] font-semibold text-white">
+                    <span className="absolute -top-0.5 -right-0.5 grid size-4 place-items-center rounded-full bg-primary text-[0.5625rem] font-semibold text-white">
                       {notifications.length}
                     </span>
                   )}
@@ -130,7 +136,7 @@ export function AdminTopBar({
                           {n.link && (
                             <Link
                               href={n.link}
-                              className="mt-1 inline-block text-xs font-medium text-brand-azure hover:underline"
+                              className="mt-1 inline-block text-xs font-medium text-primary hover:underline"
                             >
                               Open
                             </Link>

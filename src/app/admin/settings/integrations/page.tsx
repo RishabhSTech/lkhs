@@ -94,7 +94,7 @@ export default async function IntegrationsPage() {
           }
         />
 
-        <section className="rounded-xl border border-border bg-card">
+        <section className="soft-card">
           <div className="border-b border-border p-5">
             <h2 className="text-sm font-semibold text-foreground">Recently parsed emails</h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
@@ -127,13 +127,13 @@ export default async function IntegrationsPage() {
                     {row.reservation && (
                       <Link
                         href={`/admin/reservations?code=${row.reservation.code}`}
-                        className="text-xs font-medium text-brand-azure hover:underline"
+                        className="text-xs font-medium text-primary hover:underline"
                       >
                         {row.reservation.code}
                       </Link>
                     )}
                     {row.message && (
-                      <Link href="/admin/messages" className="text-xs font-medium text-brand-azure hover:underline">
+                      <Link href="/admin/messages" className="text-xs font-medium text-primary hover:underline">
                         View message
                       </Link>
                     )}

@@ -68,7 +68,7 @@ export default async function ChannelsPage() {
             <Link
               key={code}
               href={`/admin/channels/${code.toLowerCase()}`}
-              className="group rounded-xl border border-border bg-card p-5 transition-colors hover:border-ring"
+              className="group soft-card p-5 transition-colors hover:border-ring"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">

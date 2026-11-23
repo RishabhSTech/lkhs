@@ -30,7 +30,7 @@ export function Field({
     <label className={cn("block", className)}>
       <span className="mb-1.5 block text-xs font-semibold text-muted-foreground">
         {label}
-        {required && <span className="text-brand-azure"> *</span>}
+        {required && <span className="text-primary"> *</span>}
       </span>
       {children}
       {hint && <span className="mt-1 block text-xs text-muted-foreground">{hint}</span>}
@@ -80,7 +80,7 @@ export function ChipGroup<T extends string>({
             className={cn(
               "h-10 rounded-full border px-4 text-sm font-medium transition-colors lg:h-9",
               active
-                ? "border-brand-blue bg-brand-blue text-white"
+                ? "border-primary bg-primary text-white"
                 : "border-border bg-card text-foreground hover:bg-muted",
             )}
           >
@@ -136,7 +136,7 @@ export function Stepper({
 export function FormSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="space-y-3">
-      <h3 className="text-[0.6875rem] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+      <h3 className="text-base font-semibold text-foreground">
         {title}
       </h3>
       {children}

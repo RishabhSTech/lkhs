@@ -2,19 +2,19 @@ export const CLEANING_STAGES = ["CHECKOUT", "CLEANING_REQUIRED", "CLEANING", "IN
 export type CleaningStage = (typeof CLEANING_STAGES)[number];
 
 export const STAGE_LABEL: Record<CleaningStage, string> = {
-  CHECKOUT: "Guest checking out",
+  CHECKOUT: "Guest still there",
   CLEANING_REQUIRED: "To clean",
   CLEANING: "Cleaning",
-  INSPECTION: "Inspection",
-  READY: "Ready",
+  INSPECTION: "Needs a check",
+  READY: "Ready for guests",
 };
 
 /** The one-tap action that moves a task to its next stage. */
 export const NEXT_ACTION: Partial<Record<CleaningStage, { label: string; to: CleaningStage }>> = {
   CHECKOUT: { label: "Guest has left", to: "CLEANING_REQUIRED" },
   CLEANING_REQUIRED: { label: "Start cleaning", to: "CLEANING" },
-  CLEANING: { label: "Done - send for inspection", to: "INSPECTION" },
-  INSPECTION: { label: "Passed - mark ready", to: "READY" },
+  CLEANING: { label: "I've finished cleaning", to: "INSPECTION" },
+  INSPECTION: { label: "All good - ready for guests", to: "READY" },
 };
 
 export function stageBadgeClass(stage: CleaningStage) {

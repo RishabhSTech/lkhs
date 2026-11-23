@@ -6,7 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { BookingSource, ReservationStatus } from "@prisma/client";
 import {
   Ban, CalendarCheck, CheckCircle2, Loader2, Mail, MessageCircle, Pencil, Phone, Plus, RotateCcw,
-  Search, Trash2, UserX, X,
+  Search, SlidersHorizontal, Trash2, UserX, X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -167,67 +167,20 @@ export function ReservationsView({
   const chips: { key: ReservationViewKey; label: string; count?: number }[] = [
     { key: "all", label: "All" },
     { key: "arrivals", label: "Arriving today", count: counts.arrivals },
-    { key: "inhouse", label: "In-house", count: counts.inhouse },
+    { key: "inhouse", label: "Staying now", count: counts.inhouse },
     { key: "departures", label: "Leaving today", count: counts.departures },
     { key: "upcoming", label: "Upcoming" },
-    { key: "pending", label: "Requests", count: counts.pending },
+    { key: "pending", label: "Not paid yet", count: counts.pending },
   ];
 
-  return (
-    <>
-      <div className="relative lg:max-w-md">
-        <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Guest name, phone, email or booking code"
-          className="h-11 w-full rounded-full border border-border bg-card pr-10 pl-10 text-base text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 lg:h-10 lg:text-sm"
-          enterKeyHint="search"
-        />
-        {query && (
-          <button
-            type="button"
-            onClick={() => setQuery("")}
-            aria-label="Clear search"
-            className="absolute top-1/2 right-2 grid size-8 -translate-y-1/2 place-items-center rounded-full text-muted-foreground"
-          >
-            <X className="size-4" />
-          </button>
-        )}
-      </div>
+  const activeFilters = [filters.propertyId, filters.status, filters.source, filters.from].filter(Boolean).length;
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
-      <div className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0">
-        {chips.map((c) => {
-          const active = filters.view === c.key;
-          return (
-            <button
-              key={c.key}
-              type="button"
-              onClick={() => setParam("view", c.key === "all" ? "" : c.key)}
-              className={cn(
-                "flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium whitespace-nowrap transition-colors",
-                active ? "border-brand-blue bg-brand-blue text-white" : "border-border bg-card text-foreground",
-              )}
-            >
-              {c.label}
-              {c.count !== undefined && c.count > 0 && (
-                <span
-                  className={cn(
-                    "min-w-5 rounded-full px-1.5 text-xs tabular-nums",
-                    active ? "bg-white/20" : "bg-muted text-muted-foreground",
-                  )}
-                >
-                  {c.count}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-        <div className="col-span-2 sm:w-56">
+  function filterControls(stacked: boolean) {
+    const box = (cls: string) => (stacked ? "" : cls);
+    return (
+      <>
+        <div className={box("w-56")}>
           <NativeSelect
             value={filters.propertyId ?? ""}
             onChange={(e) => setParam("property", e.target.value)}
@@ -242,7 +195,7 @@ export function ReservationsView({
             ))}
           </NativeSelect>
         </div>
-        <div className="sm:w-44">
+        <div className={box("w-44")}>
           <NativeSelect
             value={filters.status ?? ""}
             onChange={(e) => setParam("status", e.target.value)}
@@ -257,14 +210,14 @@ export function ReservationsView({
             ))}
           </NativeSelect>
         </div>
-        <div className="sm:w-44">
+        <div className={box("w-44")}>
           <NativeSelect
             value={filters.source ?? ""}
             onChange={(e) => setParam("source", e.target.value)}
             aria-label="Filter by channel"
             className="h-10 lg:h-9"
           >
-            <option value="">Any channel</option>
+            <option value="">Any booking site</option>
             {Object.entries(SOURCE_LABELS).map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
@@ -291,7 +244,112 @@ export function ReservationsView({
             })
           }
         />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className="flex gap-2">
+      <div className="relative min-w-0 flex-1 lg:max-w-md">
+        <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search name, phone or code"
+          className="h-11 w-full rounded-full border border-border bg-card pr-10 pl-10 text-base text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 lg:h-10 lg:text-sm"
+          enterKeyHint="search"
+        />
+        {query && (
+          <button
+            type="button"
+            onClick={() => setQuery("")}
+            aria-label="Clear search"
+            className="absolute top-1/2 right-2 grid size-8 -translate-y-1/2 place-items-center rounded-full text-muted-foreground"
+          >
+            <X className="size-4" />
+          </button>
+        )}
       </div>
+        <button
+          type="button"
+          onClick={() => setFiltersOpen(true)}
+          className={cn(
+            "relative flex h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-medium lg:hidden",
+            activeFilters ? "border-primary bg-primary/8 text-primary" : "border-border bg-card text-foreground",
+          )}
+        >
+          <SlidersHorizontal className="size-4" />
+          Filters
+          {activeFilters > 0 && (
+            <span className="grid size-5 place-items-center rounded-full bg-primary text-[0.6875rem] font-semibold text-white">
+              {activeFilters}
+            </span>
+          )}
+        </button>
+      </div>
+
+      <div className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0">
+        {chips.map((c) => {
+          const active = filters.view === c.key;
+          return (
+            <button
+              key={c.key}
+              type="button"
+              onClick={() => setParam("view", c.key === "all" ? "" : c.key)}
+              className={cn(
+                "flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium whitespace-nowrap transition-colors",
+                active ? "border-primary bg-primary text-white" : "border-border bg-card text-foreground",
+              )}
+            >
+              {c.label}
+              {c.count !== undefined && c.count > 0 && (
+                <span
+                  className={cn(
+                    "min-w-5 rounded-full px-1.5 text-xs tabular-nums",
+                    active ? "bg-white/20" : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  {c.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Desktop shows the filters inline; phones get them in a sheet so the
+          list starts right under the search box. */}
+      <div className="mt-3 hidden flex-wrap gap-2 lg:flex">{filterControls(false)}</div>
+      <ResponsiveSheet
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        title="Filters"
+        size="sm"
+        footer={
+          <div className="flex gap-2">
+            {activeFilters > 0 && (
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() =>
+                  pushParams((p) => {
+                    ["property", "status", "source", "from", "to", "limit"].forEach((k) => p.delete(k));
+                  })
+                }
+              >
+                Clear all
+              </Button>
+            )}
+            <Button size="lg" className="flex-1" onClick={() => setFiltersOpen(false)}>
+              Show bookings
+            </Button>
+          </div>
+        }
+      >
+        <div className="grid gap-4">{filterControls(true)}</div>
+      </ResponsiveSheet>
 
       {reservations.length === 0 ? (
         <div className="mt-6">
@@ -311,7 +369,7 @@ export function ReservationsView({
       ) : (
         <>
           {/* Desktop table */}
-          <div className="mt-4 hidden overflow-hidden rounded-xl border border-border bg-card lg:block">
+          <div className="mt-4 hidden overflow-hidden soft-card lg:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/40 text-left">
@@ -378,7 +436,7 @@ export function ReservationsView({
           </div>
 
           {/* Phone list */}
-          <ul className="mt-4 divide-y divide-border overflow-hidden rounded-xl border border-border bg-card lg:hidden">
+          <ul className="mt-4 divide-y divide-border overflow-hidden soft-card lg:hidden">
             {reservations.map((r) => {
               const arriving = r.checkIn.slice(0, 10) === today;
               const leaving = r.checkOut.slice(0, 10) === today;
@@ -392,11 +450,6 @@ export function ReservationsView({
                       openingId === r.id && "bg-muted/60",
                     )}
                   >
-                    <span
-                      aria-hidden
-                      className="mt-1.5 size-2 shrink-0 rounded-full"
-                      style={{ background: `var(--chart-${["DIRECT", "AIRBNB", "BOOKING_COM", "AGODA", "OTHER"].indexOf(r.source) + 1})` }}
-                    />
                     <span className="min-w-0 flex-1">
                       <span className="flex items-baseline justify-between gap-3">
                         <span className="truncate text-[0.9375rem] font-semibold text-foreground">{r.guestName}</span>
@@ -672,7 +725,7 @@ function ReservationDetailSheet({
               disabled={pending !== null}
               className={cn(
                 "flex h-14 flex-col items-center justify-center gap-0.5 rounded-xl border text-xs font-semibold transition-colors disabled:opacity-50",
-                a.tone === "primary" && "border-brand-blue bg-brand-blue text-white",
+                a.tone === "primary" && "border-primary bg-primary text-white",
                 a.tone === "danger" && "border-destructive/25 bg-destructive/8 text-destructive",
                 !a.tone && "border-border bg-card text-foreground active:bg-muted",
               )}
@@ -752,7 +805,7 @@ function ReservationDetailSheet({
 
           <Link
             href={`/admin/operations`}
-            className="block text-center text-xs font-medium text-brand-azure"
+            className="block text-center text-xs font-medium text-primary"
           >
             Turnover cleaning is scheduled automatically for checkout
           </Link>
@@ -910,7 +963,7 @@ function ContactButton({
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h3 className="text-[0.6875rem] font-semibold tracking-[0.1em] text-muted-foreground uppercase">{title}</h3>
+      <h3 className="text-[0.8125rem] font-semibold text-muted-foreground">{title}</h3>
       <div className="mt-2 space-y-1.5">{children}</div>
     </div>
   );

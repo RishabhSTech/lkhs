@@ -41,7 +41,7 @@ export function MasterCalendar({
   const todayISO = new Date().toISOString().slice(0, 10);
 
   return (
-    <div className="rounded-xl border border-border bg-card">
+    <div className="soft-card">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-4">
         <div className="flex items-center gap-1.5">
           <Button variant="outline" size="icon-sm" onClick={() => shift(-14)}>
@@ -99,7 +99,7 @@ export function MasterCalendar({
                   className={cn(
                     "shrink-0 border-r border-border/60 py-2 text-center",
                     isWeekend && "bg-muted/50",
-                    day === todayISO && "bg-brand-azure/10",
+                    day === todayISO && "bg-primary/10",
                   )}
                 >
                   <span className="block text-[0.625rem] text-muted-foreground">
@@ -112,7 +112,7 @@ export function MasterCalendar({
                     className={cn(
                       "block text-xs font-medium",
                       day === todayISO
-                        ? "text-brand-azure"
+                        ? "text-primary"
                         : "text-foreground",
                     )}
                   >
@@ -131,7 +131,7 @@ export function MasterCalendar({
               <div className="sticky left-0 z-10 w-50 shrink-0 border-r border-border bg-card px-3 py-3">
                 <Link
                   href={`/admin/properties/${row.propertyId}`}
-                  className="block truncate text-sm font-medium text-foreground hover:text-brand-azure"
+                  className="block truncate text-sm font-medium text-foreground hover:text-primary"
                 >
                   {row.propertyName}
                 </Link>
@@ -151,7 +151,7 @@ export function MasterCalendar({
                       className={cn(
                         "shrink-0 border-r border-border/50",
                         isWeekend && "bg-muted/30",
-                        day === todayISO && "bg-brand-azure/6",
+                        day === todayISO && "bg-primary/6",
                       )}
                     />
                   );
@@ -215,7 +215,7 @@ export function MasterCalendar({
           {selected && (
             <>
               <SheetHeader>
-                <SheetTitle className="font-heading text-xl text-brand-blue">
+                <SheetTitle className="font-heading text-xl text-primary">
                   {selected.guestName ?? "Blocked dates"}
                 </SheetTitle>
                 <SheetDescription>

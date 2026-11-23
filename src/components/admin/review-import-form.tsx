@@ -210,7 +210,7 @@ export function ReviewImportForm({
           </div>
 
           <div>
-            <Label className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            <Label className="mb-2 text-[0.8125rem] font-semibold text-muted-foreground">
               Where was this posted?
             </Label>
             <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
@@ -250,7 +250,7 @@ export function ReviewImportForm({
           </div>
 
           <div>
-            <Label className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            <Label className="mb-2 text-[0.8125rem] font-semibold text-muted-foreground">
               Reviewer photo
             </Label>
             <div className="flex items-center gap-3">
@@ -370,7 +370,7 @@ export function ReviewImportForm({
                   type="checkbox"
                   checked={featuredOnHome}
                   onChange={(e) => setFeaturedOnHome(e.target.checked)}
-                  className="size-4 rounded border-border accent-brand-azure"
+                  className="size-4 rounded border-border accent-primary"
                 />
                 Feature in the homepage rail
               </label>
@@ -378,7 +378,7 @@ export function ReviewImportForm({
           </div>
 
           <div>
-            <Label className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            <Label className="mb-2 text-[0.8125rem] font-semibold text-muted-foreground">
               Topics ({MAX_TOPICS} max)
             </Label>
             <TopicPicker value={topics} onChange={setTopics} />
@@ -443,9 +443,9 @@ function Field({
 }) {
   return (
     <div>
-      <Label className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+      <Label className="mb-1.5 text-[0.8125rem] font-semibold text-muted-foreground">
         {label}
-        {required && <span className="text-brand-azure"> *</span>}
+        {required && <span className="text-primary"> *</span>}
       </Label>
       {children}
     </div>

@@ -34,7 +34,7 @@ export function PropertyExpenses({
   const total = expenses.reduce((sum, e) => sum + e.amount, 0);
 
   return (
-    <section className="rounded-xl border border-border bg-card">
+    <section className="soft-card">
       <div className="flex items-start justify-between gap-3 p-5 pb-3">
         <div>
           <h2 className="text-sm font-semibold text-foreground">Expenses</h2>
@@ -45,7 +45,7 @@ export function PropertyExpenses({
         <button
           type="button"
           onClick={() => openExpense({ propertyId })}
-          className="inline-flex items-center gap-1 text-xs font-medium text-brand-azure hover:underline"
+          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
         >
           <Plus className="size-3.5" />
           Add

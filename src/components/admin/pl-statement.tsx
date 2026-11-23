@@ -14,7 +14,7 @@ export function PLStatement({
   channels?: ChannelProfitability[];
 }) {
   return (
-    <section className="rounded-xl border border-border bg-card p-5">
+    <section className="soft-card p-5">
       <h2 className="text-sm font-semibold text-foreground">{title}</h2>
 
       <dl className="mt-4 text-sm">
@@ -78,7 +78,7 @@ export function PLStatement({
 function Group({ label, className }: { label: string; className?: string }) {
   return (
     <p
-      className={`text-[0.6875rem] font-semibold tracking-[0.1em] text-muted-foreground uppercase ${className ?? ""}`}
+      className={`text-[0.8125rem] font-semibold text-muted-foreground ${className ?? ""}`}
     >
       {label}
     </p>

@@ -133,7 +133,7 @@ export default async function SettingsPage() {
             />
           )}
 
-          <section className="rounded-xl border border-border bg-card p-5">
+          <section className="soft-card p-5">
             <h2 className="text-sm font-semibold text-foreground">Team</h2>
             <ul className="mt-4 divide-y divide-border">
               {users.map((user) => (
@@ -159,7 +159,7 @@ export default async function SettingsPage() {
             </ul>
           </section>
 
-          <section className="rounded-xl border border-border bg-card p-5">
+          <section className="soft-card p-5">
             <h2 className="text-sm font-semibold text-foreground">
               What each role can do
             </h2>
@@ -181,7 +181,7 @@ export default async function SettingsPage() {
         <TabsContent value="integrations" className="mt-5 space-y-5">
           <Link
             href="/admin/settings/integrations"
-            className="group flex items-center justify-between rounded-xl border border-border bg-card p-5 transition-colors hover:border-ring"
+            className="group flex items-center justify-between soft-card p-5 transition-colors hover:border-ring"
           >
             <div>
               <h2 className="text-sm font-semibold text-foreground">Mailbox OTA email parsing</h2>
@@ -192,7 +192,7 @@ export default async function SettingsPage() {
             <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
           </Link>
 
-          <section className="rounded-xl border border-border bg-card p-5">
+          <section className="soft-card p-5">
             <h2 className="text-sm font-semibold text-foreground">
               Integration status
             </h2>
@@ -231,7 +231,7 @@ export default async function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="audit" className="mt-5">
-          <section className="rounded-xl border border-border bg-card p-5">
+          <section className="soft-card p-5">
             <h2 className="text-sm font-semibold text-foreground">Audit log</h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
               Every change that touches money, pricing or bookings.

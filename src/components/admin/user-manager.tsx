@@ -56,7 +56,7 @@ export function UserManager({
         </Button>
       </div>
 
-      <ul className="mt-3 divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+      <ul className="mt-3 divide-y divide-border overflow-hidden soft-card">
         {users.map((user) => {
           const scoped = user.propertyAssignments?.length ?? 0;
           return (
@@ -66,7 +66,7 @@ export function UserManager({
                 onClick={() => open(user)}
                 className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-muted/60 lg:hover:bg-muted/40"
               >
-                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-blue/10 text-xs font-semibold text-brand-blue">
+                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                   {user.name
                     .split(" ")
                     .map((n) => n[0])
@@ -221,7 +221,7 @@ function UserForm({
                     type="checkbox"
                     checked={selected.has(p.id)}
                     onChange={() => toggle(p.id)}
-                    className="size-5 accent-[var(--color-brand-blue)]"
+                    className="size-5 accent-[var(--primary)]"
                   />
                   <span className="text-sm text-foreground">{p.name}</span>
                 </label>

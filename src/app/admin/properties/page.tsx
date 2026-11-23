@@ -73,7 +73,7 @@ export default async function PropertiesPage() {
           <li key={property.id}>
             <Link
               href={`/admin/properties/${property.id}`}
-              className="group block overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-brand-mist"
+              className="group block overflow-hidden soft-card transition-colors hover:border-brand-mist"
             >
               {property.images[0] && (
                 <div className="relative aspect-[16/9] overflow-hidden bg-muted">
@@ -90,7 +90,7 @@ export default async function PropertiesPage() {
               <div className="p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <h2 className="truncate font-heading text-lg text-brand-blue">
+                    <h2 className="truncate font-heading text-lg text-primary">
                       {property.name}
                     </h2>
                     <p className="truncate text-xs text-muted-foreground">

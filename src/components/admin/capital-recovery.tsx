@@ -9,7 +9,7 @@ export function CapitalRecovery({ capital }: { capital: CapitalPosition }) {
   );
 
   return (
-    <section className="rounded-xl border border-border bg-card p-5">
+    <section className="soft-card p-5">
       <h2 className="text-sm font-semibold text-foreground">Capital recovery</h2>
       <p className="mt-0.5 text-xs text-muted-foreground">
         Earnings returned against capital deployed

@@ -61,7 +61,7 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/admin/
         />
       </div>
 
-      <section className="mt-5 rounded-xl border border-border bg-card p-5">
+      <section className="mt-5 soft-card p-5">
         <h2 className="text-sm font-semibold text-foreground">
           Revenue vs expenses
         </h2>
@@ -72,7 +72,7 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/admin/
       </section>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
-        <section className="rounded-xl border border-border bg-card p-5">
+        <section className="soft-card p-5">
           <h2 className="text-sm font-semibold text-foreground">Occupancy</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
             Share of available nights sold
@@ -82,7 +82,7 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/admin/
           </div>
         </section>
 
-        <section className="rounded-xl border border-border bg-card p-5">
+        <section className="soft-card p-5">
           <h2 className="text-sm font-semibold text-foreground">
             Channel profitability
           </h2>
@@ -95,7 +95,7 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/admin/
         </section>
       </div>
 
-      <section className="mt-5 rounded-xl border border-border bg-card p-5">
+      <section className="mt-5 soft-card p-5">
         <h2 className="text-sm font-semibold text-foreground">
           Property comparison
         </h2>

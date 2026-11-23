@@ -117,7 +117,7 @@ export default async function MessagesPage() {
                       {filtered.map((m) => (
                         <li
                           key={m.id}
-                          className="rounded-xl border border-border bg-card p-4"
+                          className="soft-card p-4"
                         >
                           <div className="flex flex-wrap items-start justify-between gap-3">
                             <div className="min-w-0">
@@ -173,7 +173,7 @@ export default async function MessagesPage() {
         </TabsContent>
 
         <TabsContent value="templates" className="mt-5">
-          <section className="rounded-xl border border-border bg-card p-5">
+          <section className="soft-card p-5">
             <h2 className="text-sm font-semibold text-foreground">
               Guest journey
             </h2>
@@ -185,7 +185,7 @@ export default async function MessagesPage() {
               {COMMUNICATION_JOURNEY.map((step, i) => (
                 <li key={step.key} className="flex gap-4">
                   <div className="flex flex-col items-center">
-                    <span className="grid size-7 shrink-0 place-items-center rounded-full bg-brand-blue text-xs font-semibold text-brand-ivory">
+                    <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary text-xs font-semibold text-brand-ivory">
                       {i + 1}
                     </span>
                     {i < COMMUNICATION_JOURNEY.length - 1 && (

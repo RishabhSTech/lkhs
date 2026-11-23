@@ -70,9 +70,9 @@ export function CleaningTeam({
       ) : (
         <ul className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
           {members.map((m) => (
-            <li key={m.id} className="rounded-xl border border-border bg-card p-4">
+            <li key={m.id} className="soft-card p-4">
               <div className="flex items-start gap-3">
-                <span className="grid size-11 shrink-0 place-items-center rounded-full bg-brand-blue/10 text-sm font-semibold text-brand-blue">
+                <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                   {m.name
                     .split(" ")
                     .map((n) => n[0])
@@ -122,7 +122,7 @@ export function CleaningTeam({
                   <button
                     type="button"
                     onClick={() => setSheet((s) => ({ open: true, session: s.session + 1, member: m }))}
-                    className="flex shrink-0 items-center gap-1 text-xs font-medium text-brand-azure"
+                    className="flex shrink-0 items-center gap-1 text-xs font-medium text-primary"
                   >
                     <Settings2 className="size-3.5" />
                     Properties
@@ -149,9 +149,9 @@ export function CleaningTeam({
 
 function Stat({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
   return (
-    <div className={cn("rounded-lg py-2", highlight ? "bg-brand-blue/8" : "bg-muted/60")}>
+    <div className={cn("rounded-lg py-2", highlight ? "bg-primary/8" : "bg-muted/60")}>
       <dt className="text-[0.6875rem] text-muted-foreground">{label}</dt>
-      <dd className={cn("text-lg font-semibold tabular-nums", highlight ? "text-brand-blue" : "text-foreground")}>{value}</dd>
+      <dd className={cn("text-lg font-semibold tabular-nums", highlight ? "text-primary" : "text-foreground")}>{value}</dd>
     </div>
   );
 }
@@ -288,7 +288,7 @@ function MemberForm({
                     type="checkbox"
                     checked={selected.has(p.id)}
                     onChange={() => toggle(p.id)}
-                    className="size-5 accent-[var(--color-brand-blue)]"
+                    className="size-5 accent-[var(--primary)]"
                   />
                   <span className="text-sm text-foreground">{p.name}</span>
                 </label>

@@ -24,15 +24,15 @@ export function Panel({
   return (
     <section
       className={cn(
-        "overflow-hidden rounded-xl border border-border bg-card",
+        "overflow-hidden soft-card",
         className,
       )}
     >
       {(title || action) && (
-        <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-3.5">
+        <div className="flex items-start justify-between gap-3 px-5 pt-4 pb-1">
           <div className="min-w-0">
             {title && (
-              <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+              <h2 className="text-base font-semibold text-foreground">{title}</h2>
             )}
             {description && (
               <p className="mt-0.5 text-xs text-muted-foreground">
@@ -43,7 +43,7 @@ export function Panel({
           {action && (
             <Link
               href={action.href}
-              className="shrink-0 text-xs font-medium text-brand-azure transition-opacity hover:opacity-70"
+              className="shrink-0 text-xs font-medium text-primary transition-opacity hover:opacity-70"
             >
               {action.label}
             </Link>

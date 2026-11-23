@@ -19,14 +19,14 @@ const OFFICE: RoleName[] = ["SUPER_ADMIN", "ADMIN", "MANAGER", "FINANCE", "OPERA
 const FINANCE: RoleName[] = ["SUPER_ADMIN", "ADMIN", "FINANCE"];
 
 export const ADMIN_NAV: AdminNavItem[] = [
-  { href: "/admin", label: "Overview", icon: LayoutDashboard, roles: OFFICE, portfolio: true },
+  { href: "/admin", label: "Home", icon: LayoutDashboard, roles: OFFICE, portfolio: true },
   { href: "/admin/calendar", label: "Calendar", icon: CalendarDays, roles: OFFICE },
-  { href: "/admin/reservations", label: "Reservations", icon: Tags, roles: OFFICE },
+  { href: "/admin/reservations", label: "Bookings", icon: Tags, roles: OFFICE },
   { href: "/admin/properties", label: "Properties", icon: Building2, roles: OFFICE },
   { href: "/admin/guests", label: "Guests", icon: Users, roles: OFFICE, portfolio: true },
   { href: "/admin/reviews", label: "Reviews", icon: Star, roles: LISTING_ROLES, portfolio: true },
   { href: "/admin/pricing", label: "Pricing", icon: Sparkles, roles: INVENTORY_ROLES, portfolio: true },
-  { href: "/admin/channels", label: "Channels", icon: Plug, roles: INVENTORY_ROLES, portfolio: true },
+  { href: "/admin/channels", label: "Booking sites", icon: Plug, roles: INVENTORY_ROLES, portfolio: true },
   { href: "/admin/finance", label: "Finance", icon: CreditCard, roles: FINANCE, portfolio: true },
   {
     href: "/admin/finance/expenses",
@@ -36,10 +36,10 @@ export const ADMIN_NAV: AdminNavItem[] = [
     // gets a direct entry.
     roles: ["MANAGER", "OPERATIONS", "CLEANER"],
   },
-  { href: "/admin/operations", label: "Cleaning & upkeep", icon: Wrench },
+  { href: "/admin/operations", label: "Cleaning", icon: Wrench },
   { href: "/admin/messages", label: "Messages", icon: MessageSquare, roles: OFFICE, portfolio: true },
-  { href: "/admin/analytics", label: "Analytics", icon: BarChart3, roles: OFFICE, portfolio: true },
-  { href: "/admin/stakeholders", label: "Stakeholders", icon: Users, roles: FINANCE, portfolio: true },
+  { href: "/admin/analytics", label: "Reports", icon: BarChart3, roles: OFFICE, portfolio: true },
+  { href: "/admin/stakeholders", label: "Owners", icon: Users, roles: FINANCE, portfolio: true },
   { href: "/admin/users", label: "Users", icon: Users, roles: ["SUPER_ADMIN"] },
   { href: "/admin/settings", label: "Settings", icon: Settings, roles: SETTINGS_ROLES, portfolio: true },
 ];

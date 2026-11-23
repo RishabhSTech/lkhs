@@ -99,7 +99,7 @@ export default async function FinanceOverviewPage({ searchParams }: PageProps<"/
         />
       </div>
 
-      <section className="mt-5 rounded-xl border border-border bg-card p-5">
+      <section className="mt-5 soft-card p-5">
         <h2 className="text-sm font-semibold text-foreground">
           Revenue vs expenses
         </h2>
@@ -112,7 +112,7 @@ export default async function FinanceOverviewPage({ searchParams }: PageProps<"/
       </section>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
-        <section className="rounded-xl border border-border bg-card p-5">
+        <section className="soft-card p-5">
           <h2 className="text-sm font-semibold text-foreground">
             Channel profitability
           </h2>
@@ -124,7 +124,7 @@ export default async function FinanceOverviewPage({ searchParams }: PageProps<"/
           </div>
         </section>
 
-        <section className="rounded-xl border border-border bg-card p-5">
+        <section className="soft-card p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold text-foreground">
@@ -144,7 +144,7 @@ export default async function FinanceOverviewPage({ searchParams }: PageProps<"/
                   className="group flex items-center justify-between gap-3"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground group-hover:text-brand-azure">
+                    <p className="truncate text-sm font-medium text-foreground group-hover:text-primary">
                       {p.name}
                     </p>
                     <p className="text-xs text-muted-foreground">

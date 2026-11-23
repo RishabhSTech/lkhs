@@ -11,7 +11,7 @@ export default async function NewPropertyPage() {
     <AdminPage>
       <Link
         href="/admin/properties"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-brand-blue"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
       >
         <ArrowLeft className="size-4" />
         Back to properties

@@ -2,10 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, CheckCircle2, ChevronRight, Loader2, StickyNote, UserRound } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ChevronRight, Loader2, SlidersHorizontal, StickyNote, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { NativeSelect } from "@/components/admin/form-fields";
+import { ResponsiveSheet } from "@/components/admin/responsive-sheet";
+import { Button } from "@/components/ui/button";
 import { useQuickAdd } from "@/components/admin/quick-add";
 import type { CleaningTaskRecord } from "@/components/admin/cleaning-task-sheet";
 import {
@@ -17,7 +19,7 @@ type View = "todo" | "upcoming" | "done";
 
 function dayLabel(iso: string, today: string) {
   const diff = Math.round((Date.parse(`${iso}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86_400_000);
-  if (diff < 0) return "Overdue";
+  if (diff < 0) return "Late";
   if (diff === 0) return "Today";
   if (diff === 1) return "Tomorrow";
   return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-IN", {
@@ -50,6 +52,7 @@ export function CleaningTasks({
   const [propertyId, setPropertyId] = useState("");
   const [assigneeId, setAssigneeId] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   // Optimistic stage changes so the button responds instantly on a slow network.
   // Applied only while the server still reports the stage we moved from, so a
   // later edit made elsewhere always wins.
@@ -118,14 +121,79 @@ export function CleaningTasks({
     count: scoped.filter((t) => t.status === s && t.scheduledDate <= today).length,
   }));
 
+  const filterSelects = (
+    <>
+            <div className="w-full lg:w-56">
+              <NativeSelect
+                value={propertyId}
+                onChange={(e) => setPropertyId(e.target.value)}
+                aria-label="Filter by property"
+                className="lg:h-9 lg:rounded-full"
+              >
+                <option value="">All properties</option>
+                {properties.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </NativeSelect>
+            </div>
+            <div className="w-full lg:w-48">
+              <NativeSelect
+                value={assigneeId}
+                onChange={(e) => setAssigneeId(e.target.value)}
+                aria-label="Filter by cleaner"
+                className="lg:h-9 lg:rounded-full"
+              >
+                <option value="">All cleaners</option>
+                <option value="none">Unassigned</option>
+                {staff.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </NativeSelect>
+            </div>
+    </>
+  );
+
   return (
     <div>
+      {canManage && (
+        <ResponsiveSheet
+          open={filtersOpen}
+          onOpenChange={setFiltersOpen}
+          title="Filter cleanings"
+          size="sm"
+          footer={
+            <div className="flex gap-2">
+              {(propertyId || assigneeId) && (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => {
+                    setPropertyId("");
+                    setAssigneeId("");
+                  }}
+                >
+                  Clear
+                </Button>
+              )}
+              <Button size="lg" className="flex-1" onClick={() => setFiltersOpen(false)}>
+                Done
+              </Button>
+            </div>
+          }
+        >
+          <div className="grid gap-3">{filterSelects}</div>
+        </ResponsiveSheet>
+      )}
       {/* Segmented control */}
       <div className="grid grid-cols-3 rounded-xl bg-muted p-1">
         {(
           [
-            ["todo", "To do"],
-            ["upcoming", "Upcoming"],
+            ["todo", "Today"],
+            ["upcoming", "Coming up"],
             ["done", "Done"],
           ] as const
         ).map(([key, label]) => (
@@ -143,7 +211,7 @@ export function CleaningTasks({
               <span
                 className={cn(
                   "min-w-5 rounded-full px-1.5 text-xs tabular-nums",
-                  key === "todo" ? "bg-brand-blue text-white" : "bg-muted-foreground/15 text-muted-foreground",
+                  key === "todo" ? "bg-primary text-white" : "bg-muted-foreground/15 text-muted-foreground",
                 )}
               >
                 {buckets[key].length}
@@ -160,51 +228,30 @@ export function CleaningTasks({
           aria-pressed={mineOnly}
           className={cn(
             "flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium",
-            mineOnly ? "border-brand-blue bg-brand-blue text-white" : "border-border bg-card text-foreground",
+            mineOnly ? "border-primary bg-primary text-white" : "border-border bg-card text-foreground",
           )}
         >
           <UserRound className="size-4" />
-          {canManage ? "Assigned to me" : "My tasks"}
+          {canManage ? "Mine" : "Only mine"}
         </button>
+        {canManage && <div className="hidden flex-wrap gap-2 lg:flex">{filterSelects}</div>}
         {canManage && (
-          <>
-            <div className="min-w-36 flex-1 sm:max-w-56 sm:flex-none">
-              <NativeSelect
-                value={propertyId}
-                onChange={(e) => setPropertyId(e.target.value)}
-                aria-label="Filter by property"
-                className="h-9 rounded-full lg:h-9"
-              >
-                <option value="">All properties</option>
-                {properties.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </NativeSelect>
-            </div>
-            <div className="min-w-36 flex-1 sm:max-w-48 sm:flex-none">
-              <NativeSelect
-                value={assigneeId}
-                onChange={(e) => setAssigneeId(e.target.value)}
-                aria-label="Filter by cleaner"
-                className="h-9 rounded-full lg:h-9"
-              >
-                <option value="">Everyone</option>
-                <option value="none">Unassigned</option>
-                {staff.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </NativeSelect>
-            </div>
-          </>
+          <button
+            type="button"
+            onClick={() => setFiltersOpen(true)}
+            className={cn(
+              "flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium lg:hidden",
+              propertyId || assigneeId ? "border-primary bg-primary/8 text-primary" : "border-border bg-card text-foreground",
+            )}
+          >
+            <SlidersHorizontal className="size-4" />
+            {propertyId || assigneeId ? "Filtered" : "Filter"}
+          </button>
         )}
       </div>
 
       {view === "todo" && buckets.todo.length > 0 && (
-        <div className="mt-3 flex gap-1.5 overflow-x-auto [scrollbar-width:none]">
+        <div className="mt-3 hidden gap-1.5 lg:flex overflow-x-auto [scrollbar-width:none]">
           {stageCounts
             .filter((s) => s.count > 0)
             .map((s) => (
@@ -216,17 +263,17 @@ export function CleaningTasks({
       )}
 
       {visible.length === 0 ? (
-        <div className="mt-8 flex flex-col items-center rounded-xl border border-dashed border-border bg-card/50 px-6 py-12 text-center">
+        <div className="mt-6 flex flex-col items-center soft-card px-6 py-12 text-center">
           <CheckCircle2 className="size-8 text-chart-1" />
           <p className="mt-3 font-heading text-lg text-foreground">
             {view === "todo" ? "All clear" : view === "upcoming" ? "Nothing scheduled" : "Nothing finished yet"}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
             {view === "todo"
-              ? "Every property due today is guest-ready."
+              ? "Every home due today is ready for guests."
               : view === "upcoming"
-                ? "Turnovers appear here automatically when bookings are confirmed."
-                : "Tasks show up here once they're marked ready."}
+                ? "Cleanings show up here by themselves when a booking is confirmed."
+                : "Finished cleanings show up here."}
           </p>
         </div>
       ) : (
@@ -239,7 +286,7 @@ export function CleaningTasks({
                   key === "overdue" ? "text-destructive" : "text-muted-foreground",
                 )}
               >
-                {key === "overdue" ? "Overdue" : view === "done" ? `Finished ${dayLabel(key, today).toLowerCase()}` : dayLabel(key, today)}
+                {key === "overdue" ? "Late - still to do" : view === "done" ? `Finished ${dayLabel(key, today).toLowerCase()}` : dayLabel(key, today)}
               </h2>
               <ul className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
                 {items.map((task) => (
@@ -257,6 +304,7 @@ export function CleaningTasks({
           ))}
         </div>
       )}
+
     </div>
   );
 }
@@ -321,16 +369,16 @@ function TaskCard({
       </button>
 
       {next && (
-        <div className="border-t border-border p-2">
+        <div className="flex gap-2 border-t border-border p-2">
           <button
             type="button"
             onClick={onAdvance}
             disabled={busy}
             className={cn(
-              "flex h-11 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-60",
+              "flex h-11 w-full flex-1 items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-60",
               next.to === "READY"
                 ? "bg-chart-1 text-white active:bg-chart-1/90"
-                : "bg-brand-blue text-white active:bg-brand-blue-light",
+                : "bg-primary text-white active:bg-primary/90",
             )}
           >
             {busy ? <Loader2 className="size-4 animate-spin" /> : next.label}
