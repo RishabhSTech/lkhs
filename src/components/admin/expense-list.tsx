@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/site/empty-state";
 import { NativeSelect } from "@/components/admin/form-fields";
 import { useQuickAdd } from "@/components/admin/quick-add";
+import { useNavigate } from "@/components/admin/navigation-progress";
 import type { ExpenseRecord } from "@/components/admin/expense-sheet";
 import { formatDateLong, formatINR } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -60,6 +61,7 @@ export function ExpenseList({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { openExpense } = useQuickAdd();
+  const { navigate } = useNavigate();
 
   // ?add=1 (home-screen shortcut, old "new expense" links) opens the form.
   const handledAdd = useRef(false);
@@ -76,7 +78,7 @@ export function ExpenseList({
     const params = new URLSearchParams(searchParams.toString());
     if (value) params.set(key, value);
     else params.delete(key);
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    navigate(`${pathname}?${params.toString()}`);
   }
 
   const statusTabs = [

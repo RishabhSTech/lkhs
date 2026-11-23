@@ -16,6 +16,7 @@ import { EmptyState } from "@/components/site/empty-state";
 import { ResponsiveSheet } from "@/components/admin/responsive-sheet";
 import { NativeSelect } from "@/components/admin/form-fields";
 import { DateRangeFilter } from "@/components/admin/date-range-filter";
+import { useNavigate } from "@/components/admin/navigation-progress";
 import { useQuickAdd } from "@/components/admin/quick-add";
 import type { BookingRecord } from "@/components/admin/booking-sheet";
 import {
@@ -119,8 +120,6 @@ export function ReservationsView({
   today: string;
   canWrite: boolean;
 }) {
-  const router = useRouter();
-
   // Totals for the rows on screen; cancelled bookings bring in no money.
   const counted = reservations.filter((r) => r.status !== "CANCELLED");
   const shownTotal = counted.reduce((sum, r) => sum + r.total, 0);
@@ -131,13 +130,20 @@ export function ReservationsView({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { openBooking } = useQuickAdd();
+  const { navigate } = useNavigate();
   const [query, setQuery] = useState(filters.q ?? "");
+  // The booking just clicked, highlighted until the server sends its details.
+  const [openingId, setOpeningId] = useState<string | null>(null);
 
   function pushParams(mutate: (p: URLSearchParams) => void) {
     const params = new URLSearchParams(window.location.search);
     mutate(params);
     const qs = params.toString();
-    router.push(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+    navigate(`${pathname}${qs ? `?${qs}` : ""}`);
+  }
+  function openRow(id: string) {
+    setOpeningId(id);
+    setParam("id", id);
   }
   function setParam(key: string, value: string) {
     pushParams((p) => {
@@ -322,10 +328,16 @@ export function ReservationsView({
                 {reservations.map((r) => (
                   <tr
                     key={r.id}
-                    onClick={() => setParam("id", r.id)}
+                    onClick={() => openRow(r.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") openRow(r.id);
+                    }}
+                    tabIndex={0}
+                    role="link"
+                    aria-label={`Open booking ${r.code}`}
                     className={cn(
-                      "cursor-pointer transition-colors hover:bg-muted/40",
-                      selected?.id === r.id && "bg-muted/50",
+                      "cursor-pointer transition-colors hover:bg-muted/40 focus-visible:bg-muted/50 focus-visible:outline-none",
+                      (selected?.id === r.id || openingId === r.id) && "bg-muted/60",
                     )}
                   >
                     <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{r.code}</td>
@@ -372,8 +384,11 @@ export function ReservationsView({
                 <li key={r.id}>
                   <button
                     type="button"
-                    onClick={() => setParam("id", r.id)}
-                    className="flex w-full items-start gap-3 px-4 py-3.5 text-left active:bg-muted/60"
+                    onClick={() => openRow(r.id)}
+                    className={cn(
+                      "flex w-full items-start gap-3 px-4 py-3.5 text-left active:bg-muted/60",
+                      openingId === r.id && "bg-muted/60",
+                    )}
                   >
                     <span
                       aria-hidden
@@ -436,7 +451,10 @@ export function ReservationsView({
         selected={selected}
         today={today}
         canWrite={canWrite}
-        onClose={() => setParam("id", "")}
+        onClose={() => {
+          setOpeningId(null);
+          setParam("id", "");
+        }}
         onEdit={(booking) => {
           setParam("id", "");
           window.setTimeout(

@@ -3,6 +3,7 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminMobileNav } from "@/components/admin/admin-mobile-nav";
 import { AdminTopBar } from "@/components/admin/admin-top-bar";
 import { QuickAddProvider } from "@/components/admin/quick-add";
+import { NavigationProgressProvider } from "@/components/admin/navigation-progress";
 import { getCurrentAdminUser } from "@/lib/auth/current-user";
 import { getPropertyScope, propertyScopeFilter } from "@/lib/auth/guards";
 import { CLEANING_STAFF_ROLES } from "@/lib/auth/roles";
@@ -67,6 +68,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
         staff,
       }}
     >
+      <NavigationProgressProvider>
       <div className="admin-app flex min-h-svh bg-muted/30">
         <AdminSidebar role={user.role} userName={user.name} scoped={Boolean(scope)} />
 
@@ -95,6 +97,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
 
         <AdminMobileNav role={user.role} userName={user.name} scoped={Boolean(scope)} />
       </div>
+      </NavigationProgressProvider>
     </QuickAddProvider>
   );
 }

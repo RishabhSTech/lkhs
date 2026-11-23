@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { AdminPage, PageHeader } from "@/components/admin/page-header";
+import { RowLink } from "@/components/admin/navigation-progress";
 import { db } from "@/lib/db";
 import { formatDateLong, formatINR } from "@/lib/format";
 import { EmptyState } from "@/components/site/empty-state";
@@ -38,6 +40,8 @@ export default async function GuestsPage() {
 
     return {
       id: g.id,
+      // Their bookings, found by the most specific detail we hold.
+      href: `/admin/reservations?q=${encodeURIComponent(g.email ?? g.phone ?? g.name)}`,
       name: g.name,
       email: g.email,
       phone: g.phone,
@@ -77,7 +81,7 @@ export default async function GuestsPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {rows.map((g) => (
-                  <tr key={g.id} className="transition-colors hover:bg-muted/40">
+                  <RowLink key={g.id} href={g.href} label={`Bookings for ${g.name}`}>
                     <td className="px-4 py-3 font-medium text-foreground">
                       {g.name}
                     </td>
@@ -97,7 +101,7 @@ export default async function GuestsPage() {
                     <td className="px-4 py-3 text-muted-foreground">
                       {g.preferred ?? "-"}
                     </td>
-                  </tr>
+                  </RowLink>
                 ))}
               </tbody>
             </table>
@@ -105,7 +109,8 @@ export default async function GuestsPage() {
 
           <ul className="mt-6 space-y-2.5 lg:hidden">
             {rows.map((g) => (
-              <li key={g.id} className="rounded-xl border border-border bg-card p-4">
+              <li key={g.id}>
+                <Link href={g.href} className="block rounded-xl border border-border bg-card p-4 transition-colors active:bg-muted/60">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="truncate font-medium text-foreground">{g.name}</p>
@@ -121,6 +126,7 @@ export default async function GuestsPage() {
                   {g.bookings} bookings
                   {g.lastStay && ` · last stay ${formatDateLong(g.lastStay)}`}
                 </p>
+                </Link>
               </li>
             ))}
           </ul>

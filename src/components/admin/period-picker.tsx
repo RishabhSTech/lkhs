@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { PeriodKind } from "@/lib/finance/period";
+import { useNavigate } from "@/components/admin/navigation-progress";
 
 const PERIOD_KEYS = ["period", "month", "year", "from", "to"];
 
@@ -39,10 +40,9 @@ export function PeriodPicker({
   to: string;
   label: string;
 }) {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [pending, startTransition] = useTransition();
+  const { navigate, pending } = useNavigate();
 
   // The custom tab can be opened without navigating until dates are applied.
   const [tab, setTab] = useState<PeriodKind>(kind);
@@ -56,7 +56,7 @@ export function PeriodPicker({
     const params = new URLSearchParams(searchParams.toString());
     for (const key of PERIOD_KEYS) params.delete(key);
     for (const [k, v] of Object.entries(next)) params.set(k, v);
-    startTransition(() => router.push(`${pathname}?${params.toString()}`, { scroll: false }));
+    navigate(`${pathname}?${params.toString()}`);
   }
 
   function selectTab(next: PeriodKind) {

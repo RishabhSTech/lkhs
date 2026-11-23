@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { db } from "@/lib/db";
 import { onOperatingProperty } from "@/lib/property/back-office";
 import { PeriodPicker } from "@/components/admin/period-picker";
+import { RowLink } from "@/components/admin/navigation-progress";
 import { parsePeriod, periodDateFilter, periodQuery } from "@/lib/finance/period";
 import { toISODate } from "@/lib/dates";
 import { getPortfolioFinance } from "@/lib/queries/finance";
@@ -110,19 +111,16 @@ export default async function RevenuePage({ searchParams }: PageProps<"/admin/fi
           <h2 className="text-sm font-semibold text-foreground">By property</h2>
           <ul className="mt-4 divide-y divide-border">
             {finance.perProperty.map((p) => (
-              <li
-                key={p.id}
-                className="flex items-center justify-between gap-3 py-2.5 text-sm first:pt-0 last:pb-0"
-              >
+              <li key={p.id} className="py-0.5 first:pt-0 last:pb-0">
                 <Link
                   href={`/admin/finance/property/${p.id}?${query}`}
-                  className="text-foreground hover:text-brand-azure"
+                  className="group -mx-2 flex items-center justify-between gap-3 rounded-md px-2 py-2 text-sm transition-colors hover:bg-muted/50"
                 >
-                  {p.name}
+                  <span className="text-foreground group-hover:text-brand-azure">{p.name}</span>
+                  <span className="font-medium tabular-nums text-foreground">
+                    {formatINRCompact(p.period.grossRevenue)}
+                  </span>
                 </Link>
-                <span className="font-medium tabular-nums text-foreground">
-                  {formatINRCompact(p.period.grossRevenue)}
-                </span>
               </li>
             ))}
           </ul>
@@ -154,8 +152,9 @@ export default async function RevenuePage({ searchParams }: PageProps<"/admin/fi
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {recentRevenue.map((t) => (
-                <tr key={t.id}>
+              {recentRevenue.map((t) => {
+                const cells = (
+                  <>
                   <td className="py-2.5 whitespace-nowrap text-muted-foreground">
                     {formatDateLong(t.date)}
                   </td>
@@ -176,8 +175,17 @@ export default async function RevenuePage({ searchParams }: PageProps<"/admin/fi
                   <td className="py-2.5 text-right font-medium tabular-nums text-foreground">
                     {formatINR(Number(t.amount))}
                   </td>
-                </tr>
-              ))}
+                  </>
+                );
+                // Booking revenue opens its booking; anything else isn't a link.
+                return t.reservationId ? (
+                  <RowLink key={t.id} href={`/admin/reservations?id=${t.reservationId}`} label={`Open booking ${t.reservation?.code ?? ""}`}>
+                    {cells}
+                  </RowLink>
+                ) : (
+                  <tr key={t.id}>{cells}</tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

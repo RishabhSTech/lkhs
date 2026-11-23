@@ -4,6 +4,7 @@ import { RevenueChart } from "@/components/charts/revenue-chart";
 import { OccupancyChart } from "@/components/charts/occupancy-chart";
 import { ChannelProfitTable } from "@/components/admin/channel-profit-table";
 import { PeriodPicker } from "@/components/admin/period-picker";
+import { RowLink } from "@/components/admin/navigation-progress";
 import { getPeriodStayMetrics } from "@/lib/queries/admin-metrics";
 import { getPortfolioFinance } from "@/lib/queries/finance";
 import { parsePeriod, periodQuery } from "@/lib/finance/period";
@@ -116,7 +117,7 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/admin/
             </thead>
             <tbody className="divide-y divide-border">
               {finance.perProperty.map((p) => (
-                <tr key={p.id}>
+                <RowLink key={p.id} href={`/admin/finance/property/${p.id}?${query}`} label={`${p.name} finance`}>
                   <td className="py-2.5 font-medium text-foreground">{p.name}</td>
                   <td className="py-2.5 tabular-nums text-muted-foreground">
                     {formatINRCompact(p.period.grossRevenue)}
@@ -134,7 +135,7 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/admin/
                   <td className="py-2.5 tabular-nums text-foreground">
                     {formatPercent(p.capital.capitalRecoveredPercent)}
                   </td>
-                </tr>
+                </RowLink>
               ))}
             </tbody>
           </table>
