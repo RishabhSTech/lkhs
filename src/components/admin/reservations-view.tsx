@@ -46,6 +46,8 @@ export type ReservationRow = {
   source: BookingSource;
   status: ReservationStatus;
   total: number;
+  /** Booking total less platform fee, host tax and other charges. */
+  payout: number;
 };
 
 export type ReservationDetail = {
@@ -114,15 +116,15 @@ export function ReservationsView({
   };
   counts: Record<"arrivals" | "inhouse" | "departures" | "pending", number>;
   hasMore: boolean;
-  /** All bookings matching the filters, cancelled excluded. */
+  /** Final payout of all bookings matching the filters, cancelled excluded. */
   matchingTotal: { count: number; amount: number };
   selected: ReservationDetail | null;
   today: string;
   canWrite: boolean;
 }) {
-  // Totals for the rows on screen; cancelled bookings bring in no money.
+  // Payout totals for the rows on screen; cancelled bookings bring in no money.
   const counted = reservations.filter((r) => r.status !== "CANCELLED");
-  const shownTotal = counted.reduce((sum, r) => sum + r.total, 0);
+  const shownTotal = counted.reduce((sum, r) => sum + r.payout, 0);
   const cancelledShown = reservations.length - counted.length;
   const totalLabel = `Total · ${counted.length} ${counted.length === 1 ? "booking" : "bookings"}${
     cancelledShown ? ` (excl. ${cancelledShown} cancelled)` : ""
@@ -313,7 +315,7 @@ export function ReservationsView({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/40 text-left">
-                  {["Booking", "Property", "Guest", "Dates", "Channel", "Status", "Amount"].map((h) => (
+                  {["Booking", "Property", "Guest", "Dates", "Channel", "Status", "Payout"].map((h) => (
                     <th
                       key={h}
                       scope="col"
@@ -353,7 +355,7 @@ export function ReservationsView({
                     <td className="px-4 py-3">
                       <Badge className={statusBadgeClass(r.status)}>{STATUS_LABELS[r.status]}</Badge>
                     </td>
-                    <td className="px-4 py-2.5 text-right font-medium tabular-nums text-foreground">{formatINR(r.total)}</td>
+                    <td className="px-4 py-2.5 text-right font-medium tabular-nums text-foreground">{formatINR(r.payout)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -398,7 +400,7 @@ export function ReservationsView({
                     <span className="min-w-0 flex-1">
                       <span className="flex items-baseline justify-between gap-3">
                         <span className="truncate text-[0.9375rem] font-semibold text-foreground">{r.guestName}</span>
-                        <span className="shrink-0 text-sm font-medium tabular-nums text-foreground">{formatINR(r.total)}</span>
+                        <span className="shrink-0 text-sm font-medium tabular-nums text-foreground">{formatINR(r.payout)}</span>
                       </span>
                       <span className="mt-0.5 block truncate text-xs text-muted-foreground">
                         {r.propertyName} · {SOURCE_LABELS[r.source]}

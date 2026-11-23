@@ -9,6 +9,7 @@ import { BOOKING_WRITE_ROLES, OFFICE_ROLES } from "@/lib/auth/roles";
 import { addDays, toISODate, todayUTC } from "@/lib/dates";
 import { SOURCE_LABELS, STATUS_LABELS } from "@/lib/admin/sources";
 import { parseDateParam } from "@/lib/finance/period";
+import { finalPayout } from "@/lib/booking/payout";
 
 export const dynamic = "force-dynamic";
 
@@ -92,7 +93,7 @@ export default async function ReservationsPage({
     // ones never bring in money, so they stay out of the total.
     db.reservation.aggregate({
       where: { AND: [where, { status: { not: "CANCELLED" } }] },
-      _sum: { total: true },
+      _sum: { total: true, platformFee: true, hostTax: true, otherCharges: true },
       _count: { _all: true },
     }),
   ]);
@@ -142,6 +143,7 @@ export default async function ReservationsPage({
             source: r.source,
             status: r.status,
             total: Number(r.total),
+            payout: finalPayout(r),
           }))}
           properties={properties}
           filters={{
@@ -151,7 +153,15 @@ export default async function ReservationsPage({
           }}
           counts={{ arrivals, inhouse, departures, pending }}
           hasMore={hasMore}
-          matchingTotal={{ count: matching._count._all, amount: Number(matching._sum.total ?? 0) }}
+          matchingTotal={{
+            count: matching._count._all,
+            amount: finalPayout({
+              total: matching._sum.total ?? 0,
+              platformFee: matching._sum.platformFee ?? 0,
+              hostTax: matching._sum.hostTax ?? 0,
+              otherCharges: matching._sum.otherCharges ?? 0,
+            }),
+          }}
           today={toISODate(today)}
           canWrite={canWrite}
           selected={
@@ -182,11 +192,7 @@ export default async function ReservationsPage({
               platformFee: Number(selected.platformFee),
               hostTax: Number(selected.hostTax),
               otherCharges: Number(selected.otherCharges),
-              netPayout:
-                Number(selected.total) -
-                Number(selected.platformFee) -
-                Number(selected.hostTax) -
-                Number(selected.otherCharges),
+              netPayout: finalPayout(selected),
               total: Number(selected.total),
               internalNotes: selected.internalNotes,
               payments: selected.payments.map((p) => ({
