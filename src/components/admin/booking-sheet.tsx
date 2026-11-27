@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Loader2, Plus, X } from "lucide-react";
+import { ChevronDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,6 @@ import {
   ChipGroup, Field, FormError, FormSection, NativeSelect, Stepper, fieldControlClass, parseAmount, todayISO,
 } from "@/components/admin/form-fields";
 import { formatINR } from "@/lib/format";
-import { EXTRA_KINDS, EXTRA_LABELS, type ExtraKind } from "@/lib/booking/extras";
 import { cn } from "@/lib/utils";
 
 export type BookingProperty = { id: string; name: string; units: { id: string; name: string }[] };
@@ -34,7 +33,6 @@ export type BookingRecord = {
   platformFee: number;
   hostTax: number;
   otherCharges: number;
-  extras?: { kind: ExtraKind; description: string; amount: number }[];
 };
 
 const SOURCE_OPTIONS = [
@@ -46,14 +44,6 @@ const SOURCE_OPTIONS = [
 ];
 
 const FORM_ID = "booking-sheet-form";
-
-type ExtraRow = { key: number; kind: ExtraKind; description: string; amount: string };
-
-let extraKey = 0;
-function newExtraRow(kind: ExtraKind = "MATTRESS", description = "", amount = ""): ExtraRow {
-  extraKey += 1;
-  return { key: extraKey, kind, description, amount };
-}
 
 function addDaysISO(iso: string, days: number) {
   const d = new Date(`${iso}T00:00:00Z`);
@@ -154,9 +144,6 @@ function BookingFields({
   const [showDeductions, setShowDeductions] = useState(
     Boolean(booking && (booking.platformFee || booking.hostTax || booking.otherCharges)),
   );
-  const [extras, setExtras] = useState<ExtraRow[]>(() =>
-    (booking?.extras ?? []).map((e) => newExtraRow(e.kind, e.description, String(e.amount))),
-  );
   const [notes, setNotes] = useState("");
   const [notifyTouched, setNotifyTouched] = useState(false);
   const [notifyGuestManual, setNotifyGuestManual] = useState(true);
@@ -168,9 +155,6 @@ function BookingFields({
   const gross = parseAmount(amount) || 0;
   const deductions =
     (parseAmount(platformFee) || 0) + (parseAmount(hostTax) || 0) + (parseAmount(otherCharges) || 0);
-  const extrasTotal = extras.reduce((sum, e) => sum + (parseAmount(e.amount) || 0), 0);
-  const updateExtra = (key: number, patch: Partial<ExtraRow>) =>
-    setExtras((rows) => rows.map((r) => (r.key === key ? { ...r, ...patch } : r)));
   // Past stays are usually back-filled records; don't email those guests by default.
   const notifyGuest = notifyTouched ? notifyGuestManual : checkIn >= todayISO();
   const canNotify = !booking && status === "CONFIRMED" && email.trim().length > 0;
@@ -199,10 +183,6 @@ function BookingFields({
     if (!(gross >= 0) || amount.trim() === "") return setError("Enter the booking amount (0 is fine for a block).");
     if (deductions > gross) return setError("Fees and taxes can't be more than the booking amount.");
 
-    if (extras.some((e) => !(parseAmount(e.amount) > 0))) {
-      return setError("Enter an amount for each extra, or remove it.");
-    }
-
     onSaving(true);
     try {
       const res = await fetch(booking ? `/api/admin/reservations/${booking.id}` : "/api/admin/reservations", {
@@ -223,11 +203,6 @@ function BookingFields({
           platformFee: parseAmount(platformFee) || 0,
           hostTax: parseAmount(hostTax) || 0,
           otherCharges: parseAmount(otherCharges) || 0,
-          extras: extras.map((e) => ({
-            kind: e.kind,
-            description: e.description.trim() || undefined,
-            amount: parseAmount(e.amount),
-          })),
           ...(booking
             ? {}
             : { status, internalNotes: notes, notifyGuest: canNotify && notifyGuest }),
@@ -381,73 +356,6 @@ function BookingFields({
             <ChevronDown className="size-4" />
             Booking site took a fee?
           </button>
-        )}
-      </FormSection>
-
-      <FormSection title="Extra income">
-        <p className="-mt-1 text-xs text-muted-foreground">
-          Money we earn on top of the room - an extra mattress, a guest we put in another flat, anything else we charged
-          for. It counts as our income and shows up in Finance.
-        </p>
-        {extras.map((e) => (
-          <div key={e.key} className="space-y-2 rounded-xl border border-border bg-muted/40 p-3">
-            <div className="flex items-center gap-2">
-<div className="min-w-0 flex-1">
-              <NativeSelect
-                value={e.kind}
-                onChange={(ev) => updateExtra(e.key, { kind: ev.target.value as ExtraKind })}
-                aria-label="Type of extra"
-              >
-                {EXTRA_KINDS.map((k) => (
-                  <option key={k} value={k}>
-                    {EXTRA_LABELS[k]}
-                  </option>
-                ))}
-              </NativeSelect>
-</div>
-              <button
-                type="button"
-                onClick={() => setExtras((rows) => rows.filter((r) => r.key !== e.key))}
-                className="grid size-10 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
-                aria-label="Remove this extra"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-            <div className="grid grid-cols-[1fr_7rem] gap-2">
-              <Input
-                value={e.description}
-                onChange={(ev) => updateExtra(e.key, { description: ev.target.value })}
-                placeholder={e.kind === "OTHER_FLAT_BOOKING" ? "Which flat?" : "Note (optional)"}
-                aria-label="Note"
-                className={fieldControlClass}
-              />
-              <Input
-                inputMode="decimal"
-                value={e.amount}
-                onChange={(ev) => updateExtra(e.key, { amount: ev.target.value.replace(/[^\d.,]/g, "") })}
-                placeholder="₹ 0"
-                aria-label="Amount we earn"
-                className={cn(fieldControlClass, "tabular-nums")}
-              />
-            </div>
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={() => setExtras((rows) => [...rows, newExtraRow()])}
-          className="flex items-center gap-1 text-sm font-medium text-primary"
-        >
-          <Plus className="size-4" />
-          {extras.length === 0 ? "Add extra income" : "Add another"}
-        </button>
-        {extras.length > 0 && (
-          <div className="flex items-baseline justify-between border-t border-border pt-2 text-sm">
-            <span className="text-muted-foreground">Total with extras</span>
-            <span className="font-semibold tabular-nums text-foreground">
-              {formatINR(Math.max(0, gross - deductions) + extrasTotal)}
-            </span>
-          </div>
         )}
       </FormSection>
 

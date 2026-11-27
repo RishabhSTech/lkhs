@@ -22,7 +22,6 @@ import type { BookingRecord } from "@/components/admin/booking-sheet";
 import {
   SOURCE_LABELS, STATUS_LABELS, sourceBadgeClass, statusBadgeClass,
 } from "@/lib/admin/sources";
-import { EXTRA_LABELS, type ExtraKind } from "@/lib/booking/extras";
 import { formatDateLong, formatDateRange, formatINR } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { safeHttpUrl } from "@/lib/safe-url";
@@ -47,10 +46,8 @@ export type ReservationRow = {
   source: BookingSource;
   status: ReservationStatus;
   total: number;
-  /** Booking total less platform fee, host tax and other charges, plus any extras. */
+  /** Booking total less platform fee, host tax and other charges. */
   payout: number;
-  /** Part of `payout` that came from extras (mattress, other flats...). */
-  extrasTotal: number;
 };
 
 export type ReservationDetail = {
@@ -76,9 +73,6 @@ export type ReservationDetail = {
   hostTax: number;
   otherCharges: number;
   netPayout: number;
-  extras: { id: string; kind: ExtraKind; description: string | null; amount: number }[];
-  /** Final payout plus extras - everything we earn from this booking. */
-  totalIncome: number;
   total: number;
   internalNotes: string | null;
   payments: { id: string; method: string; amount: number; status: string; provider: string; createdAt: string }[];
@@ -419,14 +413,7 @@ export function ReservationsView({
                     <td className="px-4 py-3">
                       <Badge className={statusBadgeClass(r.status)}>{STATUS_LABELS[r.status]}</Badge>
                     </td>
-                    <td className="px-4 py-2.5 text-right font-medium tabular-nums text-foreground">
-                      {formatINR(r.payout)}
-                      {r.extrasTotal > 0 && (
-                        <span className="block text-[0.6875rem] font-normal text-muted-foreground">
-                          incl. {formatINR(r.extrasTotal)} extras
-                        </span>
-                      )}
-                    </td>
+                    <td className="px-4 py-2.5 text-right font-medium tabular-nums text-foreground">{formatINR(r.payout)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -470,7 +457,6 @@ export function ReservationsView({
                       </span>
                       <span className="mt-0.5 block truncate text-xs text-muted-foreground">
                         {r.propertyName} · {SOURCE_LABELS[r.source]}
-                        {r.extrasTotal > 0 && ` · incl. ${formatINR(r.extrasTotal)} extras`}
                       </span>
                       <span className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
                         <span className="text-foreground">
@@ -633,7 +619,6 @@ function ReservationDetailSheet({
               platformFee: r.platformFee,
               hostTax: r.hostTax,
               otherCharges: r.otherCharges,
-              extras: r.extras.map((e) => ({ kind: e.kind, description: e.description ?? "", amount: e.amount })),
             }),
         },
         r.status === "CONFIRMED" && started && {
@@ -838,19 +823,6 @@ function ReservationDetailSheet({
             <Row label="Other charges" value={`− ${formatINR(r.otherCharges)}`} />
             <Row label="Final payout" value={formatINR(r.netPayout)} strong />
           </Section>
-
-          {r.extras.length > 0 && (
-            <Section title="Extra income">
-              {r.extras.map((e) => (
-                <Row
-                  key={e.id}
-                  label={e.description ? `${EXTRA_LABELS[e.kind]} · ${e.description}` : EXTRA_LABELS[e.kind]}
-                  value={`+ ${formatINR(e.amount)}`}
-                />
-              ))}
-              <Row label="Total income from this booking" value={formatINR(r.totalIncome)} strong />
-            </Section>
-          )}
 
           <Section title="Payments">
             {r.payments.length === 0 ? (

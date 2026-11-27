@@ -10,7 +10,6 @@ import { addDays, toISODate, todayUTC } from "@/lib/dates";
 import { SOURCE_LABELS, STATUS_LABELS } from "@/lib/admin/sources";
 import { parseDateParam } from "@/lib/finance/period";
 import { finalPayout } from "@/lib/booking/payout";
-import { sumExtras } from "@/lib/booking/extras";
 
 export const dynamic = "force-dynamic";
 
@@ -75,13 +74,12 @@ export default async function ReservationsPage({
     ],
   };
 
-  const [rows, properties, arrivals, inhouse, departures, pending, matching, matchingExtras] = await Promise.all([
+  const [rows, properties, arrivals, inhouse, departures, pending, matching] = await Promise.all([
     db.reservation.findMany({
       where,
       include: {
         property: { select: { id: true, name: true } },
         guest: { select: { name: true } },
-        extras: { select: { amount: true } },
       },
       orderBy: { checkIn: ascending ? "asc" : "desc" },
       take: limit + 1,
@@ -98,10 +96,6 @@ export default async function ReservationsPage({
       _sum: { total: true, platformFee: true, hostTax: true, otherCharges: true },
       _count: { _all: true },
     }),
-    db.reservationExtra.aggregate({
-      where: { reservation: { AND: [where, { status: { not: "CANCELLED" } }] } },
-      _sum: { amount: true },
-    }),
   ]);
   const hasMore = rows.length > limit;
   const reservations = rows.slice(0, limit);
@@ -113,7 +107,6 @@ export default async function ReservationsPage({
           property: { select: { id: true, name: true, addressLine: true } },
           unit: { select: { id: true } },
           guest: true,
-          extras: { orderBy: { createdAt: "asc" } },
           payments: true,
           messages: { orderBy: { createdAt: "desc" } },
           auditLogs: { orderBy: { createdAt: "desc" } },
@@ -153,9 +146,7 @@ export default async function ReservationsPage({
             source: r.source,
             status: r.status,
             total: Number(r.total),
-            // What we actually take home: the stay's payout plus any extras.
-            payout: finalPayout(r) + sumExtras(r.extras),
-            extrasTotal: sumExtras(r.extras),
+            payout: finalPayout(r),
           }))}
           properties={properties}
           filters={{
@@ -167,13 +158,12 @@ export default async function ReservationsPage({
           hasMore={hasMore}
           matchingTotal={{
             count: matching._count._all,
-            amount:
-              finalPayout({
-                total: matching._sum.total ?? 0,
-                platformFee: matching._sum.platformFee ?? 0,
-                hostTax: matching._sum.hostTax ?? 0,
-                otherCharges: matching._sum.otherCharges ?? 0,
-              }) + Number(matchingExtras._sum.amount ?? 0),
+            amount: finalPayout({
+              total: matching._sum.total ?? 0,
+              platformFee: matching._sum.platformFee ?? 0,
+              hostTax: matching._sum.hostTax ?? 0,
+              otherCharges: matching._sum.otherCharges ?? 0,
+            }),
           }}
           today={toISODate(today)}
           canWrite={canWrite}
@@ -206,13 +196,6 @@ export default async function ReservationsPage({
               hostTax: Number(selected.hostTax),
               otherCharges: Number(selected.otherCharges),
               netPayout: finalPayout(selected),
-              extras: selected.extras.map((e) => ({
-                id: e.id,
-                kind: e.kind,
-                description: e.description,
-                amount: Number(e.amount),
-              })),
-              totalIncome: finalPayout(selected) + sumExtras(selected.extras),
               total: Number(selected.total),
               internalNotes: selected.internalNotes,
               payments: selected.payments.map((p) => ({

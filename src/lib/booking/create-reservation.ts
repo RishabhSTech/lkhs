@@ -7,7 +7,6 @@ import { getNotificationProvider } from "@/lib/notifications/provider";
 import { renderTemplate } from "@/lib/notifications/templates";
 import { alertTeam } from "@/lib/notifications/alert";
 import { enqueueChannelSync } from "@/lib/queue";
-import { EXTRA_CATEGORY, EXTRA_LABELS, type ExtraInput } from "@/lib/booking/extras";
 
 export class InventoryConflictError extends Error {
   constructor() {
@@ -48,8 +47,6 @@ export type CreateReservationInput = {
     hostTax: number;
     otherCharges: number;
   };
-  /** Extra income on top of the stay (mattress, a booking in another flat...). */
-  extras?: ExtraInput[];
 };
 
 const CODE_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -152,13 +149,6 @@ export async function createReservation(input: CreateReservationInput) {
           hostTax: new Prisma.Decimal(financials?.hostTax ?? 0),
           otherCharges: new Prisma.Decimal(financials?.otherCharges ?? 0),
           hasCustomFinancials: Boolean(financials),
-          extras: {
-            create: (input.extras ?? []).map((e) => ({
-              kind: e.kind,
-              description: e.description || null,
-              amount: new Prisma.Decimal(e.amount),
-            })),
-          },
           reservationGuests: {
             create: {
               name: input.guest.name,
@@ -308,36 +298,6 @@ export async function postBookingFinancials(
     },
   });
 
-  // Extras (mattress, a booking passed to another flat...) are our own income:
-  // no channel commission is taken on them, and each is its own revenue line
-  // so Finance can show them separately from the stay.
-  const extras = await tx.reservationExtra.findMany({
-    where: { reservationId: args.reservationId },
-    orderBy: { createdAt: "asc" },
-  });
-  for (const extra of extras) {
-    const category = await tx.transactionCategory.upsert({
-      where: { name_group: { name: EXTRA_CATEGORY[extra.kind], group: "REVENUE" } },
-      create: { name: EXTRA_CATEGORY[extra.kind], group: "REVENUE" },
-      update: {},
-    });
-    await tx.transaction.create({
-      data: {
-        propertyId: args.propertyId,
-        categoryId: category.id,
-        reservationId: args.reservationId,
-        type: "REVENUE",
-        amount: extra.amount,
-        date: args.date,
-        status: "PAID",
-        paymentMethod: "OTHER",
-        description: extra.description
-          ? `${EXTRA_LABELS[extra.kind]} · ${extra.description}`
-          : EXTRA_LABELS[extra.kind],
-      },
-    });
-  }
-
   const otaFee = args.hasCustomFinancials
     ? args.platformFee
     : Math.round(args.total * (OTA_FEE_RATES[args.source] ?? 0));
@@ -414,8 +374,6 @@ export type UpdateReservationInput = {
     hostTax: number;
     otherCharges: number;
   };
-  /** Omit to leave the booking's extras as they are; pass [] to clear them. */
-  extras?: ExtraInput[];
 };
 
 export async function updateReservation(input: UpdateReservationInput) {
@@ -480,18 +438,6 @@ export async function updateReservation(input: UpdateReservationInput) {
         },
       },
     });
-
-    if (input.extras) {
-      await tx.reservationExtra.deleteMany({ where: { reservationId: input.reservationId } });
-      await tx.reservationExtra.createMany({
-        data: input.extras.map((e) => ({
-          reservationId: input.reservationId,
-          kind: e.kind,
-          description: e.description || null,
-          amount: new Prisma.Decimal(e.amount),
-        })),
-      });
-    }
 
     if (existing.status === "CONFIRMED") {
       await tx.transaction.deleteMany({ where: { reservationId: input.reservationId } });

@@ -1,9 +1,9 @@
 import {
   BarChart3, Building2, CalendarDays, CreditCard, LayoutDashboard, MessageSquare,
-  Plug, Receipt, Settings, Sparkles, Star, Tags, Users, Wrench,
+  Plug, Receipt, Wallet, Settings, Sparkles, Star, Tags, Users, Wrench,
 } from "lucide-react";
 import type { RoleName } from "@prisma/client";
-import { INVENTORY_ROLES, LISTING_ROLES, SETTINGS_ROLES } from "@/lib/auth/roles";
+import { EXTRA_INCOME_ROLES, INVENTORY_ROLES, LISTING_ROLES, SETTINGS_ROLES } from "@/lib/auth/roles";
 
 export type AdminNavItem = {
   href: string;
@@ -28,6 +28,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/pricing", label: "Pricing", icon: Sparkles, roles: INVENTORY_ROLES, portfolio: true },
   { href: "/admin/channels", label: "Booking sites", icon: Plug, roles: INVENTORY_ROLES, portfolio: true },
   { href: "/admin/finance", label: "Finance", icon: CreditCard, roles: FINANCE, portfolio: true },
+  { href: "/admin/finance/extra-income", label: "Extra income", icon: Wallet, roles: EXTRA_INCOME_ROLES },
   {
     href: "/admin/finance/expenses",
     label: "Expenses",

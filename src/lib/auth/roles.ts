@@ -19,6 +19,9 @@ export const EXPENSE_SUBMIT_ROLES: RoleName[] = [
   "CLEANER",
 ];
 
+/** Can record and edit extra income (items charged, bookings given to other flats). */
+export const EXTRA_INCOME_ROLES: RoleName[] = [...FINANCE_ROLES, "MANAGER"];
+
 /** Can create, edit, cancel and annotate bookings. */
 export const BOOKING_WRITE_ROLES: RoleName[] = [
   "SUPER_ADMIN",

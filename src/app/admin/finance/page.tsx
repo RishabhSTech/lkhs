@@ -44,6 +44,13 @@ export default async function FinanceOverviewPage({ searchParams }: PageProps<"/
               All expenses
             </Button>
             <Button
+              render={<Link href="/admin/finance/extra-income" />}
+              variant="outline"
+              size="sm"
+            >
+              Extra income
+            </Button>
+            <Button
                
               render={<a href={`/api/admin/reports?type=portfolio&${query}`} />}
               variant="outline"

@@ -3,7 +3,6 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { guardApi, inScope, outOfScope } from "@/lib/auth/guards";
 import { BOOKING_WRITE_ROLES } from "@/lib/auth/roles";
-import { extraSchema } from "@/lib/booking/extras";
 import {
   createReservation,
   confirmReservation,
@@ -27,7 +26,6 @@ const schema = z.object({
   platformFee: z.number().nonnegative().default(0),
   hostTax: z.number().nonnegative().default(0),
   otherCharges: z.number().nonnegative().default(0),
-  extras: z.array(extraSchema).max(20).default([]),
   internalNotes: z.string().max(2000).optional(),
   notifyGuest: z.boolean().default(true),
 });
@@ -85,7 +83,6 @@ export async function POST(request: Request) {
         hostTax: data.hostTax,
         otherCharges: data.otherCharges,
       },
-      extras: data.extras,
     });
 
     if (data.internalNotes?.trim()) {
