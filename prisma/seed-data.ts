@@ -1087,7 +1087,7 @@ export const TRANSACTION_CATEGORY_DEFS: {
       "Appliance Repair", "Deep Cleaning", "Host Tax", "Items Ordered for Guests", "Miscellaneous",
     ],
   },
-  { group: "REVENUE", names: ["Accommodation", "Extra Guest", "Late Checkout"] },
+  { group: "REVENUE", names: ["Accommodation", "Extra Guest", "Late Checkout", "Extra Mattress", "Other Flat Booking", "Other Extras"] },
   { group: "OTA_FEE", names: ["Channel Commission"] },
   { group: "PAYMENT_FEE", names: ["Gateway Fee"] },
   { group: "DEPOSIT", names: ["Refundable Security Deposit"], refundable: ["Refundable Security Deposit"] },

@@ -542,6 +542,7 @@ model Reservation {
 
   reservationGuests      ReservationGuest[]
   payments               ReservationPayment[]
+  extras                 ReservationExtra[]
   nightsBlocked          InventoryNight[]
   transactions           Transaction[]
   messages               Message[]
@@ -555,6 +556,30 @@ model Reservation {
   @@index([guestId])
   @@index([status])
   @@index([checkIn, checkOut])
+}
+
+/// What kind of extra income a booking brought in beyond the stay itself.
+enum ExtraIncomeKind {
+  OTHER_FLAT_BOOKING // we placed the guest in someone else's flat and kept a cut
+  MATTRESS
+  OTHER
+}
+
+/// Extra money earned on a booking on top of the stay: an extra mattress,
+/// a booking we passed to another flat, anything else we charged for. Each
+/// row is posted to Finance as its own REVENUE transaction (see
+/// postBookingFinancials) - these rows are the editable source for that.
+model ReservationExtra {
+  id            String          @id @default(cuid())
+  reservationId String
+  kind          ExtraIncomeKind
+  description   String?
+  amount        Decimal         @db.Decimal(12, 2)
+  createdAt     DateTime        @default(now())
+
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  @@index([reservationId])
 }
 
 model ReservationGuest {

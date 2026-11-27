@@ -1,5 +1,6 @@
-import type {
-  ChannelProfitability, PLStatement as PL,
+import {
+  extrasRevenue,
+  type ChannelProfitability, type PLStatement as PL,
 } from "@/lib/finance/calculations";
 import { SOURCE_LABELS } from "@/lib/admin/sources";
 import { formatINR } from "@/lib/format";
@@ -19,14 +20,20 @@ export function PLStatement({
 
       <dl className="mt-4 text-sm">
         <Group label="Revenue" />
-        {channels?.filter((c) => c.grossRevenue > 0).map((c) => (
-          <Line
-            key={c.source}
-            label={SOURCE_LABELS[c.source]}
-            value={c.grossRevenue}
-            indent
-          />
-        ))}
+        {extrasRevenue(pl) > 0
+          ? // Extras (mattress, bookings in other flats...) get their own lines
+            // so the stay and the extra income are visible side by side.
+            pl.revenueByCategory.map((c) => (
+              <Line key={c.name} label={c.name === "Accommodation" ? "Stays" : c.name} value={c.amount} indent />
+            ))
+          : channels?.filter((c) => c.grossRevenue > 0).map((c) => (
+              <Line
+                key={c.source}
+                label={SOURCE_LABELS[c.source]}
+                value={c.grossRevenue}
+                indent
+              />
+            ))}
         <Line label="Gross revenue" value={pl.grossRevenue} subtotal />
 
         <Group label="Less" className="mt-4" />

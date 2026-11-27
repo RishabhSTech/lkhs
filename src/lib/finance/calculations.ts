@@ -60,6 +60,9 @@ export type PLTransaction = Prisma.TransactionGetPayload<{
   select: typeof PL_TRANSACTION_SELECT;
 }>;
 
+/** The revenue category a booking's stay itself is posted under. */
+export const STAY_REVENUE_CATEGORY = "Accommodation";
+
 const REVENUE_TYPES: TransactionType[] = ["REVENUE"];
 const FEE_TYPES: TransactionType[] = ["OTA_FEE", "PAYMENT_FEE"];
 const EXPENSE_TYPES: TransactionType[] = ["EXPENSE"];
@@ -75,6 +78,8 @@ function byTypes(txs: PLInput[], types: TransactionType[]) {
 
 export type PLStatement = {
   grossRevenue: number;
+  /** Gross revenue split by category - the stay itself vs extras (mattress, other flats...). */
+  revenueByCategory: { name: string; amount: number }[];
   otaFees: number;
   paymentFees: number;
   netRevenue: number;
@@ -86,7 +91,12 @@ export type PLStatement = {
 };
 
 export function buildPL(txs: PLInput[]): PLStatement {
-  const grossRevenue = sum(byTypes(txs, REVENUE_TYPES));
+  const revenueTxs = byTypes(txs, REVENUE_TYPES);
+  const grossRevenue = sum(revenueTxs);
+  const revenueGrouped = new Map<string, number>();
+  for (const t of revenueTxs) {
+    revenueGrouped.set(t.category.name, (revenueGrouped.get(t.category.name) ?? 0) + Number(t.amount));
+  }
   const otaFees = sum(txs.filter((t) => t.type === "OTA_FEE"));
   const paymentFees = sum(txs.filter((t) => t.type === "PAYMENT_FEE"));
   const netRevenue = grossRevenue - otaFees - paymentFees;
@@ -107,6 +117,9 @@ export function buildPL(txs: PLInput[]): PLStatement {
 
   return {
     grossRevenue,
+    revenueByCategory: [...revenueGrouped.entries()]
+      .map(([name, amount]) => ({ name, amount }))
+      .sort((a, b) => b.amount - a.amount),
     otaFees,
     paymentFees,
     netRevenue,
@@ -117,6 +130,13 @@ export function buildPL(txs: PLInput[]): PLStatement {
     netOperatingIncome: netRevenue - operatingExpenses,
     depositsHeld: depositsIn - depositsOut,
   };
+}
+
+/** Revenue that is not the stay itself: mattresses, bookings passed to other flats, etc. */
+export function extrasRevenue(pl: Pick<PLStatement, "revenueByCategory">): number {
+  return pl.revenueByCategory
+    .filter((c) => c.name !== STAY_REVENUE_CATEGORY)
+    .reduce((total, c) => total + c.amount, 0);
 }
 
 export type CapitalPosition = {

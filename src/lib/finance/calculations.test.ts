@@ -13,6 +13,7 @@ import {
   buildCapitalPosition,
   buildChannelProfitability,
   buildPL,
+  extrasRevenue,
   type TxWithCategory,
 } from "./calculations";
 
@@ -92,6 +93,26 @@ describe("buildPL", () => {
 
   it("sums gross revenue across all REVENUE rows", () => {
     expect(pl.grossRevenue).toBe(18_000);
+  });
+
+  it("splits gross revenue by category and counts extras separately from the stay", () => {
+    const MATTRESS = category("Extra Mattress", "REVENUE");
+    const OTHER_FLAT = category("Other Flat Booking", "REVENUE");
+    const withExtras = buildPL([
+      ...knownTxs,
+      tx("REVENUE", 500, MATTRESS),
+      tx("REVENUE", 1_500, OTHER_FLAT),
+    ]);
+    expect(withExtras.grossRevenue).toBe(18_000 + 500 + 1_500);
+    expect(withExtras.revenueByCategory).toEqual([
+      { name: "Accommodation", amount: 18_000 },
+      { name: "Other Flat Booking", amount: 1_500 },
+      { name: "Extra Mattress", amount: 500 },
+    ]);
+    expect(extrasRevenue(withExtras)).toBe(2_000);
+    expect(extrasRevenue(pl)).toBe(0);
+    // Extras are ours outright - no fee is taken against them.
+    expect(withExtras.netRevenue).toBe(pl.netRevenue + 2_000);
   });
 
   it("separates OTA and payment fees", () => {

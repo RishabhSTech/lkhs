@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { guardApi, inScope, outOfScope } from "@/lib/auth/guards";
 import { BOOKING_WRITE_ROLES } from "@/lib/auth/roles";
+import { extraSchema } from "@/lib/booking/extras";
 import {
   updateReservation,
   GuestConflictError,
@@ -24,6 +25,7 @@ const schema = z.object({
   platformFee: z.number().nonnegative(),
   hostTax: z.number().nonnegative(),
   otherCharges: z.number().nonnegative(),
+  extras: z.array(extraSchema).max(20).optional(),
 });
 
 export async function PATCH(
@@ -65,6 +67,7 @@ export async function PATCH(
         hostTax: data.hostTax,
         otherCharges: data.otherCharges,
       },
+      extras: data.extras,
     });
     await db.auditLog.create({
       data: {

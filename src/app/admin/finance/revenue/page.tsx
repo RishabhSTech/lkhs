@@ -12,6 +12,7 @@ import { RowLink } from "@/components/admin/navigation-progress";
 import { parsePeriod, periodDateFilter, periodQuery } from "@/lib/finance/period";
 import { toISODate } from "@/lib/dates";
 import { getPortfolioFinance } from "@/lib/queries/finance";
+import { extrasRevenue, STAY_REVENUE_CATEGORY } from "@/lib/finance/calculations";
 import { SOURCE_LABELS, sourceBadgeClass } from "@/lib/admin/sources";
 import { formatDateLong, formatINR, formatINRCompact } from "@/lib/format";
 
@@ -30,6 +31,7 @@ export default async function RevenuePage({ searchParams }: PageProps<"/admin/fi
       where: { type: "REVENUE", date: periodDateFilter(period), ...onOperatingProperty },
       include: {
         property: { select: { id: true, name: true } },
+        category: { select: { name: true } },
         reservation: {
           select: { code: true, source: true, guest: { select: { name: true } } },
         },
@@ -38,6 +40,9 @@ export default async function RevenuePage({ searchParams }: PageProps<"/admin/fi
       take: 200,
     }),
   ]);
+
+  const extras = extrasRevenue(finance.period);
+  const extraLines = finance.period.revenueByCategory.filter((c) => c.name !== STAY_REVENUE_CATEGORY);
 
   return (
     <AdminPage>
@@ -90,6 +95,29 @@ export default async function RevenuePage({ searchParams }: PageProps<"/admin/fi
         />
       </div>
 
+      {extras > 0 && (
+        <section className="mt-5 soft-card p-5">
+          <h2 className="text-sm font-semibold text-foreground">Stays and extras</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Extra income is money we earn on top of the room - an extra mattress, a booking passed to another flat, and so on.
+          </p>
+          <ul className="mt-3 divide-y divide-border text-sm">
+            <li className="flex items-baseline justify-between py-2">
+              <span className="text-foreground">Stays</span>
+              <span className="font-medium tabular-nums text-foreground">
+                {formatINR(finance.period.grossRevenue - extras)}
+              </span>
+            </li>
+            {extraLines.map((c) => (
+              <li key={c.name} className="flex items-baseline justify-between py-2">
+                <span className="text-foreground">{c.name}</span>
+                <span className="font-medium tabular-nums text-foreground">{formatINR(c.amount)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section className="mt-5 soft-card p-5">
         <h2 className="text-sm font-semibold text-foreground">
           Revenue over time
@@ -139,7 +167,7 @@ export default async function RevenuePage({ searchParams }: PageProps<"/admin/fi
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-left">
-                {["Date", "Property", "Guest", "Booking", "Channel", "Amount"].map(
+                {["Date", "Property", "Guest", "Booking", "Type", "Channel", "Amount"].map(
                   (h) => (
                     <th
                       key={h}
@@ -164,6 +192,9 @@ export default async function RevenuePage({ searchParams }: PageProps<"/admin/fi
                   </td>
                   <td className="py-2.5 font-mono text-xs text-muted-foreground">
                     {t.reservation?.code ?? "-"}
+                  </td>
+                  <td className="py-2.5 text-muted-foreground">
+                    {t.category.name === STAY_REVENUE_CATEGORY ? "Stay" : t.category.name}
                   </td>
                   <td className="py-2.5">
                     {t.reservation && (
